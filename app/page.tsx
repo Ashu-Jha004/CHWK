@@ -13,11 +13,6 @@ import { CustomerFeaturesSection } from "@/components/LandingPage/customer-featu
 import { HowItWorksSection } from "@/components/LandingPage/how-it-works-section";
 import { FinalCTASection } from "@/components/LandingPage/final-cta-section";
 import { TestimonialsSection } from "@/components/LandingPage/testimonials-section";
-export const metadata: Metadata = {
-  title: "CHWK - Discover Local Businesses & Services in India",
-  description:
-    "Find the best restaurants, salons, repair services, healthcare, and more. Read reviews, compare ratings, and connect with trusted local businesses.",
-};
 export default function Home() {
   return (
     <>
