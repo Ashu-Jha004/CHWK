@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+   "db:push": "npx prisma db push",
+    "db:migrate": "cross-env DATABASE_URL=$DIRECT_URL npx prisma migrate dev",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^7.2.0",
@@ -34,6 +37,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "prisma": "^7.2.0",

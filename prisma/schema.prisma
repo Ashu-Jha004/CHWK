@@ -5,16 +5,1550 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
 }
+
 
 datasource db {
   provider = "postgresql"
 }
+// schema.prisma
+// Production-Ready Schema for Yelp-like Platform - India Focused
+// Last Updated: December 27, 2025
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  CUSTOMER
+  BUSINESS_OWNER
+  ADMIN
+  MODERATOR
+}
+
+enum BusinessStatus {
+  PENDING         // Awaiting verification
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  CLAIMED         // Owned by verified business owner
+  UNCLAIMED       // Listed but not claimed
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  FLAGGED
+  REMOVED
+}
+
+enum BusinessClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum PriceRange {
+  BUDGET        // ₹
+  MODERATE      // ₹₹
+  EXPENSIVE     // ₹₹₹
+  LUXURY        // ₹₹₹₹
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  LOGO
+  COVER
+  MENU
+  DOCUMENT
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED_BY_USER
+  CANCELLED_BY_BUSINESS
+  COMPLETED
+  NO_SHOW
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum OrderType {
+  DELIVERY
+  PICKUP
+  DINE_IN
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  CARD
+  NET_BANKING
+  WALLET
+}
+
+enum ComplaintStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+  CLOSED
+}
+
+enum ComplaintPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AdStatus {
+  DRAFT
+  PENDING_APPROVAL
+  ACTIVE
+  PAUSED
+  COMPLETED
+  REJECTED
+}
+
+enum AdPlacement {
+  SEARCH_TOP
+  SEARCH_SIDEBAR
+  CATEGORY_TOP
+  HOME_FEATURED
+  MAP_PIN_HIGHLIGHTED
+}
+
+// ==================== USER MANAGEMENT ====================
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id            String   @id @default(cuid())
+  email         String   @unique
+  emailVerified DateTime?
+
+  username      String?  @unique
+  firstName     String?
+  lastName      String?
+  avatar        String?
+  phone         String?
+  phoneVerified Boolean  @default(false)
+
+  role          UserRole @default(CUSTOMER)
+
+  // Default location preferences
+  defaultPincode    String?
+  defaultCity       String?
+  defaultState      String?
+  defaultLatitude   Float?
+  defaultLongitude  Float?
+  defaultRadius     Int?    @default(5000) // meters
+
+  // Account metadata
+  isActive      Boolean  @default(true)
+  isBanned      Boolean  @default(false)
+  bannedReason  String?
+  lastLoginAt   DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime? // Soft delete
+
+  // Relations
+  ownedBusinesses    Business[]
+  reviews            Review[]
+  reviewVotes        ReviewVote[]
+  bookings           Booking[]
+  orders             Order[]
+  complaints         Complaint[]
+  savedBusinesses    SavedBusiness[]
+  photos             Photo[]
+  reviewResponses    ReviewResponse[]
+  reportsMade        Report[]       @relation("ReportsMade")
+  reportsReceived    Report[]       @relation("ReportsReceived")
+  businessClaims     BusinessClaim[]
+
+  @@index([email])
+  @@index([username])
+  @@index([phone])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([defaultPincode])
+  @@map("users")
+}
+// ==================== BUSINESS CHAINS ====================
+
+model BusinessChain {
+  id              String   @id @default(cuid())
+
+  name            String   // "McDonald's India", "Naturals Salon"
+  slug            String   @unique
+  logo            String?
+  description     String?  @db.Text
+
+  // Corporate details
+  corporateEmail  String?
+  corporatePhone  String?
+  headquarters    String?  // Head office location
+  website         String?
+
+  // Chain-level metrics
+  totalBranches   Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  branches        Business[] @relation("ChainBranches")
+
+  @@index([slug])
+  @@index([name])
+  @@map("business_chains")
+}
+
+// ==================== BUSINESS CORE ====================
+
+model Business {
+  id              String         @id @default(cuid())
+
+  // Basic Info
+  name            String
+  slug            String         @unique
+  description     String?        @db.Text
+  shortDescription String?       @db.VarChar(255)
+
+  // Chain relationship (NEW)
+  chainId         String?
+  chain           BusinessChain? @relation("ChainBranches", fields: [chainId], references: [id])
+  branchName      String?        // "Connaught Place", "Sector 18 Noida"
+
+  // Contact
+  email           String?
+  phone           String
+  alternatePhone  String?
+  whatsappNumber  String?        // Popular in India
+  website         String?
+
+  // India-specific Location
+  addressLine1    String
+  addressLine2    String?
+  landmark        String?        // Common in India
+  area            String?        // Locality/Area name
+  city            String
+  district        String?
+  state           String
+  pincode         String         // 6-digit Indian PIN
+  latitude        Float
+  longitude       Float
+
+  // Business Details
+  status          BusinessStatus @default(UNCLAIMED)
+  priceRange      PriceRange?
+  isVerified      Boolean        @default(false)
+  verifiedAt      DateTime?
+
+  // Feature toggles
+  acceptsOrders       Boolean    @default(false)
+  acceptsBookings     Boolean    @default(false)
+  hasDelivery         Boolean    @default(false)
+  hasPickup           Boolean    @default(false)
+  hasDineIn           Boolean    @default(false)
+
+  // Delivery settings
+  deliveryRadius      Int?       // in meters
+  minOrderAmount      Float?     // in INR
+  deliveryFee         Float?     // in INR
+
+  // Booking policies (NEW)
+  minAdvanceBookingHours Int?    @default(2)   // Need 2 hours notice
+  maxAdvanceBookingDays  Int?    @default(30)  // Can book up to 30 days ahead
+  cancellationPolicy     String? @db.Text
+  cancellationDeadlineHours Int? @default(24)  // Cancel 24 hours before
+  refundPolicy           String? @db.Text
+  autoConfirmBookings    Boolean @default(false)
+  autoConfirmOrders      Boolean @default(false)
+
+  // Temporary closure (NEW)
+  isTemporarilyClosed    Boolean   @default(false)
+  temporaryClosureReason String?
+  temporaryClosureStart  DateTime?
+  temporaryClosureEnd    DateTime?
+
+  // Emergency services (NEW)
+  is24x7                 Boolean @default(false)
+  hasEmergencyService    Boolean @default(false)
+  emergencyContactNumber String?
+  emergencyExtraCharge   Float?  // Extra charge for emergency calls
+
+  // Metrics (denormalized for performance)
+  averageRating       Float?     @default(0)
+  totalReviews        Int        @default(0)
+  totalOrders         Int        @default(0)
+  totalBookings       Int        @default(0)
+  totalPhotos         Int        @default(0)
+  totalComplaints     Int        @default(0)
+
+  // SEO
+  metaTitle           String?
+  metaDescription     String?
+
+  // Ownership
+  ownerId             String?
+  owner               User?      @relation(fields: [ownerId], references: [id])
+
+  // GST (Important for Indian businesses)
+  gstNumber           String?    @unique
+  panNumber           String?
+
+  // Metadata
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  deletedAt           DateTime?  // Soft delete
+  lastClaimedAt       DateTime?
+
+  // Relations
+  categories          BusinessCategory[]
+  hours               BusinessHours[]
+  reviews             Review[]
+  photos              Photo[]
+  amenities           BusinessAmenity[]
+  savedBy             SavedBusiness[]
+  bookings            Booking[]
+  orders              Order[]
+  menuItems           MenuItem[]
+  complaints          Complaint[]
+  claims              BusinessClaim[]
+  reports             Report[]
+  promotedListings    PromotedListing[]
+  serviceAreas        BusinessServiceArea[] // NEW
+  staff               BusinessStaff[]       // NEW
+
+  @@index([slug])
+  @@index([status])
+  @@index([pincode])
+  @@index([city, state])
+  @@index([state])
+  @@index([latitude, longitude])
+  @@index([averageRating])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([ownerId])
+  @@index([gstNumber])
+  @@index([chainId])
+  @@index([city, status, averageRating])
+  @@index([pincode, status])
+  @@index([state, city, status])
+  @@index([is24x7])
+  @@index([hasEmergencyService])
+  @@map("businesses")
+}
+
+// ==================== SERVICE AREAS (NEW) ====================
+
+model BusinessServiceArea {
+  id          String   @id @default(cuid())
+
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Option 1: Serve specific pincodes
+  pincode     String?
+
+  // Option 2: Serve specific areas/neighborhoods
+  areaName    String?  // e.g., "Indirapuram", "Dwarka Sector 10"
+  city        String?
+  state       String?
+
+  // Option 3: Serve radius from business location
+  radiusKm    Int?     // e.g., 10km radius
+
+  // Pricing
+  extraCharge Float?   @default(0)  // Extra delivery/service charge for this area
+
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([pincode])
+  @@index([city])
+  @@index([areaName])
+  @@index([isActive])
+  @@map("business_service_areas")
+}
+
+// ==================== STAFF MANAGEMENT (NEW) ====================
+
+model BusinessStaff {
+  id              String   @id @default(cuid())
+
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Staff details
+  name            String
+  designation     String?  // "Senior Stylist", "General Physician", "Chef"
+  specialization  String?  // "Hair Coloring Expert", "Pediatrics", "North Indian Cuisine"
+  photo           String?
+  bio             String?  @db.Text
+
+  // Contact
+  phone           String?
+  email           String?
+
+  // Experience
+  yearsOfExperience Int?
+  qualifications    String? @db.Text
+
+  // Ratings (if allowing staff-specific ratings)
+  averageRating     Float?  @default(0)
+  totalBookings     Int     @default(0)
+
+  // Availability
+  isActive        Boolean  @default(true)
+  isAvailableForBooking Boolean @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  bookings        Booking[]
+  workingHours    StaffWorkingHours[]
+
+  @@index([businessId])
+  @@index([isActive])
+  @@index([isAvailableForBooking])
+  @@index([deletedAt])
+  @@map("business_staff")
+}
+
+model StaffWorkingHours {
+  id          String    @id @default(cuid())
+
+  staffId     String
+  staff       BusinessStaff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  dayOfWeek   DayOfWeek
+  startTime   String    // Format: "09:00"
+  endTime     String    // Format: "18:00"
+  slotDuration Int      @default(30) // Duration per slot in minutes
+
+  // Break time
+  breakStartTime String? // Format: "13:00"
+  breakEndTime   String? // Format: "14:00"
+
+  // Availability
+  isAvailable Boolean  @default(true)
+
+  // For specific dates (overrides)
+  specificDate DateTime? // If this is for a specific date override
+  note         String?   // e.g., "Half day", "Training session"
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([staffId, dayOfWeek, specificDate])
+  @@index([staffId])
+  @@index([dayOfWeek])
+  @@index([specificDate])
+  @@index([isAvailable])
+  @@map("staff_working_hours")
+}
+
+// ==================== BUSINESS HOURS ====================
+
+model BusinessHours {
+  id          String    @id @default(cuid())
+
+  businessId  String
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  dayOfWeek   DayOfWeek
+  openTime    String    // Format: "09:00"
+  closeTime   String    // Format: "21:00"
+  isClosed    Boolean   @default(false)
+
+  // Handle special hours (holidays, festivals, etc.)
+  isOverride  Boolean   @default(false)
+  overrideDate DateTime? // Specific date for override
+  overrideNote String?   // e.g., "Closed for Diwali", "Extended hours for New Year"
+
+  // Split shifts (lunch break for some businesses)
+  hasSplitShift    Boolean @default(false)
+  splitCloseTime   String? // First shift ends
+  splitReopenTime  String? // Second shift starts
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([businessId, dayOfWeek, overrideDate])
+  @@index([businessId])
+  @@index([dayOfWeek])
+  @@index([overrideDate])
+  @@index([isClosed])
+  @@map("business_hours")
+}
+
+// ==================== CATEGORIES ====================
+
+model Category {
+  id          String   @id @default(cuid())
+
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  icon        String?  // Emoji or icon URL
+
+  // Hierarchy support (3-level max recommended)
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+
+  // Display & ordering
+  displayOrder Int?
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false) // Show on homepage/featured sections
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Search keywords (helps with category matching)
+  searchKeywords  String[] // e.g., ["chai", "tea", "beverage"] for Tea Stall
+
+  // Icon/Image for category page
+  coverImage  String?
+
+  // Stats (denormalized)
+  totalBusinesses Int @default(0) // Number of businesses in this category
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  businesses  BusinessCategory[]
+
+  @@index([slug])
+  @@index([parentId])
+  @@index([isActive, displayOrder])
+  @@index([isFeatured])
+  @@index([isActive, isFeatured])
+  @@map("categories")
+}
+
+model BusinessCategory {
+  businessId  String
+  categoryId  String
+
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  // Only one primary category per business
+  isPrimary   Boolean  @default(false)
+
+  // Display order (if business wants to prioritize certain categories)
+  displayOrder Int?    @default(0)
+
+  createdAt   DateTime @default(now())
+
+  @@id([businessId, categoryId])
+  @@index([categoryId])
+  @@index([businessId])
+  @@index([isPrimary])
+  @@index([categoryId, isPrimary])
+  @@map("business_categories")
+}
+
+// ==================== MENU ITEMS / SERVICE CATALOG ====================
+
+model MenuItem {
+  id              String   @id @default(cuid())
+
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Basic info
+  name            String
+  description     String?  @db.Text
+
+  // Pricing
+  price           Float    // in INR
+  discountedPrice Float?   // in INR (if on sale)
+
+  // Media
+  image           String?
+  images          String[] // Multiple images
+
+  // Categorization (e.g., "Appetizers", "Main Course", "Hair Services")
+  category        String?
+  subcategory     String?
+
+  // Food-specific attributes
+  isVegetarian    Boolean  @default(false)
+  isVegan         Boolean  @default(false)
+  isGlutenFree    Boolean  @default(false)
+  isJain          Boolean  @default(false) // India-specific
+  spiceLevel      String?  // "Mild", "Medium", "Hot", "Extra Hot"
+
+  // Service-specific attributes (NEW)
+  duration        Int?     // Duration in minutes (for services like haircut, massage)
+  requiresStaff   Boolean  @default(false) // Does this service need staff assignment?
+
+  // Availability
+  isAvailable     Boolean  @default(true)
+  availableFrom   String?  // Time-based availability (e.g., "11:00")
+  availableTo     String?  // (e.g., "23:00")
+
+  // Stock/Inventory (for physical products)
+  hasLimitedStock Boolean  @default(false)
+  stockQuantity   Int?
+
+  // Search & Discovery
+  tags            String[] // e.g., ["spicy", "popular", "chef-special", "bestseller"]
+
+  // Display
+  displayOrder    Int?
+  isFeatured      Boolean  @default(false)
+  isBestseller    Boolean  @default(false)
+
+  // Nutritional info (optional)
+  calories        Int?
+  servingSize     String?
+
+  // Customization options (stored as JSON string)
+  customizationOptions String? @db.Text // JSON: {"size": ["Small", "Medium", "Large"], "toppings": [...]}
+
+  // Metrics
+  totalOrders     Int      @default(0)
+  averageRating   Float?   @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  orderItems      OrderItem[]
+
+  @@index([businessId])
+  @@index([isAvailable])
+  @@index([isVegetarian])
+  @@index([isFeatured])
+  @@index([isBestseller])
+  @@index([category])
+  @@index([deletedAt])
+  @@index([businessId, isAvailable])
+  @@index([businessId, category])
+  @@map("menu_items")
+}
+
+// ==================== AMENITIES ====================
+
+model Amenity {
+  id          String   @id @default(cuid())
+
+  name        String   @unique
+  slug        String   @unique
+  icon        String?  // Icon name or emoji
+  description String?
+
+  // Categorization
+  category    String?  // "Payment", "Accessibility", "Facilities", "Services"
+
+  // Display
+  displayOrder Int?
+  isActive    Boolean  @default(true)
+  isPopular   Boolean  @default(false) // Show in quick filters
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  businesses  BusinessAmenity[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([isPopular])
+  @@index([category])
+  @@map("amenities")
+}
+
+model BusinessAmenity {
+  businessId  String
+  amenityId   String
+
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  amenity     Amenity  @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  // Additional info (some amenities might have extra details)
+  note        String?  // e.g., "Free WiFi - 50 Mbps", "Parking - 20 slots"
+
+  createdAt   DateTime @default(now())
+
+  @@id([businessId, amenityId])
+  @@index([amenityId])
+  @@index([businessId])
+  @@map("business_amenities")
+}
+
+// ==================== BOOKINGS / RESERVATIONS ====================
+
+model Booking {
+  id              String        @id @default(cuid())
+  bookingNumber   String        @unique // Human-readable booking number (e.g., "BK-2025-001234")
+
+  businessId      String
+  business        Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Staff assignment (NEW)
+  staffId         String?
+  staff           BusinessStaff? @relation(fields: [staffId], references: [id])
+
+  // Booking details
+  bookingDate     DateTime      // Date of the appointment/reservation
+  bookingTime     String        // Time slot (e.g., "10:00")
+  endTime         String?       // End time (e.g., "10:30")
+  duration        Int?          // Duration in minutes
+
+  numberOfPeople  Int?          // For restaurants/group bookings
+
+  status          BookingStatus @default(PENDING)
+
+  // Contact details (can differ from user profile)
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+
+  // Service/Menu items booked (optional - for service packages)
+  serviceIds      String[]      // Array of MenuItem IDs
+  totalAmount     Float?        // Total booking amount (if advance payment)
+  advancePaid     Float?        // Advance payment made
+
+  specialRequests String?       @db.Text
+
+  // Business side
+  businessNotes   String?       @db.Text // Internal notes for staff
+  tableNumber     String?       // For restaurants
+  roomNumber      String?       // For hotels/spas
+
+  // Confirmation
+  confirmedAt     DateTime?
+  confirmedBy     String?       // Business owner/staff user ID
+
+  // Completion
+  completedAt     DateTime?
+
+  // Cancellation
+  cancelledAt     DateTime?
+  cancellationReason String?    @db.Text
+  cancelledBy     String?       // USER or BUSINESS
+  refundAmount    Float?
+  refundStatus    String?       // "PENDING", "PROCESSED", "FAILED"
+
+  // No-show tracking
+  markedNoShowAt  DateTime?
+  noShowFee       Float?
+
+  // Reminders sent
+  reminderSent    Boolean       @default(false)
+  reminderSentAt  DateTime?
+
+  // Rating after service (optional link)
+  reviewId        String?       // Link to review if customer reviewed after booking
+
+  // Payment tracking
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod?
+  transactionId   String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([businessId, bookingDate])
+  @@index([userId])
+  @@index([staffId])
+  @@index([bookingNumber])
+  @@index([status])
+  @@index([bookingDate])
+  @@index([createdAt])
+  @@index([businessId, status])
+  @@index([businessId, bookingDate, status])
+  @@index([userId, status])
+  @@index([staffId, bookingDate])
+  @@map("bookings")
+}
+// ==================== ORDERS ====================
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique // Human-readable order number (e.g., "ORD-2025-001234")
+
+  businessId      String
+  business        Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Order details
+  orderType       OrderType
+  status          OrderStatus   @default(PENDING)
+
+  // Delivery address (if applicable)
+  deliveryAddress String?       @db.Text
+  deliveryPincode String?
+  deliveryLatitude Float?
+  deliveryLongitude Float?
+  deliveryInstructions String?  @db.Text
+  landmark        String?       // India-specific
+
+  // Pickup/Dine-in details
+  pickupTime      DateTime?     // Scheduled pickup time
+  tableNumber     String?       // For dine-in orders
+
+  // Contact (can differ from user profile)
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  alternatePhone  String?
+
+  // Pricing breakdown
+  subtotal        Float         // Sum of all items
+  deliveryFee     Float         @default(0)
+  packagingFee    Float         @default(0)
+  tax             Float         @default(0)  // GST
+  taxPercentage   Float?        // e.g., 5% or 18%
+  discount        Float         @default(0)
+  tipAmount       Float         @default(0)  // Customer tip
+  total           Float         // Final amount to be paid
+
+  // Coupon/Promo
+  couponCode      String?
+  couponDiscount  Float?        @default(0)
+
+  // Payment
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   PaymentMethod?
+  transactionId   String?       // Payment gateway transaction ID
+  paidAt          DateTime?
+
+  // Fulfillment timeline
+  estimatedPrepTime Int?        // in minutes
+  estimatedDeliveryTime DateTime? // Estimated delivery/pickup time
+  acceptedAt      DateTime?     // When business accepted
+  preparingAt     DateTime?     // When started preparing
+  readyAt         DateTime?     // When ready for pickup/delivery
+  dispatchedAt    DateTime?     // When out for delivery
+  deliveredAt     DateTime?     // When actually delivered
+
+  // Delivery tracking
+  deliveryPartnerId String?     // If using third-party delivery
+  deliveryPartnerName String?   // "Swiggy", "Zomato", "Self"
+  deliveryPersonName String?
+  deliveryPersonPhone String?
+  trackingUrl     String?       // Real-time tracking URL
+
+  // Order instructions
+  specialInstructions String?   @db.Text
+  businessNotes   String?       @db.Text // Internal notes
+
+  // Cancellation/Refund
+  cancelledAt     DateTime?
+  cancellationReason String?    @db.Text
+  cancelledBy     String?       // "USER" or "BUSINESS"
+  refundAmount    Float?
+  refundedAt      DateTime?
+  refundTransactionId String?
+
+  // Rating & Review
+  reviewId        String?       // Link to review if customer reviewed
+  rating          Int?          // Quick rating (1-5)
+
+  // Invoice
+  invoiceNumber   String?       @unique
+  invoiceUrl      String?       // PDF invoice URL
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  items           OrderItem[]
+
+  @@index([businessId, createdAt])
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([orderType])
+  @@index([createdAt])
+  @@index([businessId, status])
+  @@index([userId, status])
+  @@index([deliveryPincode])
+  @@index([businessId, orderType, status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String   @id @default(cuid())
+
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  menuItemId      String
+  menuItem        MenuItem @relation(fields: [menuItemId], references: [id])
+
+  // Item details at time of order (snapshot)
+  itemName        String   // Snapshot in case menu item changes later
+  itemDescription String?
+
+  quantity        Int
+  price           Float    // Price at time of order (in INR)
+  subtotal        Float    // quantity * price
+
+  // Customizations
+  customizations  String?  @db.Text // JSON string: {"size": "Large", "toppings": ["Extra Cheese"], "spice": "Medium"}
+  specialNotes    String?  // "No onions", "Extra spicy"
+
+  // Item-level discount
+  discount        Float    @default(0)
+  finalPrice      Float    // subtotal - discount
+
+  // Tax (if item-wise tax calculation)
+  taxAmount       Float?   @default(0)
+
+  // Status tracking (optional - for complex orders)
+  isReady         Boolean  @default(false)
+  isPacked        Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+
+  @@index([orderId])
+  @@index([menuItemId])
+  @@map("order_items")
+}
+
+// ==================== REVIEWS & RATINGS ====================
+
+model Review {
+  id          String       @id @default(cuid())
+
+  businessId  String
+  business    Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Rating & content
+  rating      Int          // 1-5 stars
+  title       String?      @db.VarChar(255)
+  content     String?      @db.Text
+
+  status      ReviewStatus @default(PENDING)
+
+  // Experience details
+  visitDate   DateTime?
+  visitType   String?      // "Dine-in", "Delivery", "Takeout", "Service Visit"
+
+  // Linked transactions (optional)
+  orderId     String?      // If review is for an order
+  bookingId   String?      // If review is for a booking
+
+  // Category-specific ratings (optional - for detailed feedback)
+  foodRating      Int?     // For restaurants
+  serviceRating   Int?     // Service quality
+  ambienceRating  Int?     // Ambience/atmosphere
+  valueRating     Int?     // Value for money
+
+  // Verification
+  isVerifiedPurchase Boolean @default(false) // Did they actually order/book?
+
+  // Engagement metrics
+  helpfulCount   Int       @default(0)
+  notHelpfulCount Int      @default(0)
+  totalVotes     Int       @default(0)
+
+  // Moderation
+  flaggedReason  String?
+  moderatedBy    String?   // Admin/Moderator user ID
+  moderatedAt    DateTime?
+
+  // Visibility
+  isPublished    Boolean   @default(false)
+  publishedAt    DateTime?
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  votes       ReviewVote[]
+  photos      Photo[]
+  response    ReviewResponse?
+  reports     Report[]
+
+  @@unique([userId, businessId]) // One review per user per business
+  @@index([businessId, status, createdAt])
+  @@index([userId])
+  @@index([rating])
+  @@index([status])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@index([businessId, rating])
+  @@index([isVerifiedPurchase])
+  @@index([isPublished])
+  @@map("reviews")
+}
+
+model ReviewVote {
+  id         String   @id @default(cuid())
+
+  reviewId   String
+  review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  isHelpful  Boolean  // true = helpful, false = not helpful
+
+  createdAt  DateTime @default(now())
+
+  @@unique([reviewId, userId]) // One vote per user per review
+  @@index([reviewId])
+  @@index([userId])
+  @@index([isHelpful])
+  @@map("review_votes")
+}
+
+model ReviewResponse {
+  id         String   @id @default(cuid())
+
+  reviewId   String   @unique
+  review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  userId     String   // Business owner/staff responding
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content    String   @db.Text
+
+  // Edit tracking
+  isEdited   Boolean  @default(false)
+  editedAt   DateTime?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  @@index([reviewId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("review_responses")
+}
+
+// ==================== COMPLAINTS ====================
+
+model Complaint {
+  id              String           @id @default(cuid())
+  complaintNumber String           @unique // Human-readable (e.g., "COMP-2025-001234")
+
+  businessId      String
+  business        Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Complaint details
+  subject         String
+  description     String           @db.Text
+  category        String           // "Service Quality", "Billing Issue", "Safety Concern", "Hygiene", "Staff Behavior"
+
+  status          ComplaintStatus  @default(SUBMITTED)
+  priority        ComplaintPriority @default(MEDIUM)
+
+  // Related transaction (optional)
+  orderId         String?          // If complaint is about an order
+  bookingId       String?          // If complaint is about a booking
+
+  // Supporting evidence
+  attachments     String[]         // Array of file URLs (images, PDFs, videos)
+
+  // Contact details (may differ from user profile)
+  contactName     String
+  contactPhone    String
+  contactEmail    String?
+
+  // Resolution workflow
+  assignedToId    String?          // Admin/Moderator assigned to handle this
+  assignedAt      DateTime?
+
+  responseFromBusiness String?     @db.Text
+  respondedAt          DateTime?   // When business first responded
+
+  adminNotes      String?          @db.Text
+  resolution      String?          @db.Text
+  resolutionType  String?          // "REFUND", "REPLACEMENT", "APOLOGY", "NO_ACTION"
+
+  // Compensation
+  compensationAmount Float?        // Refund/compensation amount
+  compensationStatus String?       // "PENDING", "PROCESSED"
+
+  // Timeline
+  escalatedAt     DateTime?        // If escalated to higher authority
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+
+  // Follow-up
+  requiresFollowUp Boolean         @default(false)
+  followUpDate     DateTime?
+  followUpNotes    String?         @db.Text
+
+  // Customer satisfaction after resolution
+  satisfactionRating Int?          // 1-5 stars
+  feedbackOnResolution String?     @db.Text
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([businessId])
+  @@index([userId])
+  @@index([complaintNumber])
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@index([createdAt])
+  @@index([assignedToId])
+  @@index([businessId, status])
+  @@index([userId, status])
+  @@index([status, priority])
+  @@map("complaints")
+}
+// ==================== MEDIA ====================
+
+model Photo {
+  id          String    @id @default(cuid())
+
+  url         String
+  thumbnailUrl String?
+  caption     String?
+  type        MediaType @default(IMAGE)
+
+  // File metadata
+  fileSize    Int?      // in bytes
+  mimeType    String?   // "image/jpeg", "video/mp4"
+  width       Int?
+  height      Int?
+
+  // Relations (polymorphic - can belong to business or review)
+  businessId  String?
+  business    Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  reviewId    String?
+  review      Review?   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Moderation
+  isApproved  Boolean   @default(false)
+  isFlagged   Boolean   @default(false)
+  flagReason  String?
+  moderatedBy String?   // Admin/Moderator user ID
+  moderatedAt DateTime?
+
+  // Engagement
+  viewCount   Int       @default(0)
+  likeCount   Int       @default(0)
+
+  // Display
+  isFeatured  Boolean   @default(false)
+  displayOrder Int?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([businessId])
+  @@index([reviewId])
+  @@index([userId])
+  @@index([isApproved])
+  @@index([type])
+  @@index([isFlagged])
+  @@index([isFeatured])
+  @@index([createdAt])
+  @@index([businessId, isApproved, type])
+  @@map("photos")
+}
+
+// ==================== USER INTERACTIONS ====================
+
+model SavedBusiness {
+  id          String   @id @default(cuid())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  businessId  String
+  business    Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Collection/List feature
+  collectionName String? @default("Saved") // "Favorites", "Want to Try", "Visited"
+  collectionColor String? // For UI customization
+
+  // Notes
+  note        String?  @db.Text // Personal notes about this business
+
+  // Reminder
+  reminderDate DateTime? // Remind user to visit
+  reminderSent Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, businessId])
+  @@index([userId])
+  @@index([businessId])
+  @@index([collectionName])
+  @@index([userId, collectionName])
+  @@map("saved_businesses")
+}
+
+// ==================== BUSINESS CLAIMS ====================
+
+model BusinessClaim {
+  id          String              @id @default(cuid())
+  claimNumber String              @unique // Human-readable (e.g., "CLAIM-2025-001234")
+
+  businessId  String
+  business    Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status      BusinessClaimStatus @default(PENDING)
+
+  // Claimant details
+  claimantName        String
+  claimantDesignation String?  // "Owner", "Manager", "Authorized Representative"
+  claimantPhone       String
+  claimantEmail       String?
+
+  // Verification documents
+  documents   String[]            // Array of document URLs (GST cert, PAN, license, etc.)
+  documentTypes String[]          // ["GST Certificate", "PAN Card", "Business License"]
+
+  gstNumber   String?
+  panNumber   String?
+
+  // Additional info
+  relationshipToBusiness String? // How they're related to the business
+  notes       String?             @db.Text // Claimant's additional notes
+
+  // Review process
+  reviewedBy  String?             // Admin user ID
+  reviewedAt  DateTime?
+  reviewNotes String?             @db.Text // Admin's review notes
+  rejectionReason String?         @db.Text
+
+  // Verification call
+  verificationCallScheduled DateTime?
+  verificationCallCompleted Boolean @default(false)
+  verificationCallNotes     String? @db.Text
+
+  // Approval
+  approvedAt  DateTime?
+
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([businessId])
+  @@index([userId])
+  @@index([claimNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@index([reviewedBy])
+  @@index([businessId, status])
+  @@map("business_claims")
+}
+
+// ==================== REPORTING SYSTEM ====================
+
+model Report {
+  id          String   @id @default(cuid())
+  reportNumber String  @unique // Human-readable (e.g., "REP-2025-001234")
+
+  // Polymorphic reporting - can report business, review, or user
+  businessId  String?
+  business    Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  reviewId    String?
+  review      Review?   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  reportedUserId String?
+  reportedUser   User?   @relation("ReportsReceived", fields: [reportedUserId], references: [id], onDelete: Cascade)
+
+  reporterId  String
+  reporter    User     @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  // Report details
+  reason      String   // "Fake Review", "Inappropriate Content", "Spam", "Closed Business", "Wrong Information"
+  category    String?  // "Content", "Safety", "Legal", "Spam"
+  description String?  @db.Text
+
+  // Evidence
+  screenshots String[] // Array of screenshot URLs
+
+  status      String   @default("PENDING") // "PENDING", "UNDER_REVIEW", "RESOLVED", "DISMISSED"
+
+  // Review process
+  assignedToId String? // Admin/Moderator assigned
+  assignedAt   DateTime?
+
+  priority    String   @default("MEDIUM") // "LOW", "MEDIUM", "HIGH", "URGENT"
+
+  // Resolution
+  resolvedBy  String?  // Admin user ID
+  resolvedAt  DateTime?
+  resolution  String?  @db.Text
+  actionTaken String?  // "CONTENT_REMOVED", "USER_WARNED", "USER_BANNED", "NO_ACTION", "BUSINESS_SUSPENDED"
+
+  // Follow-up
+  requiresFollowUp Boolean @default(false)
+  followUpNotes    String? @db.Text
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([reviewId])
+  @@index([reportedUserId])
+  @@index([reporterId])
+  @@index([reportNumber])
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@index([createdAt])
+  @@index([assignedToId])
+  @@index([status, priority])
+  @@map("reports")
+}
+// ==================== PROMOTED LISTINGS / ADS ====================
+
+model PromotedListing {
+  id              String      @id @default(cuid())
+  campaignNumber  String      @unique // Human-readable (e.g., "AD-2025-001234")
+
+  businessId      String
+  business        Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Campaign details
+  campaignName    String
+  adStatus        AdStatus    @default(DRAFT)
+  placement       AdPlacement
+
+  // Targeting - Geographic
+  targetPincodes  String[]    // Target specific pincodes
+  targetCities    String[]    // Target specific cities
+  targetStates    String[]    // Target specific states
+  targetRadius    Int?        // Radius in meters from business location
+
+  // Targeting - Demographic (optional)
+  targetCategories String[]   // Show ad when users search these categories
+  targetKeywords   String[]   // Show ad for these search keywords
+
+  // Budget & Billing (in INR)
+  dailyBudget     Float?
+  totalBudget     Float
+  costPerClick    Float?      // CPC model
+  costPerImpression Float?    // CPM model
+  billingModel    String      @default("CPC") // "CPC", "CPM", "FLAT"
+
+  // Schedule
+  startDate       DateTime
+  endDate         DateTime
+
+  // Time-based targeting (optional)
+  activeHoursStart String?    // "09:00" - Show ads only during specific hours
+  activeHoursEnd   String?    // "21:00"
+  activeDays       DayOfWeek[] // Show ads only on specific days
+
+  // Performance metrics
+  impressions     Int         @default(0)
+  clicks          Int         @default(0)
+  conversions     Int         @default(0) // Leads/calls/bookings/orders
+  totalSpent      Float       @default(0)
+
+  // Calculated metrics (for reporting)
+  ctr             Float?      @default(0) // Click-through rate
+  conversionRate  Float?      @default(0)
+  costPerConversion Float?    @default(0)
+
+  // Creative content
+  adTitle         String?
+  adDescription   String?     @db.Text
+  adImage         String?
+  adBadge         String?     // "Sponsored", "Featured", "Top Rated"
+  callToAction    String?     // "Call Now", "Book Now", "Order Now", "Visit Website"
+
+  // Priority (for multiple ads competing for same slot)
+  priority        Int         @default(0)
+
+  // Approval workflow
+  approvedBy      String?     // Admin user ID
+  approvedAt      DateTime?
+  rejectionReason String?     @db.Text
+
+  // Pause/Resume
+  pausedAt        DateTime?
+  pauseReason     String?
+
+  // Auto-pause triggers
+  autoPauseWhenBudgetReached Boolean @default(true)
+  autoPauseWhenEndDateReached Boolean @default(true)
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([businessId])
+  @@index([adStatus])
+  @@index([placement])
+  @@index([startDate, endDate])
+  @@index([campaignNumber])
+  @@index([targetCities])
+  @@index([targetPincodes])
+  @@index([adStatus, startDate, endDate])
+  @@index([businessId, adStatus])
+  @@map("promoted_listings")
+}
+
+// ==================== SEARCH ANALYTICS ====================
+
+model SearchQuery {
+  id          String   @id @default(cuid())
+
+  // Search details
+  query       String
+  queryType   String?  @default("TEXT") // "TEXT", "VOICE", "IMAGE"
+
+  // Location context
+  pincode     String?
+  city        String?
+  state       String?
+  area        String?
+  latitude    Float?
+  longitude   Float?
+  radius      Int?     // Search radius in meters
+
+  // Filters applied
+  categoryFilter    String?
+  priceRangeFilter  String?
+  ratingFilter      Float?
+  amenitiesFilter   String[] // Array of amenity slugs
+  sortBy            String?  // "relevance", "distance", "rating", "popularity"
+
+  // Results
+  resultCount       Int      @default(0)
+  clickedBusinessIds String[] // Track which businesses were clicked
+  firstClickPosition Int?     // Position of first clicked result
+
+  // Engagement
+  clickedCount      Int      @default(0)
+  timeToFirstClick  Int?     // Milliseconds
+  noResultsFound    Boolean  @default(false)
+
+  // User context
+  userId      String?
+  sessionId   String?  // For anonymous users
+  ipAddress   String?
+  userAgent   String?
+  deviceType  String?  // "mobile", "tablet", "desktop"
+  browser     String?
+  platform    String?  // "android", "ios", "web"
+
+  // Referrer
+  referrer    String?  // Where did the search originate
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([query])
+  @@index([pincode])
+  @@index([city])
+  @@index([createdAt])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([categoryFilter])
+  @@index([noResultsFound])
+  @@index([query, city])
+  @@index([createdAt, city])
+  @@map("search_queries")
+}
+
+// ==================== POPULAR SEARCHES (Aggregated) ====================
+
+model PopularSearch {
+  id              String   @id @default(cuid())
+
+  query           String
+  category        String?
+  city            String?
+  pincode         String?
+
+  // Aggregated metrics
+  searchCount     Int      @default(1)
+  clickRate       Float    @default(0) // Percentage of searches that led to clicks
+  conversionRate  Float    @default(0) // Percentage that led to orders/bookings
+
+  // Trending
+  isTrending      Boolean  @default(false)
+  trendScore      Float    @default(0) // Algorithm-based trending score
+
+  // Date range
+  periodStart     DateTime
+  periodEnd       DateTime
+
+  lastSearchedAt  DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([query, city, periodStart, periodEnd])
+  @@index([query])
+  @@index([city])
+  @@index([isTrending])
+  @@index([searchCount])
+  @@index([lastSearchedAt])
+  @@index([category])
+  @@map("popular_searches")
 }
