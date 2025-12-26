@@ -2,7 +2,7 @@
   "name": "CHWK - Discover Local Businesses",
   "short_name": "CHWK",
   "description": "Find the best local businesses and services in India",
-  "start_url": "/",
+  "start_url": "https://chwk.vercel.app",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#FF6B35",

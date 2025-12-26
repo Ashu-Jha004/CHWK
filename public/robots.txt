@@ -1,0 +1,9 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://chwk.vercel.app/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1

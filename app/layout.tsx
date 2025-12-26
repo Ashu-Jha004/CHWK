@@ -25,7 +25,7 @@ const poppins = Poppins({
 
 // SEO Metadata with error handling
 export const metadata: Metadata = {
-  metadataBase: new URL(SEO_CONFIG.url),
+  metadataBase: new URL("https://chwk.vercel.app"), // ✅ UPDATED
   title: {
     default: SEO_CONFIG.title,
     template: `%s | CHWK`,
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: SEO_CONFIG.url,
+    url: "https://chwk.vercel.app", // ✅ UPDATED
     title: SEO_CONFIG.title,
     description: SEO_CONFIG.description,
     siteName: "CHWK",
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     title: SEO_CONFIG.title,
     description: SEO_CONFIG.description,
     images: [SEO_CONFIG.ogImage],
-    creator: "@chwk_india", // Update with actual Twitter handle
+    creator: "@chwk_india",
   },
   robots: {
     index: true,
@@ -81,12 +81,10 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   verification: {
-    google: "your-google-verification-code", // Add actual code later
-    // yandex: "your-yandex-verification-code",
-    // yahoo: "your-yahoo-verification-code",
+    google: "your-google-verification-code", // Add after setting up Search Console
   },
   alternates: {
-    canonical: SEO_CONFIG.url,
+    canonical: "https://chwk.vercel.app", // ✅ UPDATED
   },
 };
 

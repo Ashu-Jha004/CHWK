@@ -38,7 +38,7 @@ export const SEO_CONFIG = {
     "home services India",
     "business reviews India",
   ],
-  url: "https://chwk.com", // Update with your actual domain
+  url: "https://chwk.vercel.app/", // Update with your actual domain
   ogImage: "/public/images/og-image.jpg", // We'll create this later
 };
 
