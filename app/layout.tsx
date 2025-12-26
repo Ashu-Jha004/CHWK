@@ -81,7 +81,7 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   verification: {
-    google: "your-google-verification-code", // Add after setting up Search Console
+    google: "google-site-verification=5GWQ1ZdE-5ZpOm0cSk1yORKWYZQNoS4OdezTlp47nBE", // Add after setting up Search Console
   },
   alternates: {
     canonical: "https://chwk.vercel.app", // ✅ UPDATED
