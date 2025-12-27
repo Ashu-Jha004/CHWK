@@ -12,6 +12,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DIRECT_URL")  // ← Add this back
 }
 // schema.prisma
 // Production-Ready Schema for Yelp-like Platform - India Focused

@@ -4,7 +4,7 @@ import "./globals.css";
 import { SEO_CONFIG } from "@/lib/(landing_page)/constants";
 import { Providers } from "@/components/LandingPage/providers/providers";
 import { StructuredData } from "./structured-data";
-
+import { ClerkProvider } from '@clerk/nextjs'
 // Font configurations with performance optimizations
 const inter = Inter({
   subsets: ["latin"],
@@ -107,6 +107,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: '#3b82f6', // Your brand color
+          colorBackground: '#ffffff',
+          colorInputBackground: '#f3f4f6',
+          colorInputText: '#111827',
+        },
+        elements: {
+          formButtonPrimary: 'bg-blue-600 hover:bg-blue-700',
+          card: 'shadow-lg',
+          headerTitle: 'text-2xl font-bold',
+          headerSubtitle: 'text-gray-600',
+        },
+      }}
+    >
     <html lang="en" suppressHydrationWarning>
       <head>
         {/* Preconnect to external domains for performance */}
@@ -172,6 +188,6 @@ export default function RootLayout({
         <StructuredData />
         <Providers>{children}</Providers>
       </body>
-    </html>
+    </html></ClerkProvider>
   );
 }
