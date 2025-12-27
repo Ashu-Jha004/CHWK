@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +27,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { UserButton } from "@/components/auth/user-button";
 
 /**
  * Main Header Component
@@ -36,6 +38,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const scrollDirection = useScrollDirection({ threshold: 50 });
   const isMobile = useMediaQuery("(max-width: 768px)");
+  const { isSignedIn, user, isLoaded } = useUser();
 
   // Zustand store selectors
   const { isOpen: isMobileMenuOpen, toggle: toggleMobileMenu } =
@@ -223,14 +226,18 @@ export function Header() {
                 </Button>
 
                 {/* Sign In */}
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="gap-2 btn-shine focus-visible-ring"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Sign In
-                </Button>
+                {!isSignedIn ? (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="gap-2 btn-shine focus-visible-ring"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Sign In
+                  </Button>
+                ) : (
+                  <UserButton />
+                )}
               </div>
             )}
 

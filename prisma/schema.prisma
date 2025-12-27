@@ -163,7 +163,8 @@ model User {
   avatar        String?
   phone         String?
   phoneVerified Boolean  @default(false)
-
+lonitude       Float?
+latitude      Float?
   role          UserRole @default(CUSTOMER)
 
   // Default location preferences

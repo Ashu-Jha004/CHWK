@@ -210,31 +210,6 @@ export const useUIStore = create<UIState>()(
           searchLocation: state.searchLocation,
         }),
         // Storage configuration with error handling
-        storage: {
-          getItem: (name) => {
-            try {
-              const str = localStorage.getItem(name);
-              return str ? JSON.parse(str) : null;
-            } catch (error) {
-              console.error("Error reading from localStorage:", error);
-              return null;
-            }
-          },
-          setItem: (name, value) => {
-            try {
-              localStorage.setItem(name, JSON.stringify(value));
-            } catch (error) {
-              console.error("Error writing to localStorage:", error);
-            }
-          },
-          removeItem: (name) => {
-            try {
-              localStorage.removeItem(name);
-            } catch (error) {
-              console.error("Error removing from localStorage:", error);
-            }
-          },
-        },
       }
     ),
     {
