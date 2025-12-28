@@ -1,7 +1,18 @@
-import React from "react";
+// app/(dashboard)/business/onboard/page.tsx
+// Main business onboarding page
 
-const page = () => {
-  return <div>page</div>;
+import { Metadata } from "next";
+import { BusinessOnboardingFlow } from "@/components/business-onboarding/business-onboarding-flow";
+
+export const metadata: Metadata = {
+  title: "Business Onboarding | CHWK",
+  description: "Register your business on CHWK",
 };
 
-export default page;
+export default function BusinessOnboardPage() {
+  return (
+    <div className="min-h-screen bg-background">
+      <BusinessOnboardingFlow />
+    </div>
+  );
+}

@@ -1,7 +1,19 @@
+"use client";
+
 import React from "react";
+import { useBusinessOnboardingStore } from "@/store/businessOnboarding/business-onboarding.store";
 
-const page = () => {
-  return <div>page</div>;
-};
+export default function SimpleOnboardingLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // Adjust based on your ONBOARDING_STEPS length
 
-export default page;
+  return (
+    <div className="min-h-screen">
+      {/* 2. Main Content Card */}
+      <main className="w-full ">{children}</main>
+    </div>
+  );
+}

@@ -274,6 +274,7 @@ model Business {
 
   // Business Details
   status          BusinessStatus @default(UNCLAIMED)
+  businessDocuments String[]       // Array of document URLs (GST, FSSAI, etc.)
   priceRange      PriceRange?
   isVerified      Boolean        @default(false)
   verifiedAt      DateTime?
@@ -322,7 +323,7 @@ model Business {
   // SEO
   metaTitle           String?
   metaDescription     String?
-
+metadataKeywords    String[]   // e.g., ["restaurant", "cafe", "dining", "Indian food"]
   // Ownership
   ownerId             String?
   owner               User?      @relation(fields: [ownerId], references: [id])
