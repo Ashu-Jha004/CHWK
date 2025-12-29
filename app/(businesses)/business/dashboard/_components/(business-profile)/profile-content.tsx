@@ -1,4 +1,3 @@
-// app/business/dashboard/_components/profile-content.tsx
 "use client";
 
 import { useDashboardStore } from "@/store/business-dashboard";
@@ -16,6 +15,7 @@ import { BusinessHoursForm } from "../business-hours-form";
 import { PhotosMediaForm } from "../photos-media-form";
 import { ProfileTabs } from "./profile-tabs";
 import { CategoriesAmenitiesForm } from "../categories-amenities-form";
+import { ServiceSettingsForm } from "../service-settings/service-settings-form"; // ← NEW IMPORT
 
 interface ProfileContentProps {
   business: Business & {
@@ -65,13 +65,9 @@ export function ProfileContent({
           <CategoriesAmenitiesForm business={business} />
         )}
 
+        {/* ✅ UPDATED SERVICE SETTINGS SECTION */}
         {activeProfileTab === "service-settings" && (
-          <div className="glass rounded-xl p-8 sm:p-12 text-center">
-            <h3 className="text-xl sm:text-2xl font-semibold mb-2">
-              Service Settings
-            </h3>
-            <p className="text-sm text-muted-foreground">Coming soon...</p>
-          </div>
+          <ServiceSettingsForm businessId={business.id} />
         )}
 
         {activeProfileTab === "legal" && (

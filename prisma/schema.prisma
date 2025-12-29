@@ -149,6 +149,35 @@ enum AdPlacement {
   HOME_FEATURED
   MAP_PIN_HIGHLIGHTED
 }
+// ==================== NEW ENUMS FOR SERVICE SETTINGS ====================
+
+enum PricingType {
+  FIXED              // Fixed price per item
+  HOURLY             // Price per hour
+  DAILY              // Price per day
+  NEGOTIABLE         // Call for price / negotiable
+  FREE               // Free service/consultation
+  STARTING_FROM      // Starting from X amount
+}
+
+enum DeliveryType {
+  PHYSICAL           // Physical delivery (products)
+  DIGITAL            // Digital delivery (ebooks, courses)
+  IN_PERSON          // Service at business location
+  ON_SITE            // Service at customer location
+  ONLINE             // Online service (video call)
+}
+
+enum ServiceType {
+  PRODUCT            // Physical/digital products
+  SERVICE            // Services (plumbing, teaching, etc.)
+  CONSULTATION       // Consultation/advice
+  RENTAL             // Rental services
+  SUBSCRIPTION       // Subscription-based
+}
+
+
+
 
 // ==================== USER MANAGEMENT ====================
 
@@ -339,6 +368,35 @@ metadataKeywords    String[]   // e.g., ["restaurant", "cafe", "dining", "Indian
   gstNumber           String?    @unique
   panNumber           String?
 
+  offersProducts      Boolean   @default(false)
+  offersServices      Boolean   @default(false)
+  offersDineIn        Boolean   @default(false)  // Keep existing for restaurants
+  offersDelivery      Boolean   @default(false)  // Keep existing
+  offersPickup        Boolean   @default(false)  // Keep existing
+  offersOnline        Boolean   @default(false)  // NEW: Online services
+  offersOnSite        Boolean   @default(false)  // NEW: Visit customer location
+
+  // Service Radius & Areas
+  serviceRadiusKm     Float?                     // Service radius in kilometers
+
+  // Booking Settings (some exist, keep them)
+  // acceptsBookings      Boolean   @default(false)  // Already exists in your schema
+  // minAdvanceBookingHours Int?   @default(2)      // Already exists
+  // maxAdvanceBookingDays  Int?   @default(30)     // Already exists
+
+  // Payment Settings
+  acceptsCash         Boolean   @default(true)
+  acceptsUPI          Boolean   @default(false)
+  acceptsCards        Boolean   @default(false)
+  acceptsNetBanking   Boolean   @default(false)
+  acceptsWallets      Boolean   @default(false)
+  requiresAdvancePayment Boolean @default(false)
+  advancePaymentPercent Int?                      // Percentage of advance required
+
+  // Relations (add to existing relations section)
+  serviceAreas        ServiceArea[]              // NEW relation
+
+
   // Metadata
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
@@ -362,7 +420,7 @@ metadataKeywords    String[]   // e.g., ["restaurant", "cafe", "dining", "Indian
   claims              BusinessClaim[]
   reports             Report[]
   promotedListings    PromotedListing[]
-  serviceAreas        BusinessServiceArea[] // NEW
+  serviceArea        BusinessServiceArea[] // NEW
   staff               BusinessStaff[]       // NEW
 
   @@index([slug])
@@ -384,6 +442,37 @@ metadataKeywords    String[]   // e.g., ["restaurant", "cafe", "dining", "Indian
   @@index([hasEmergencyService])
   @@map("businesses")
 }
+
+// ==================== SERVICE AREAS ====================
+
+model ServiceArea {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Area identification
+  areaName        String?  // "Sector 21, Gurgaon", "Dwarka"
+  pincode         String?  // "122001"
+  city            String?  // Optional: for better organization
+
+  // Custom pricing for this area
+  deliveryFee     Float?   @default(0)      // Custom delivery fee
+  minimumOrder    Float?                    // Minimum order for this area
+
+  // Timing
+  estimatedTime   String?  // "30-45 mins"
+
+  isActive        Boolean  @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([businessId])
+  @@index([pincode])
+  @@index([isActive])
+  @@map("service_areas")
+}
+
 
 // ==================== BUSINESS GALLERY IMAGES ====================
 
@@ -713,6 +802,37 @@ model MenuItem {
   // Metrics
   totalOrders     Int      @default(0)
   averageRating   Float?   @default(0)
+   // ==================== NEW: UNIVERSAL SERVICE/PRODUCT FIELDS ====================
+
+  // Type Classification
+  itemType        ServiceType?  @default(PRODUCT)     // What is this?
+  deliveryType    DeliveryType? @default(PHYSICAL)   // How is it delivered?
+
+  // Pricing Model
+  pricingType     PricingType   @default(FIXED)      // How is it priced?
+  hourlyRate      Float?                              // If pricing is HOURLY
+  dailyRate       Float?                              // If pricing is DAILY
+  priceNote       String?       @db.Text             // "Negotiable on call", "Starting from"
+
+  // Service-specific fields
+  serviceDuration Int?          // Duration in minutes (for appointments)
+  requiresBooking Boolean       @default(false)      // Must customer book in advance?
+  bufferTime      Int?          // Minutes between bookings (cool-down period)
+
+  // Availability
+  availableDays   String[]      // ["MONDAY", "TUESDAY", "FRIDAY"]
+  availableOnline Boolean       @default(false)      // Can be delivered/done online?
+
+  // Location
+  availableAtLocation Boolean   @default(true)       // Available at business location?
+  availableOnSite     Boolean   @default(false)      // Can travel to customer?
+  maxTravelDistance   Float?                         // Max km willing to travel
+
+  // Additional Info
+  skillLevel      String?       // "Beginner", "Intermediate", "Advanced"
+  certification   String?       // Any certifications needed
+  cancellationPolicy String?    @db.Text            // Item-specific policy
+slug       String?  @unique
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -721,13 +841,16 @@ model MenuItem {
   // Relations
   orderItems      OrderItem[]
 
-  @@index([businessId])
+  @@index([businessId,itemType,pricingType])
   @@index([isAvailable])
+   @@index([itemType])
+    @@index([pricingType])
   @@index([isVegetarian])
   @@index([isFeatured])
   @@index([isBestseller])
   @@index([category])
   @@index([deletedAt])
+    @@index([requiresBooking])
   @@index([businessId, isAvailable])
   @@index([businessId, category])
   @@map("menu_items")

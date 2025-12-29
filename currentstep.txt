@@ -382,6 +382,591 @@ await prisma.$transaction([
   // Create new hours
   prisma.businessHours.createMany({ data: hoursToCreate })
 ])
+📋 UPDATED COMPREHENSIVE BUILD DOCUMENTATION
+Add this section after Tab 3:
+
+🏷️ TAB 4: CATEGORIES & AMENITIES
+Components
+categories-amenities-form.tsx
+
+Dual-section form (Categories + Amenities)
+
+Multi-select categories with primary selection
+
+Checkbox-based amenity selection
+
+Search/filter functionality
+
+Grouped amenities by category
+
+Visual indicators (checkmarks, icons)
+
+Separate save buttons for each section
+
+Dirty state tracking (only enable save if changed)
+
+Key Features
+Categories Section:
+
+Grid layout of available categories
+
+Multi-select with visual feedback (border highlight)
+
+Radio group for primary category selection
+
+Search filter for categories
+
+Auto-update primary when categories change
+
+Display category icons and descriptions
+
+Featured categories highlighted
+
+Amenities Section:
+
+Grouped by category (Payment, Facilities, Dining, etc.)
+
+Checkbox selection
+
+Search across all amenities
+
+Popular amenities marked
+
+Icons for each amenity
+
+India-specific options (UPI, Halal, Veg Only, etc.)
+
+Server Actions
+actions/business/update-business-categories.ts
+
+Two Actions:
+
+typescript
+// 1. Update Categories
+export async function updateBusinessCategories(
+  businessId: string,
+  data: {
+    categoryIds: string[];
+    primaryCategoryId: string;
+  }
+): Promise<ApiResponse>
+Flow:
+
+Verify business access
+
+Validate primary category is in selected list
+
+Delete existing BusinessCategory records
+
+Create new BusinessCategory records with displayOrder
+
+Mark one as isPrimary
+
+Revalidate cache
+
+typescript
+// 2. Update Amenities
+export async function updateBusinessAmenities(
+  businessId: string,
+  amenityIds: string[]
+): Promise<ApiResponse>
+Flow:
+
+Verify business access
+
+Delete existing BusinessAmenity records
+
+Create new BusinessAmenity records
+
+Revalidate cache
+
+Transaction Pattern:
+
+typescript
+await prisma.$transaction([
+  prisma.businessCategory.deleteMany({ where: { businessId } }),
+  prisma.businessCategory.createMany({ data: categoriesData })
+])
+React Query Hooks
+hooks/business-dashboard/use-business-categories.ts
+
+Four Hooks:
+
+typescript
+// 1. Update Categories Mutation
+export function useUpdateCategories(businessId: string)
+
+// 2. Update Amenities Mutation
+export function useUpdateAmenities(businessId: string)
+
+// 3. Fetch All Categories (with caching)
+export function useCategories() {
+  return useQuery<Category[]>({
+    queryKey: ["categories"],
+    queryFn: async () => { /* fetch from API */ },
+    staleTime: 1000 * 60 * 60, // 1 hour cache
+  })
+}
+
+// 4. Fetch All Amenities (with caching)
+export function useAmenities() {
+  return useQuery<Amenity[]>({
+    queryKey: ["amenities"],
+    queryFn: async () => { /* fetch from API */ },
+    staleTime: 1000 * 60 * 60,
+  })
+}
+Key TypeScript Fix:
+
+Added generic types <Category[]> and <Amenity[]> to useQuery
+
+Prevents implicit any type errors
+
+Enables proper type inference in components
+
+API Routes
+app/api/categories/route.ts
+
+typescript
+export async function GET() {
+  const categories = await prisma.category.findMany({
+    where: { isActive: true },
+    orderBy: [
+      { isFeatured: "desc" },
+      { displayOrder: "asc" },
+      { name: "asc" }
+    ],
+    select: { id, name, slug, description, icon, isFeatured, ... }
+  })
+  return NextResponse.json(categories)
+}
+app/api/amenities/route.ts
+
+typescript
+export async function GET() {
+  const amenities = await prisma.amenity.findMany({
+    where: { isActive: true },
+    orderBy: [
+      { isPopular: "desc" },
+      { displayOrder: "asc" },
+      { name: "asc" }
+    ],
+    select: { id, name, slug, icon, category, isPopular, ... }
+  })
+  return NextResponse.json(amenities)
+}
+Why API Routes Here?
+
+Categories and amenities are static reference data
+
+Can be cached globally across all businesses
+
+Don't need business-specific access control
+
+Better for React Query caching strategy
+
+Seed Data
+prisma/seeds/categories-amenities.ts
+
+10 Categories:
+
+🍽️ Restaurant (Featured)
+
+☕ Cafe (Featured)
+
+🍺 Bar & Pub (Featured)
+
+🍔 Fast Food
+
+🥐 Bakery
+
+🚚 Food Truck
+
+🏨 Hotel (Featured)
+
+💪 Gym & Fitness (Featured)
+
+💆 Spa & Salon
+
+🛍️ Shopping
+
+31 Amenities Across 7 Categories:
+
+Payment (4):
+
+📱 UPI Payment (Popular)
+
+💳 Card Payment (Popular)
+
+💵 Cash Only
+
+💻 Online Payment (Popular)
+
+Facilities (8):
+
+📶 WiFi (Popular)
+
+🅿️ Parking (Popular)
+
+❄️ Air Conditioning (Popular)
+
+♿ Wheelchair Accessible
+
+🐕 Pet Friendly
+
+🌳 Outdoor Seating
+
+🚪 Private Rooms
+
+🚬 Smoking Area
+
+Dining (5):
+
+🍽️ Dine-in (Popular)
+
+🥡 Takeaway (Popular)
+
+🛵 Home Delivery (Popular)
+
+📅 Table Booking
+
+🍱 Buffet
+
+Services (4):
+
+🎵 Live Music
+
+📺 Live Sports Screening
+
+🍴 Catering Services
+
+🎉 Event Space
+
+Safety (4):
+
+🧼 Sanitization (Popular)
+
+🌡️ Temperature Check
+
+🤝 Contactless Service (Popular)
+
+📹 CCTV Surveillance
+
+Food Type (4):
+
+🥗 Veg Only
+
+🍖 Non-Veg Available
+
+🌿 Jain Food
+
+☪️ Halal Certified
+
+Delivery Partners (2):
+
+🛵 Swiggy Partner (Popular)
+
+🍔 Zomato Partner (Popular)
+
+Seed Command:
+
+bash
+npm run seed:categories
+Package.json Script:
+
+json
+{
+  "scripts": {
+    "seed:categories": "tsx prisma/seeds/categories-amenities.ts"
+  }
+}
+Important Fix:
+
+Use where: { name: amenity.name } in upsert (not slug)
+
+Amenity.name has unique constraint, not slug
+
+Prevents P2002 unique constraint errors
+
+State Management Pattern
+Local State (not Zustand):
+
+typescript
+const [selectedCategories, setSelectedCategories] = useState<string[]>()
+const [primaryCategoryId, setPrimaryCategoryId] = useState<string>()
+const [selectedAmenities, setSelectedAmenities] = useState<string[]>()
+const [categorySearch, setCategorySearch] = useState("")
+const [amenitySearch, setAmenitySearch] = useState("")
+Auto-Primary Category Logic:
+
+typescript
+const handleCategoryToggle = (categoryId: string) => {
+  setSelectedCategories((prev) => {
+    const newCategories = prev.includes(categoryId)
+      ? prev.filter((id) => id !== categoryId)
+      : [...prev, categoryId];
+
+    // Auto-update primary if current primary removed
+    if (!newCategories.includes(primaryCategoryId) && newCategories.length > 0) {
+      setPrimaryCategoryId(newCategories[0]);
+    }
+
+    return newCategories;
+  });
+}
+Why Not useEffect?
+
+Avoid cascading renders
+
+ESLint warning: "set-state-in-effect"
+
+Better performance
+
+More predictable state updates
+
+Dirty State Tracking
+typescript
+const isCategoriesDirty =
+  JSON.stringify(selectedCategories.sort()) !==
+    JSON.stringify((business.categories || []).map(bc => bc.categoryId).sort()) ||
+  primaryCategoryId !== business.categories?.find(bc => bc.isPrimary)?.categoryId;
+
+const isAmenitiesDirty =
+  JSON.stringify(selectedAmenities.sort()) !==
+  JSON.stringify((business.amenities || []).map(ba => ba.amenityId).sort());
+Save Button Disabled When:
+
+Mutation in progress
+
+No changes (not dirty)
+
+Data Grouping Pattern
+Amenities Grouped by Category:
+
+typescript
+const amenitiesByCategory: Record<string, Amenity[]> =
+  filteredAmenities?.reduce(
+    (acc: Record<string, Amenity[]>, amenity: Amenity) => {
+      const category = amenity.category || "Other";
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(amenity);
+      return acc;
+    },
+    {}
+  ) || {};
+
+// Render
+{Object.entries(amenitiesByCategory).map(([category, amenities]) => (
+  <div key={category}>
+    <h4>{category}</h4>
+    {amenities.map(amenity => <AmenityCard />)}
+  </div>
+))}
+TypeScript Improvements
+Problem:
+
+React Query returns any by default
+
+reduce had implicit any types
+
+Type inference failures
+
+Solution:
+
+typescript
+// ✅ Add generics to useQuery
+export function useCategories() {
+  return useQuery<Category[]>({ ... })
+}
+
+// ✅ Explicit type for reduce
+const amenitiesByCategory: Record<string, Amenity[]> =
+  filteredAmenities?.reduce<Record<string, Amenity[]>>(
+    (acc, amenity) => { ... },
+    {}
+  ) || {};
+UI/UX Features
+Visual Feedback:
+
+Selected items: blue border + light blue background
+
+Checkmark icon on selected items
+
+Hover states on all clickable items
+
+Loading spinners during fetch/save
+
+Search Functionality:
+
+Real-time filter
+
+Case-insensitive
+
+Searches category/amenity names
+
+Clear visual with search icon
+
+Responsive Grid:
+
+Mobile: 1 column
+
+Tablet (sm): 2 columns
+
+Desktop (md): 3-4 columns
+
+Primary Category Section:
+
+Only shows when categories selected
+
+Muted background to separate
+
+Radio buttons (single selection)
+
+Shows category icons + names
+
+Data Flow
+Read Flow:
+
+text
+1. Component mounts
+   ↓
+2. useCategories() & useAmenities() fetch from API
+   ↓
+3. Data cached by React Query (1 hour)
+   ↓
+4. Initialize local state from business.categories/amenities
+   ↓
+5. Filter based on search
+   ↓
+6. Render in grid
+Write Flow:
+
+text
+1. User selects categories/amenities
+   ↓
+2. Update local state
+   ↓
+3. Dirty state = true (enable save)
+   ↓
+4. Click save
+   ↓
+5. React Query mutation calls server action
+   ↓
+6. Server action validates & updates DB
+   ↓
+7. Revalidate path
+   ↓
+8. Query invalidation
+   ↓
+9. Toast notification
+Database Relations Updated
+In page.tsx fetch:
+
+typescript
+const business = await prisma.business.findUnique({
+  where: { id: result.business.id },
+  include: {
+    images: { ... },
+    categories: {
+      include: { category: true },
+      orderBy: { displayOrder: "asc" }
+    },
+    amenities: {
+      include: { amenity: true }
+    }
+  }
+})
+Type Definitions Updated:
+
+typescript
+// All components now accept:
+business: Business & {
+  images: BusinessImage[];
+  categories?: (BusinessCategory & { category: Category })[];
+  amenities?: (BusinessAmenity & { amenity: Amenity })[];
+}
+Error Handling
+Loading States:
+
+Skeleton loader (spinner) while fetching
+
+"Saving..." text on button
+
+Disabled inputs during mutation
+
+Empty States:
+
+"No categories found" message
+
+"No amenities found" message
+
+Validation:
+
+Must select at least one category
+
+Primary must be in selected categories
+
+Alert if trying to save without selection
+
+Toast Notifications:
+
+Success: "Categories updated successfully"
+
+Success: "Amenities updated successfully"
+
+Error: "Failed to update" with reason
+
+Error: "Something went wrong"
+
+✅ UPDATED COMPLETION STATUS
+Tab 1: Basic Info ✅ Complete
+Tab 2: Business Hours ✅ Complete
+Tab 3: Photos & Media ✅ Complete
+Tab 4: Categories & Amenities ✅ Complete
+
+Tab 5: Service Settings ⏳ Pending
+Tab 6: Legal & Documents ⏳ Pending
+
+🔑 KEY LEARNINGS FROM TAB 4
+TypeScript Generics in React Query - Always specify return types
+
+Reference Data via API Routes - Better for cacheable, global data
+
+Dirty State Tracking - JSON stringify for deep comparison
+
+Auto-State Updates - Handle in event handlers, not effects
+
+Seed Data Pattern - Upsert with correct unique fields
+
+Grouped Display - Use reduce for category grouping
+
+Multi-Select UX - Visual feedback + primary selection pattern
+
+Search Performance - Filter on already-loaded data, not new fetches
+
+📦 NEW DEPENDENCIES (if any)
+None! Used existing:
+
+@tanstack/react-query
+
+@prisma/client
+
+zod
+
+React Hook Form
+
+Existing UI components
+
+🔮 NEXT STEPS
+When continuing:
+
+Provide this updated documentation
+
+Specify which tab to build (Tab 5 or Tab 6)
+
+Share any specific requirements
+
+AI will continue with same patterns and architecture
 📸 TAB 3: PHOTOS & MEDIA
 Components
 photos-media-form.tsx
