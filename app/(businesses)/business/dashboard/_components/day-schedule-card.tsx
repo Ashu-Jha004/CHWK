@@ -1,21 +1,19 @@
 // app/business/dashboard/_components/day-schedule-card.tsx
 "use client";
 
-import { useState, useMemo } from "react";
 import { DayOfWeek } from "@prisma/client";
-import { ChevronDown, Copy, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { TimePicker } from "./time-picker";
-import { FormField } from "./form-field";
-import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Copy, Clock } from "lucide-react";
 import { DayScheduleFormData } from "@/lib/validations/business-dashboard/profile/business-hours";
+import { cn } from "@/lib/utils";
 
 interface DayScheduleCardProps {
   day: DayOfWeek;
   schedule: DayScheduleFormData;
   onChange: (schedule: DayScheduleFormData) => void;
-  onCopy?: (schedule: DayScheduleFormData) => void;
+  onCopy: (schedule: DayScheduleFormData) => void;
   errors?: {
     openTime?: string;
     closeTime?: string;
@@ -41,187 +39,153 @@ export function DayScheduleCard({
   onCopy,
   errors,
 }: DayScheduleCardProps) {
-  const [isExpanded, setIsExpanded] = useState(!schedule.isClosed);
-
-  const handleToggleClosed = (isClosed: boolean) => {
+  const handleClosedToggle = (isClosed: boolean) => {
     onChange({
       ...schedule,
       isClosed,
-      openTime: isClosed ? null : schedule.openTime,
-      closeTime: isClosed ? null : schedule.closeTime,
+      openTime: isClosed ? "" : schedule.openTime,
+      closeTime: isClosed ? "" : schedule.closeTime,
       hasSplitShift: isClosed ? false : schedule.hasSplitShift,
-      splitCloseTime: null,
-      splitReopenTime: null,
+      splitCloseTime: "",
+      splitReopenTime: "",
     });
-    setIsExpanded(!isClosed);
   };
 
-  const handleToggleSplitShift = (hasSplitShift: boolean) => {
+  const handleTimeChange = (
+    field: keyof DayScheduleFormData,
+    value: string
+  ) => {
+    onChange({
+      ...schedule,
+      [field]: value,
+    });
+  };
+
+  const handleSplitShiftToggle = (hasSplitShift: boolean) => {
     onChange({
       ...schedule,
       hasSplitShift,
-      splitCloseTime: hasSplitShift ? schedule.splitCloseTime : null,
-      splitReopenTime: hasSplitShift ? schedule.splitReopenTime : null,
+      splitCloseTime: hasSplitShift ? schedule.splitCloseTime : "",
+      splitReopenTime: hasSplitShift ? schedule.splitReopenTime : "",
     });
   };
 
-  // Generate summary text
-  const summaryText = useMemo(() => {
-    if (schedule.isClosed) return "Closed";
-    if (!schedule.openTime || !schedule.closeTime) return "Set hours";
-
-    if (
-      schedule.hasSplitShift &&
-      schedule.splitCloseTime &&
-      schedule.splitReopenTime
-    ) {
-      return `${schedule.openTime} - ${schedule.splitCloseTime}, ${schedule.splitReopenTime} - ${schedule.closeTime}`;
-    }
-
-    return `${schedule.openTime} - ${schedule.closeTime}`;
-  }, [schedule]);
-
   return (
-    <div
-      className={cn(
-        "glass rounded-lg border transition-all duration-200",
-        schedule.isClosed
-          ? "border-border bg-muted/30"
-          : "border-primary/20 bg-background"
-      )}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <button
-            title="input"
-            type="button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className={cn(
-              "p-1 rounded hover:bg-muted transition-colors",
-              schedule.isClosed && "opacity-50"
-            )}
-            disabled={schedule.isClosed}
-          >
-            <ChevronDown
-              className={cn(
-                "h-4 w-4 transition-transform",
-                isExpanded && "rotate-180"
-              )}
-            />
-          </button>
-
-          <div className="flex-1 min-w-0">
-            <h4 className="font-semibold">{dayLabels[day]}</h4>
-            <p
-              className={cn(
-                "text-sm truncate",
-                schedule.isClosed ? "text-muted-foreground" : "text-primary"
-              )}
-            >
-              {summaryText}
-            </p>
+    <div className="glass rounded-lg p-4 space-y-4">
+      {/* Day Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <h4 className="font-semibold text-base">{dayLabels[day]}</h4>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {onCopy && !schedule.isClosed && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => onCopy(schedule)}
-              title="Copy to all days"
-              className="h-8 w-8"
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-          )}
 
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Closed</span>
             <Switch
-              checked={schedule.isClosed}
-              onCheckedChange={handleToggleClosed}
+              checked={!schedule.isClosed}
+              onCheckedChange={(checked) => handleClosedToggle(!checked)}
             />
+            <span className="text-sm text-muted-foreground">
+              {schedule.isClosed ? "Closed" : "Open"}
+            </span>
           </div>
         </div>
+
+        {!schedule.isClosed && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onCopy(schedule)}
+            className="gap-2"
+          >
+            <Copy className="h-3.5 w-3.5" />
+            Copy to All
+          </Button>
+        )}
       </div>
 
-      {/* Expandable Content */}
-      {isExpanded && !schedule.isClosed && (
-        <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
-          {/* Regular Hours */}
+      {/* Time Fields */}
+      {!schedule.isClosed && (
+        <div className="space-y-4">
+          {/* Main Hours */}
           <div className="grid grid-cols-2 gap-4">
-            <FormField label="Opening Time" required error={errors?.openTime}>
-              <TimePicker
-                value={schedule.openTime || ""}
-                onChange={(value) =>
-                  onChange({ ...schedule, openTime: value || null })
-                }
-                placeholder="09:00"
-                error={!!errors?.openTime}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Open Time</label>
+              <Input
+                type="time"
+                value={schedule.openTime}
+                onChange={(e) => handleTimeChange("openTime", e.target.value)}
+                className={cn(errors?.openTime && "border-destructive")}
               />
-            </FormField>
+              {errors?.openTime && (
+                <p className="text-xs text-destructive">{errors.openTime}</p>
+              )}
+            </div>
 
-            <FormField label="Closing Time" required error={errors?.closeTime}>
-              <TimePicker
-                value={schedule.closeTime || ""}
-                onChange={(value) =>
-                  onChange({ ...schedule, closeTime: value || null })
-                }
-                placeholder="21:00"
-                error={!!errors?.closeTime}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Close Time</label>
+              <Input
+                type="time"
+                value={schedule.closeTime}
+                onChange={(e) => handleTimeChange("closeTime", e.target.value)}
+                className={cn(errors?.closeTime && "border-destructive")}
               />
-            </FormField>
+              {errors?.closeTime && (
+                <p className="text-xs text-destructive">{errors.closeTime}</p>
+              )}
+            </div>
           </div>
 
           {/* Split Shift Toggle */}
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div>
-              <p className="text-sm font-medium">Split Shift</p>
-              <p className="text-xs text-muted-foreground">
-                For businesses with lunch breaks
-              </p>
-            </div>
+          <div className="flex items-center gap-2 pt-2 border-t border-border">
             <Switch
               checked={schedule.hasSplitShift}
-              onCheckedChange={handleToggleSplitShift}
+              onCheckedChange={handleSplitShiftToggle}
             />
+            <label className="text-sm text-muted-foreground">
+              Split Shift (e.g., lunch break)
+            </label>
           </div>
 
           {/* Split Shift Times */}
           {schedule.hasSplitShift && (
-            <div className="grid grid-cols-2 gap-4 p-3 bg-muted/30 rounded-lg border border-dashed border-border">
-              <FormField
-                label="Break Starts"
-                required
-                error={errors?.splitCloseTime}
-              >
-                <TimePicker
-                  value={schedule.splitCloseTime || ""}
-                  onChange={(value) =>
-                    onChange({ ...schedule, splitCloseTime: value || null })
+            <div className="grid grid-cols-2 gap-4 pl-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Break Start</label>
+                <Input
+                  type="time"
+                  value={schedule.splitCloseTime}
+                  onChange={(e) =>
+                    handleTimeChange("splitCloseTime", e.target.value)
                   }
-                  placeholder="13:00"
-                  error={!!errors?.splitCloseTime}
+                  className={cn(errors?.splitCloseTime && "border-destructive")}
                 />
-              </FormField>
+                {errors?.splitCloseTime && (
+                  <p className="text-xs text-destructive">
+                    {errors.splitCloseTime}
+                  </p>
+                )}
+              </div>
 
-              <FormField
-                label="Break Ends"
-                required
-                error={errors?.splitReopenTime}
-              >
-                <TimePicker
-                  value={schedule.splitReopenTime || ""}
-                  onChange={(value) =>
-                    onChange({ ...schedule, splitReopenTime: value || null })
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Break End</label>
+                <Input
+                  type="time"
+                  value={schedule.splitReopenTime}
+                  onChange={(e) =>
+                    handleTimeChange("splitReopenTime", e.target.value)
                   }
-                  placeholder="14:00"
-                  error={!!errors?.splitReopenTime}
+                  className={cn(
+                    errors?.splitReopenTime && "border-destructive"
+                  )}
                 />
-              </FormField>
+                {errors?.splitReopenTime && (
+                  <p className="text-xs text-destructive">
+                    {errors.splitReopenTime}
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>
