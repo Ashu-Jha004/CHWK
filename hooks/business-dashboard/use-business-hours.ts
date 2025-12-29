@@ -3,7 +3,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateBusinessHours } from "@/app/(businesses)/business/actions/update-business-hours";
-import { BusinessHoursFormData } from "@/lib/validations/business-onboarding.validation";
+import { BusinessHoursFormData } from "@/lib/validations/business-dashboard/profile/business-hours";
 import { showToast } from "@/lib/business-onboarding/toast";
 
 export function useUpdateBusinessHours(businessId: string) {
