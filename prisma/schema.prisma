@@ -247,6 +247,13 @@ model Business {
   slug            String         @unique
   description     String?        @db.Text
   shortDescription String?       @db.VarChar(255)
+   logo                String?
+  logoPublicId        String?  // Cloudinary public ID for deletion
+
+    // Cover Image
+  coverImage          String?
+  coverImagePublicId  String?  // Cloudinary public ID for deletion
+
 
   // Chain relationship (NEW)
   chainId         String?
@@ -342,6 +349,9 @@ metadataKeywords    String[]   // e.g., ["restaurant", "cafe", "dining", "Indian
   categories          BusinessCategory[]
   hours               BusinessHours[]
   reviews             Review[]
+   // Relations - ADD this to existing relations section
+  images              BusinessImage[]  // Gallery images
+
   photos              Photo[]
   amenities           BusinessAmenity[]
   savedBy             SavedBusiness[]
@@ -373,6 +383,54 @@ metadataKeywords    String[]   // e.g., ["restaurant", "cafe", "dining", "Indian
   @@index([is24x7])
   @@index([hasEmergencyService])
   @@map("businesses")
+}
+
+// ==================== BUSINESS GALLERY IMAGES ====================
+
+model BusinessImage {
+  id              String   @id @default(cuid())
+
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Image details
+  imageUrl        String   // Cloudinary URL
+  publicId        String   // Cloudinary public ID for deletion
+  thumbnailUrl    String?  // Optional thumbnail
+
+  caption         String?  @db.Text
+  altText         String?  // SEO alt text
+
+  // Display
+  displayOrder    Int      @default(0)
+  isFeatured      Boolean  @default(false)
+
+  // Moderation
+  isApproved      Boolean  @default(true)
+  isFlagged       Boolean  @default(false)
+  flagReason      String?
+
+  // Metadata
+  width           Int?
+  height          Int?
+  fileSize        Int?     // in bytes
+  mimeType        String?
+
+  // Upload info
+  uploadedById    String?  // User who uploaded
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime? // Soft delete
+
+  @@index([businessId])
+  @@index([displayOrder])
+  @@index([isFeatured])
+  @@index([isApproved])
+  @@index([deletedAt])
+  @@index([businessId, displayOrder])
+  @@index([businessId, isFeatured])
+  @@map("business_images")
 }
 
 // ==================== SERVICE AREAS (NEW) ====================

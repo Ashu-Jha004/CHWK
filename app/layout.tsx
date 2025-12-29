@@ -4,7 +4,9 @@ import "./globals.css";
 import { SEO_CONFIG } from "@/lib/(landing_page)/constants";
 import { Providers } from "@/components/LandingPage/providers/providers";
 import { StructuredData } from "./structured-data";
-import { ClerkProvider } from '@clerk/nextjs'
+import { ClerkProvider } from "@clerk/nextjs";
+import { QueryProvider } from "@/components/providers/query-provider";
+import { Toaster } from "sonner";
 // Font configurations with performance optimizations
 const inter = Inter({
   subsets: ["latin"],
@@ -81,7 +83,8 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   verification: {
-    google: "google-site-verification=5GWQ1ZdE-5ZpOm0cSk1yORKWYZQNoS4OdezTlp47nBE", // Add after setting up Search Console
+    google:
+      "google-site-verification=5GWQ1ZdE-5ZpOm0cSk1yORKWYZQNoS4OdezTlp47nBE", // Add after setting up Search Console
   },
   alternates: {
     canonical: "https://chwk.vercel.app", // ✅ UPDATED
@@ -110,84 +113,88 @@ export default function RootLayout({
     <ClerkProvider
       appearance={{
         variables: {
-          colorPrimary: '#3b82f6', // Your brand color
-          colorBackground: '#ffffff',
-          colorInputBackground: '#f3f4f6',
-          colorInputText: '#111827',
+          colorPrimary: "#3b82f6", // Your brand color
+          colorBackground: "#ffffff",
+          colorInputBackground: "#f3f4f6",
+          colorInputText: "#111827",
         },
         elements: {
-          formButtonPrimary: 'bg-blue-600 hover:bg-blue-700',
-          card: 'shadow-lg',
-          headerTitle: 'text-2xl font-bold',
-          headerSubtitle: 'text-gray-600',
+          formButtonPrimary: "bg-blue-600 hover:bg-blue-700",
+          card: "shadow-lg",
+          headerTitle: "text-2xl font-bold",
+          headerSubtitle: "text-gray-600",
         },
       }}
     >
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Preconnect to external domains for performance */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          {/* Preconnect to external domains for performance */}
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossOrigin="anonymous"
+          />
 
-        {/* Structured Data for SEO */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebSite",
-              name: "CHWK",
-              url: SEO_CONFIG.url,
-              description: SEO_CONFIG.description,
-              potentialAction: {
-                "@type": "SearchAction",
-                target: {
-                  "@type": "EntryPoint",
-                  urlTemplate: `${SEO_CONFIG.url}/search?q={search_term_string}`,
+          {/* Structured Data for SEO */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: "CHWK",
+                url: SEO_CONFIG.url,
+                description: SEO_CONFIG.description,
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: {
+                    "@type": "EntryPoint",
+                    urlTemplate: `${SEO_CONFIG.url}/search?q={search_term_string}`,
+                  },
+                  "query-input": "required name=search_term_string",
                 },
-                "query-input": "required name=search_term_string",
-              },
-            }),
-          }}
-        />
+              }),
+            }}
+          />
 
-        {/* Organization Structured Data */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              name: "CHWK",
-              url: SEO_CONFIG.url,
-              logo: `${SEO_CONFIG.url}/logo.png`,
-              description: SEO_CONFIG.description,
-              contactPoint: {
-                "@type": "ContactPoint",
-                contactType: "Customer Support",
-                availableLanguage: "English",
-              },
-              sameAs: [
-                // Add social media links when available
-                "https://facebook.com/chwk",
-                "https://twitter.com/chwk_india",
-                "https://instagram.com/chwk_india",
-                "https://linkedin.com/company/chwk",
-              ],
-            }),
-          }}
-        />
-      </head>
-      <body
-        className={`${inter.variable} ${poppins.variable} font-sans antialiased min-h-screen`}
-      >
-        <StructuredData />
-        <Providers>{children}</Providers>
-      </body>
-    </html></ClerkProvider>
+          {/* Organization Structured Data */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "CHWK",
+                url: SEO_CONFIG.url,
+                logo: `${SEO_CONFIG.url}/logo.png`,
+                description: SEO_CONFIG.description,
+                contactPoint: {
+                  "@type": "ContactPoint",
+                  contactType: "Customer Support",
+                  availableLanguage: "English",
+                },
+                sameAs: [
+                  // Add social media links when available
+                  "https://facebook.com/chwk",
+                  "https://twitter.com/chwk_india",
+                  "https://instagram.com/chwk_india",
+                  "https://linkedin.com/company/chwk",
+                ],
+              }),
+            }}
+          />
+        </head>
+        <body
+          className={`${inter.variable} ${poppins.variable} font-sans antialiased min-h-screen`}
+        >
+          <StructuredData />
+          <QueryProvider>
+            <Providers>{children}</Providers>
+            <Toaster />
+          </QueryProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

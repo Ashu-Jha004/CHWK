@@ -1,0 +1,850 @@
+📋 COMPREHENSIVE BUILD DOCUMENTATION
+Business Dashboard - Profile Management System
+Built: December 29, 2025
+Status: 3/6 Tabs Complete
+
+🎯 PROJECT OVERVIEW
+We built a comprehensive business dashboard profile management system for a Yelp-like platform focused on India. Business owners can manage their complete business profile through a tabbed interface with real-time updates, image uploads, and full CRUD operations.
+
+🏗️ ARCHITECTURE & TECH STACK
+Core Technologies
+Framework: Next.js 15 (App Router)
+
+Language: TypeScript
+
+Database: PostgreSQL with Prisma ORM
+
+State Management: Zustand
+
+Data Fetching: TanStack React Query v5
+
+Form Handling: React Hook Form + Zod validation
+
+UI Components: Custom UI components (shadcn/ui style)
+
+Styling: Tailwind CSS
+
+File Upload: Cloudinary
+
+Authentication: Clerk (custom implementation with verifyBusinessAccess)
+
+Build Tool: Turbopack
+
+Key Patterns
+Server Components for data fetching
+
+Client Components for interactivity
+
+Server Actions for mutations
+
+Optimistic updates with React Query
+
+Type-safe forms with Zod schemas
+
+Separation of client/server utilities
+
+📁 PROJECT STRUCTURE
+text
+my-app/
+├── app/
+│   └── (businesses)/
+│       └── business/
+│           ├── dashboard/
+│           │   ├── _components/
+│           │   │   ├── (business-profile)/
+│           │   │   │   ├── dashboard-content.tsx
+│           │   │   │   ├── profile-content.tsx
+│           │   │   │   ├── profile-tabs.tsx
+│           │   │   │   ├── basic-info-form.tsx
+│           │   │   │   ├── business-hours-form.tsx
+│           │   │   │   ├── day-schedule-card.tsx
+│           │   │   │   └── photos-media-form.tsx
+│           │   │   └── sidebar.tsx
+│           │   └── page.tsx
+│           └── actions/
+│               ├── update-business-info.ts
+│               ├── update-business-hours.ts
+│               ├── update-business-images.ts
+│               └── upload-signature.ts
+│
+├── components/
+│   └── shared/
+│       └── image-upload.tsx
+│
+├── hooks/
+│   └── business-dashboard/
+│       ├── use-business-info.ts
+│       ├── use-business-hours.ts
+│       └── use-business-images.ts
+│
+├── lib/
+│   ├── validations/
+│   │   └── business-dashboard/
+│   │       └── profile/
+│   │           ├── basic-info.ts
+│   │           └── business-hours.ts
+│   ├── utils/
+│   │   ├── cloudinary-client.utils.ts
+│   │   └── cloudinary-server.utils.ts
+│   ├── auth.ts
+│   └── prisma.ts
+│
+├── stores/
+│   └── dashboard-store.ts
+│
+├── types/
+│   └── businessDashboard/
+│       └── dashboard-types.ts
+│
+└── prisma/
+    └── schema.prisma
+🗄️ DATABASE SCHEMA CHANGES
+Business Model - Added Fields
+text
+model Business {
+  // ... existing fields ...
+
+  // NEW: Image fields
+  logo                String?
+  logoPublicId        String?
+  coverImage          String?
+  coverImagePublicId  String?
+
+  // NEW: Relations
+  images              BusinessImage[]
+}
+BusinessImage Model - NEW
+text
+model BusinessImage {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  imageUrl        String
+  publicId        String
+  thumbnailUrl    String?
+  caption         String?  @db.Text
+  altText         String?
+
+  displayOrder    Int      @default(0)
+  isFeatured      Boolean  @default(false)
+
+  isApproved      Boolean  @default(true)
+  isFlagged       Boolean  @default(false)
+  flagReason      String?
+
+  width           Int?
+  height          Int?
+  fileSize        Int?
+  mimeType        String?
+
+  uploadedById    String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+
+  @@index([businessId])
+  @@index([displayOrder])
+  @@index([isFeatured])
+  @@map("business_images")
+}
+Migration Command Used:
+
+bash
+npx prisma migrate dev --name add_business_images
+🎨 STATE MANAGEMENT
+Zustand Store: dashboard-store.ts
+Purpose: Global state for dashboard navigation and UI state
+
+State Shape:
+
+typescript
+{
+  activeTab: "overview" | "profile" | "menu" | "bookings" | "orders" | "reviews" | "analytics" | "settings"
+  activeProfileTab: "basic-info" | "hours" | "photos" | "categories" | "service-settings" | "legal"
+  sidebarCollapsed: boolean
+  refreshTrigger: number
+}
+Key Actions:
+
+setActiveTab(tab) - Switch main tabs
+
+setActiveProfileTab(tab) - Switch profile sub-tabs
+
+toggleSidebar() - Toggle sidebar
+
+triggerRefresh() - Force data refresh
+
+📝 FORM VALIDATION SCHEMAS
+1. Basic Info Schema (lib/validations/business-dashboard/profile/basic-info.ts)
+Validates:
+
+Business name (2-100 chars)
+
+Description (optional, max 2000 chars)
+
+Short description (optional, max 255 chars)
+
+Email (valid email format)
+
+Phone (10 digits, Indian format)
+
+Alternate phone (optional, 10 digits)
+
+WhatsApp number (optional, 10 digits)
+
+Website (valid URL)
+
+Address fields (all required)
+
+Landmark (optional)
+
+Pincode (6 digits, Indian PIN)
+
+Latitude/Longitude (valid coordinates)
+
+Price range (enum)
+
+Zod Schema Pattern:
+
+typescript
+export const basicInfoSchema = z.object({
+  name: z.string().min(2).max(100),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().regex(/^\d{10}$/),
+  // ... more fields
+});
+2. Business Hours Schema (lib/validations/business-dashboard/profile/business-hours.ts)
+Validates:
+
+24/7 toggle
+
+Day-wise schedules for all 7 days
+
+Open/close times (HH:mm format)
+
+Closed status per day
+
+Split shifts (optional lunch breaks)
+
+Time logic (close > open, split times valid)
+
+Key Validations:
+
+typescript
+.refine((data) => {
+  if (data.isClosed) return true;
+  if (!data.openTime || !data.closeTime) return false;
+  return data.closeTime > data.openTime;
+}, "Close time must be after open time")
+🔄 DATA FLOW ARCHITECTURE
+Read Flow (Server → Client)
+text
+1. page.tsx (Server Component)
+   ↓
+2. Fetch data from Prisma
+   ↓
+3. Pass to DashboardContent (Client Component)
+   ↓
+4. Pass to ProfileContent
+   ↓
+5. Pass to specific form component
+   ↓
+6. Display in UI with React Hook Form
+Write Flow (Client → Server)
+text
+1. User submits form
+   ↓
+2. React Hook Form validates with Zod
+   ↓
+3. Client component calls React Query mutation
+   ↓
+4. Mutation hook calls server action
+   ↓
+5. Server action validates business access
+   ↓
+6. Server action updates Prisma database
+   ↓
+7. Server action revalidates Next.js cache
+   ↓
+8. React Query invalidates queries
+   ↓
+9. UI auto-updates with new data
+🎯 TAB 1: BASIC INFO
+Components
+basic-info-form.tsx
+
+Form for business name, contact, address
+
+Uses React Hook Form + Zod
+
+Real-time validation
+
+Optimistic updates
+
+Loading states during submission
+
+Server Action
+actions/business/update-business-info.ts
+
+typescript
+export async function updateBusinessInfo(
+  businessId: string,
+  data: BasicInfoFormData
+): Promise<ApiResponse>
+Flow:
+
+Verify business access with verifyBusinessAccess()
+
+Validate data with Zod schema
+
+Update Business model in Prisma
+
+Revalidate /business/dashboard path
+
+Return success/error response
+
+React Query Hook
+hooks/business-dashboard/use-business-info.ts
+
+typescript
+export function useUpdateBusinessInfo(businessId: string) {
+  return useMutation({
+    mutationFn: (data: BasicInfoFormData) => updateBusinessInfo(businessId, data),
+    onSuccess: () => {
+      showToast.success("Business info updated")
+      queryClient.invalidateQueries(["business", businessId])
+    }
+  })
+}
+🕒 TAB 2: BUSINESS HOURS
+Components
+business-hours-form.tsx
+
+24/7 toggle with conditional rendering
+
+Quick actions (Set All Open, Weekdays, Set All Closed)
+
+Day-by-day schedule cards
+
+Split shift support
+
+day-schedule-card.tsx
+
+Individual day schedule management
+
+Open/Closed toggle
+
+Time pickers (openTime, closeTime)
+
+Split shift times (optional)
+
+"Copy to All" button
+
+Field-level error display
+
+Key Features
+Uses useFieldArray for dynamic day management
+
+Uses useWatch for reactive 24/7 toggle
+
+Time validation (close must be after open)
+
+Split shift validation (break times must be between open/close)
+
+Server Action
+actions/business/update-business-hours.ts
+
+typescript
+export async function updateBusinessHours(
+  businessId: string,
+  data: BusinessHoursFormData
+): Promise<ApiResponse>
+Flow:
+
+Verify business access
+
+Update is24x7 on Business model
+
+Delete existing BusinessHours records
+
+Create new BusinessHours records in transaction
+
+Revalidate cache
+
+Database Pattern
+typescript
+await prisma.$transaction([
+  // Delete existing hours
+  prisma.businessHours.deleteMany({ where: { businessId, isOverride: false } }),
+
+  // Create new hours
+  prisma.businessHours.createMany({ data: hoursToCreate })
+])
+📸 TAB 3: PHOTOS & MEDIA
+Components
+photos-media-form.tsx
+
+Logo upload section (square aspect ratio)
+
+Cover image upload section (video aspect ratio)
+
+Gallery with drag & drop reordering
+
+Delete images with confirmation
+
+Display order badges
+
+Empty state for gallery
+
+components/shared/image-upload.tsx
+
+Reusable upload component
+
+Drag & drop support
+
+Upload progress indicator
+
+Image preview
+
+Remove image button
+
+Aspect ratio options (square, video, auto)
+
+File validation (size, type)
+
+Cloudinary Integration
+Split into Two Files:
+
+Client-Side: lib/utils/cloudinary-client.utils.ts
+
+No Cloudinary SDK import (avoids fs error)
+
+uploadToCloudinary() - Upload via API route
+
+validateImageFile() - Client-side validation
+
+createImagePreview() - Generate preview URLs
+
+formatFileSize() - Display file sizes
+
+Server-Side: lib/utils/cloudinary-server.utils.ts
+
+Imports Cloudinary SDK
+
+generateUploadSignature() - Signed uploads
+
+deleteCloudinaryImage() - Delete from Cloudinary
+
+getOptimizedImageUrl() - URL transformations
+
+Cloudinary configuration
+
+Why Split?
+
+Cloudinary SDK uses Node.js fs module
+
+Can't bundle in client-side code
+
+Next.js webpack error if imported in client components
+
+Upload Flow
+Simple Upload (via API route):
+
+text
+1. User selects file
+2. Client validates file (size, type)
+3. Create preview with FileReader
+4. Upload to /api/upload
+5. API route uploads to Cloudinary
+6. Return secure_url and public_id
+7. Client calls server action to save to DB
+Signed Upload (more secure, not used yet):
+
+text
+1. Client requests signature from server
+2. Server generates signature with Cloudinary SDK
+3. Client uploads directly to Cloudinary with signature
+4. Client calls server action to save to DB
+Server Actions
+actions/business/update-business-images.ts
+
+Four Actions:
+
+updateBusinessLogo(businessId, logoUrl, publicId)
+
+Get old logo's publicId
+
+Update Business.logo and Business.logoPublicId
+
+Delete old logo from Cloudinary
+
+updateBusinessCover(businessId, coverUrl, publicId)
+
+Same pattern as logo for cover image
+
+addGalleryImage(businessId, imageUrl, publicId)
+
+Count existing images for displayOrder
+
+Create new BusinessImage record
+
+deleteGalleryImage(businessId, imageId)
+
+Verify image belongs to business
+
+Delete from database
+
+Delete from Cloudinary
+
+reorderGalleryImages(businessId, imageOrders[])
+
+Update displayOrder in transaction
+
+Array of { id, order }
+
+Drag & Drop Pattern
+typescript
+const handleDragStart = (e, index) => {
+  e.dataTransfer.setData("text/html", index.toString())
+}
+
+const handleDrop = (e, dropIndex) => {
+  const dragIndex = parseInt(e.dataTransfer.getData("text/html"))
+  // Reorder array
+  // Update displayOrder
+  // Save to backend
+}
+API Routes
+app/api/upload/route.ts
+
+Accepts multipart/form-data
+
+Extracts file and folder
+
+Uploads to Cloudinary using SDK
+
+Returns CloudinaryUploadResponse
+
+app/api/upload/signature/route.ts
+
+Accepts businessId and folder
+
+Calls getUploadSignature server action
+
+Returns signature data for client-side upload
+
+🔐 AUTHENTICATION & AUTHORIZATION
+lib/auth.ts - Key Functions
+verifyBusinessAccess(businessId: string)
+
+typescript
+export async function verifyBusinessAccess(businessId: string) {
+  const { userId } = await auth()
+
+  if (!userId) {
+    return { success: false, error: "Not authenticated" }
+  }
+
+  const business = await prisma.business.findUnique({
+    where: { id: businessId, ownerId: userId }
+  })
+
+  if (!business) {
+    return { success: false, error: "Business not found or access denied" }
+  }
+
+  return { success: true, business }
+}
+Used in ALL server actions to ensure user can only modify their own businesses.
+
+🎨 UI/UX PATTERNS
+Design System
+Glass Morphism Cards:
+
+typescript
+className="glass rounded-xl p-6 space-y-4"
+Form Sections:
+
+Header with icon + title + description
+
+Content area with form fields
+
+Footer with save button + status
+
+Loading States:
+
+Skeleton loaders (not implemented yet)
+
+Button spinners with "Saving..." text
+
+Disabled states during mutations
+
+Error Handling:
+
+Toast notifications for all mutations
+
+Inline field errors from React Hook Form
+
+Error summary cards for form-level errors
+
+Success States:
+
+Success toasts with custom messages
+
+Optimistic updates (UI updates before server confirms)
+
+"All changes saved" vs "You have unsaved changes" footer
+
+Responsive Design
+Breakpoints:
+
+Mobile: default
+
+Tablet: sm: prefix
+
+Desktop: md: and lg: prefixes
+
+Mobile Adaptations:
+
+Collapsible sidebar
+
+Stacked form layouts
+
+Touch-friendly tap targets
+
+Bottom-aligned action buttons
+
+🧪 KEY TECHNICAL DECISIONS
+1. Why React Hook Form + Zod?
+Type-safe forms
+
+Automatic validation
+
+Performance (uncontrolled inputs)
+
+Easy integration with server actions
+
+2. Why React Query?
+Automatic cache management
+
+Optimistic updates
+
+Loading/error states
+
+Refetch on focus/reconnect
+
+Query invalidation after mutations
+
+3. Why Zustand?
+Lightweight (compared to Redux)
+
+No Provider needed
+
+Simple API
+
+TypeScript support
+
+Perfect for UI state (not data)
+
+4. Why Split Cloudinary Utils?
+Cloudinary SDK requires Node.js modules
+
+Can't bundle in client components
+
+Next.js webpack throws errors
+
+Solution: server utils + client utils
+
+5. Why Server Actions?
+Type-safe server-client communication
+
+No need for API routes (for mutations)
+
+Progressive enhancement
+
+Integrated with Next.js cache
+
+6. Why Separate Components by Feature?
+Easier to maintain
+
+Clear responsibility
+
+Easier to test
+
+Can be reused
+
+📊 TYPE DEFINITIONS
+Common Types (types/businessDashboard/dashboard-types.ts)
+typescript
+export interface ApiResponse<T = any> {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+}
+
+export type DashboardTab = "overview" | "profile" | "menu" | "bookings" | "orders" | "reviews" | "analytics" | "settings"
+
+export type ProfileTab = "basic-info" | "hours" | "photos" | "categories" | "service-settings" | "legal"
+🚨 ERROR HANDLING PATTERNS
+Server Actions
+typescript
+try {
+  // Verify access
+  const accessCheck = await verifyBusinessAccess(businessId)
+  if (!accessCheck.success) {
+    return { success: false, error: "Access denied" }
+  }
+
+  // Perform operation
+  await prisma.business.update({ ... })
+
+  // Revalidate
+  revalidatePath("/business/dashboard")
+
+  return { success: true, message: "Success" }
+} catch (error) {
+  console.error("[ACTION_NAME] Error:", error)
+  return { success: false, error: "Something went wrong" }
+}
+React Query Mutations
+typescript
+onSuccess: (response) => {
+  if (response.success) {
+    showToast.success("Operation successful")
+    queryClient.invalidateQueries(["business", businessId])
+  } else {
+    showToast.error("Operation failed", response.error)
+  }
+},
+
+onError: (error) => {
+  console.error("Mutation error:", error)
+  showToast.error("Something went wrong", "Please try again")
+}
+🎯 ENVIRONMENT VARIABLES NEEDED
+text
+# Cloudinary
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Database
+DATABASE_URL=your_postgres_url
+DIRECT_URL=your_postgres_direct_url
+
+# Clerk (assumed)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...
+CLERK_SECRET_KEY=...
+✅ COMPLETED FEATURES SUMMARY
+Tab 1: Basic Info
+✅ Business name, description, contact
+
+✅ Full address management
+
+✅ Google Maps coordinates
+
+✅ Price range selection
+
+✅ Website URL
+
+✅ Form validation
+
+✅ Real-time updates
+
+✅ Error handling
+
+Tab 2: Business Hours
+✅ 24/7 toggle
+
+✅ Weekly schedule (7 days)
+
+✅ Open/close times
+
+✅ Split shifts (lunch breaks)
+
+✅ Quick actions (bulk updates)
+
+✅ Copy to all days
+
+✅ Time validation
+
+✅ Conditional rendering
+
+Tab 3: Photos & Media
+✅ Logo upload (Cloudinary)
+
+✅ Cover image upload
+
+✅ Gallery management
+
+✅ Drag & drop reorder
+
+✅ Delete images
+
+✅ Progress indicators
+
+✅ Image preview
+
+✅ Cloudinary integration
+
+✅ Server/client utils split
+
+🔮 FUTURE CONTEXT FOR AI
+When continuing this project, provide:
+
+✅ This documentation
+
+✅ The schema.prisma file (for reference)
+
+✅ Which tab/feature you want to build next
+
+✅ Any specific requirements or changes
+
+AI can then:
+
+Continue with same patterns
+
+Match existing code style
+
+Use established types
+
+Follow same architecture
+
+Maintain consistency
+
+📝 CODE CONVENTIONS USED
+Naming
+Components: PascalCase (BasicInfoForm)
+
+Files: kebab-case (basic-info-form.tsx)
+
+Server actions: camelCase (updateBusinessInfo)
+
+Hooks: camelCase with "use" prefix (useBusinessInfo)
+
+Types: PascalCase (ApiResponse)
+
+Constants: SCREAMING_SNAKE_CASE (CLOUDINARY_FOLDERS)
+
+File Organization
+Group related components in folders
+
+Separate server and client utilities
+
+Co-locate validation schemas with features
+
+Keep server actions in actions/ folder
+
+Keep hooks in hooks/ folder
+
+Comments
+JSDoc for exported functions
+
+Inline comments for complex logic
+
+Section headers in large files
+
+"// TODO:" for future improvements

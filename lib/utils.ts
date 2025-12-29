@@ -55,3 +55,118 @@ export function scrollToElement(elementId: string): void {
     console.error("Error scrolling to element:", error);
   }
 }
+
+/**
+ * Format currency in INR
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+/**
+ * Format date to Indian locale
+ */
+export function formatDate(
+  date: Date | string,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  return new Intl.DateTimeFormat("en-IN", {
+    dateStyle: "medium",
+    ...options,
+  }).format(dateObj);
+}
+
+/**
+ * Format time to 12-hour format
+ */
+export function formatTime(time: string): string {
+  const [hours, minutes] = time.split(":");
+  const hour = parseInt(hours, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${minutes} ${ampm}`;
+}
+
+/**
+ * Truncate text with ellipsis
+ */
+export function truncate(text: string, length: number): string {
+  if (text.length <= length) return text;
+  return text.slice(0, length).trim() + "...";
+}
+
+/**
+ * Generate slug from text
+ */
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * Calculate average rating
+ */
+export function calculateAverageRating(ratings: number[]): number {
+  if (ratings.length === 0) return 0;
+  const sum = ratings.reduce((acc, rating) => acc + rating, 0);
+  return Math.round((sum / ratings.length) * 10) / 10;
+}
+
+/**
+ * Get initials from name
+ */
+export function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+/**
+ * Safe JSON parse with fallback
+ */
+export function safeParse<T>(json: string, fallback: T): T {
+  try {
+    return JSON.parse(json);
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Check if business is currently open
+ */
+export function isBusinessOpen(
+  hours: Array<{
+    dayOfWeek: string;
+    openTime: string;
+    closeTime: string;
+    isClosed: boolean;
+  }>
+): boolean {
+  const now = new Date();
+  const currentDay = now
+    .toLocaleDateString("en-US", { weekday: "long" })
+    .toUpperCase();
+  const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
+
+  const todayHours = hours.find((h) => h.dayOfWeek === currentDay);
+
+  if (!todayHours || todayHours.isClosed) return false;
+
+  return (
+    currentTime >= todayHours.openTime && currentTime <= todayHours.closeTime
+  );
+}

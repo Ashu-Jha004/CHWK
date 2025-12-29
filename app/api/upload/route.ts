@@ -2,7 +2,7 @@
 // API route for Cloudinary uploads
 
 import { NextRequest, NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
+import { cloudinary } from "@/lib/utils/cloudinary-server.utils"; // CHANGED
 
 // Configure Cloudinary
 cloudinary.config({

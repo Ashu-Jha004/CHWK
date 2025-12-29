@@ -172,16 +172,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[Onboarding] 🚀 Starting onboarding for user: ${userId}`);
-
+    // ========== STEP 2: GET OR CREATE USER ==========
     // ========== STEP 2: GET OR CREATE USER ==========
     let user = await prisma.user.findUnique({
       where: { id: userId },
     });
 
     if (!user) {
-      console.log("[Onboarding] Creating new user record...");
-
+      // Create new user with BUSINESS_OWNER role
       user = await prisma.user.create({
         data: {
           id: userId,
@@ -193,16 +191,22 @@ export async function POST(request: NextRequest) {
           role: "BUSINESS_OWNER",
         },
       });
-
-      console.log(`[Onboarding] ✅ User created: ${user.id}`);
     } else {
-      console.log(`[Onboarding] ✅ User found: ${user.id}`);
+      // User exists - update role to BUSINESS_OWNER if not already
+      if (user.role !== "BUSINESS_OWNER") {
+        user = await prisma.user.update({
+          where: { id: userId },
+          data: { role: "BUSINESS_OWNER" },
+        });
+      } else {
+        console.log(
+          `[Onboarding] ✅ User found with BUSINESS_OWNER role: ${user.id}`
+        );
+      }
     }
 
     // ========== STEP 3: PARSE AND SANITIZE REQUEST DATA ==========
     const rawData: any = await request.json();
-
-    console.log("[Onboarding] 📦 Raw data received");
 
     // Clean and structure data - remove frontend-only fields
     const data: OnboardingData = {
@@ -287,8 +291,6 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    console.log("[Onboarding] ✅ Data cleaned and sanitized");
-
     // ========== STEP 4: VALIDATE DATA ==========
     const validation = validateOnboardingData(data);
 
@@ -299,8 +301,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    console.log("[Onboarding] ✅ Validation passed");
 
     // ========== STEP 5: CHECK FOR EXISTING BUSINESS ==========
     const existingBusiness = await prisma.business.findFirst({
@@ -326,11 +326,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    console.log("[Onboarding] ✅ No existing business found");
-
-    // ========== STEP 6: CREATE BUSINESS IN TRANSACTION ==========
-    console.log("[Onboarding] 💾 Starting database transaction...");
 
     const business = await prisma.$transaction(async (tx) => {
       // Create main business record
@@ -395,7 +390,7 @@ export async function POST(request: NextRequest) {
           branchName: data.basicInfo.branchName,
 
           // Status
-          status: "PENDING",
+          status: "ACTIVE",
           isVerified: false,
           is24x7: data.businessHours.is24x7,
 
@@ -403,8 +398,6 @@ export async function POST(request: NextRequest) {
           ownerId: user.id,
         },
       });
-
-      console.log(`[Onboarding] ✅ Business created: ${biz.id}`);
 
       // Create business hours
       const openHours = data.businessHours.hours.filter((h) => !h.isClosed);
@@ -422,10 +415,6 @@ export async function POST(request: NextRequest) {
             splitReopenTime: hour.splitReopenTime || null,
           })),
         });
-
-        console.log(
-          `[Onboarding] ✅ Created ${openHours.length} business hours`
-        );
       }
 
       // Create primary category link
@@ -455,7 +444,6 @@ export async function POST(request: NextRequest) {
 
       const totalCategories =
         1 + (data.categories.additionalCategoryIds?.length || 0);
-      console.log(`[Onboarding] ✅ Linked ${totalCategories} categories`);
 
       // Create logo photo
       await tx.photo.create({
@@ -504,8 +492,6 @@ export async function POST(request: NextRequest) {
         photoCount += data.photos.photoUrls.length;
       }
 
-      console.log(`[Onboarding] ✅ Created ${photoCount} photos`);
-
       // Link amenities
       if (
         data.businessDetails.amenityIds &&
@@ -517,10 +503,6 @@ export async function POST(request: NextRequest) {
             amenityId,
           })),
         });
-
-        console.log(
-          `[Onboarding] ✅ Linked ${data.businessDetails.amenityIds.length} amenities`
-        );
       }
 
       return biz;
