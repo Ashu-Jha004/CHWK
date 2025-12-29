@@ -12,7 +12,7 @@ export default async function DashboardPage() {
     redirect("/business/onboarding");
   }
 
-  // Fetch complete business data with relations
+  // Fetch complete business data with all relations
   const [business, businessHours] = await Promise.all([
     prisma.business.findUnique({
       where: { id: result.business.id },
@@ -20,6 +20,19 @@ export default async function DashboardPage() {
         images: {
           where: { deletedAt: null },
           orderBy: { displayOrder: "asc" },
+        },
+        categories: {
+          include: {
+            category: true,
+          },
+          orderBy: {
+            displayOrder: "asc",
+          },
+        },
+        amenities: {
+          include: {
+            amenity: true,
+          },
         },
       },
     }),
