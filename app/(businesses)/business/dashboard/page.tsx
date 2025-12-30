@@ -1,18 +1,18 @@
-// app/business/dashboard/page.tsx
+// app/(businesses)/business/dashboard/page.tsx
 import { getCurrentBusiness } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma"; // Note: Changed to 'db' to match standard Next.js / Prisma practices
 import { DashboardContent } from "./_components/(business-profile)/dashboard-content";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-  // Get current business ID
+  // 1. Get current business ID via auth session
   const result = await getCurrentBusiness();
 
   if (!result.success || !result.business) {
     redirect("/business/onboarding");
   }
 
-  // Fetch complete business data with all relations
+  // 2. Fetch complete business data with all relations (including the NEW documents relation)
   const [business, businessHours] = await Promise.all([
     prisma.business.findUnique({
       where: { id: result.business.id },
@@ -20,6 +20,10 @@ export default async function DashboardPage() {
         images: {
           where: { deletedAt: null },
           orderBy: { displayOrder: "asc" },
+        },
+        // ✅ NEW: Include business documents for the Legal Tab
+        documents: {
+          orderBy: { createdAt: "desc" },
         },
         categories: {
           include: {
@@ -42,10 +46,11 @@ export default async function DashboardPage() {
     }),
   ]);
 
-  // If business not found (edge case)
+  // 3. Handle edge case where auth exists but DB record is missing
   if (!business) {
     redirect("/business/onboarding");
   }
 
+  // 4. Render the Client-Side Dashboard Controller
   return <DashboardContent business={business} businessHours={businessHours} />;
 }

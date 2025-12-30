@@ -2,6 +2,15 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**", // Allows all paths under the cloudinary domain
+      },
+    ],
+  },
   /* config options here */
   reactCompiler: true,
 };

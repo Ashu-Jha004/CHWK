@@ -257,3 +257,16 @@
 .auth-card {
   animation: auth-fade-in 0.5s ease-out;
 }
+
+body[style*="pointer-events: none"] .cloudinary-widget,
+body[style*="pointer-events: none"] #cloudinary-widget,
+body[style*="pointer-events: none"] [id^="cloudinary-widget"],
+body[style*="pointer-events: none"] .ml-cloudinary-widget-container {
+  pointer-events: auto !important;
+}
+
+/* Ensures the widget stays above the dialog overlay
+*/
+.cloudinary-widget {
+  z-index: 99999 !important;
+}

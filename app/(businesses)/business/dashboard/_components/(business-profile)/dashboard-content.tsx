@@ -1,4 +1,4 @@
-// app/business/dashboard/_components/(business-profile)/dashboard-content.tsx
+// app/(businesses)/business/dashboard/_components/(business-profile)/dashboard-content.tsx
 "use client";
 
 import { useDashboardStore } from "@/store/business-dashboard";
@@ -8,6 +8,7 @@ import {
   BusinessImage,
   BusinessCategory,
   BusinessAmenity,
+  BusinessDocument, // ✅ Added Import
   Category,
   Amenity,
 } from "@prisma/client";
@@ -19,6 +20,7 @@ import { useRouter } from "next/navigation";
 interface DashboardContentProps {
   business: Business & {
     images: BusinessImage[];
+    documents: BusinessDocument[]; // ✅ Added to Type Definition
     categories: (BusinessCategory & {
       category: Category;
     })[];

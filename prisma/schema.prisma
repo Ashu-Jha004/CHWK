@@ -26,6 +26,26 @@ enum UserRole {
   ADMIN
   MODERATOR
 }
+// ==================== NEW ENUMS ====================
+
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum DocumentType {
+  PAN_CARD
+  GST_CERTIFICATE
+  AADHAAR_CARD
+  FSSAI_LICENSE
+  TRADE_LICENSE
+  HEALTH_PERMIT
+  COLLAGE_DEGREE
+  BAR_CERTIFICATE
+  COOK_LICENSE
+  OTHER
+}
 
 enum BusinessStatus {
   PENDING         // Awaiting verification
@@ -422,7 +442,7 @@ metadataKeywords    String[]   // e.g., ["restaurant", "cafe", "dining", "Indian
   promotedListings    PromotedListing[]
   serviceArea        BusinessServiceArea[] // NEW
   staff               BusinessStaff[]       // NEW
-
+documents BusinessDocument[]
   @@index([slug])
   @@index([status])
   @@index([pincode])
@@ -441,6 +461,28 @@ metadataKeywords    String[]   // e.g., ["restaurant", "cafe", "dining", "Indian
   @@index([is24x7])
   @@index([hasEmergencyService])
   @@map("businesses")
+}
+
+model BusinessDocument {
+  id            String         @id @default(cuid())
+  businessId    String
+  business      Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  type          DocumentType
+  customName    String?        // For "OTHER" types or specific degree names
+
+  fileUrl       String         // Cloudinary secure_url
+  publicId      String         // Cloudinary public_id (needed for deletion)
+  fileType      String         // e.g., "application/pdf", "image/jpeg"
+
+  status        DocumentStatus @default(PENDING)
+  rejectionNote String?        // Why the document was rejected (if applicable)
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([businessId])
+  @@index([status])
 }
 
 // ==================== SERVICE AREAS ====================
