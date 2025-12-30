@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "../form-field";
 import { cn } from "@/lib/utils";
+import { SEOMetaDialog } from "./seo/seo-meta-dialog";
 
 interface BasicInfoFormProps {
   business: Business;
@@ -79,6 +80,15 @@ export function BasicInfoForm({ business }: BasicInfoFormProps) {
               disabled={mutation.isPending}
             />
           </FormField>
+          <SEOMetaDialog
+            businessId={business.id}
+            businessName={business.name}
+            initialData={{
+              metaTitle: business.metaTitle,
+              metaDescription: business.metaDescription,
+              metadataKeywords: business.metadataKeywords || [],
+            }}
+          />
 
           <FormField
             label="Short Description"
