@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/search",
   "/businesses(.*)",
+  "/business_service(.*)",
   "/categories(.*)",
   "/about",
   "/api/businesses/nearby",
@@ -53,7 +54,8 @@ export default clerkMiddleware(async (auth, req) => {
 
     // Business owner routes protection
     if (
-      pathname.startsWith("/business") &&
+      pathname.startsWith("/business/") &&
+      !pathname.startsWith("/business_service") &&
       userRole !== "BUSINESS_OWNER" &&
       userRole !== "ADMIN"
     ) {

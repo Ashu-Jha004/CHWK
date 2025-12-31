@@ -13,6 +13,7 @@ import {
   ChevronDown,
   Building2,
   LogIn,
+  Navigation,
 } from "lucide-react";
 import { uiSelectors } from "@/store/landing_page/ui-store";
 import { useScrollDirection } from "@/hooks/landing_page/use-scroll-direction";
@@ -29,24 +30,18 @@ import {
 } from "@/components/ui/sheet";
 import { UserButton } from "@/components/auth/user-button";
 
-/**
- * Main Header Component
- * Features: Sticky header, search bar, location selector, auth buttons
- * Performance: Optimized with useMemo and useCallback
- */
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false); // Added missing state
   const scrollDirection = useScrollDirection({ threshold: 50 });
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const { isSignedIn, user, isLoaded } = useUser();
+  const { isSignedIn, isLoaded } = useUser();
 
-  // Zustand store selectors
   const { isOpen: isMobileMenuOpen, toggle: toggleMobileMenu } =
     uiSelectors.useMobileMenu();
   const { query, location, setQuery, setLocation } = uiSelectors.useSearch();
   const { city, setCity } = uiSelectors.usePreferredCity();
 
-  // Track scroll position for header styling
   useEffect(() => {
     const handleScroll = () => {
       try {
@@ -55,21 +50,113 @@ export function Header() {
         console.error("Error tracking scroll position:", error);
       }
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Handle search submission
+  // components/LandingPage/layout/header.tsx
+  // Same improved GPS detection
+
+  const handleDetectLocation = useCallback(async () => {
+    try {
+      setLocationOpen(false);
+
+      if (!("geolocation" in navigator)) {
+        alert(
+          "Geolocation is not supported by your browser. Please enter your city manually."
+        );
+        return;
+      }
+
+      console.log("Requesting location...");
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude, accuracy } = position.coords;
+          console.log("Location detected:", { latitude, longitude, accuracy });
+
+          setLocation("Near me");
+
+          localStorage.setItem("userLat", latitude.toString());
+          localStorage.setItem("userLon", longitude.toString());
+          localStorage.setItem("locationDetected", "true");
+          localStorage.setItem("locationTimestamp", Date.now().toString());
+
+          console.log("✓ Location detected successfully!");
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          localStorage.removeItem("locationDetected");
+
+          let message = "";
+          let suggestion = "";
+
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              message = "Location access was denied.";
+              suggestion =
+                "Enable location access in browser settings, then try again.\n\nOr enter your city name manually.";
+              break;
+
+            case error.POSITION_UNAVAILABLE:
+              message = "Location unavailable.";
+              suggestion = "Please enter your city name manually.";
+              break;
+
+            case error.TIMEOUT:
+              message = "Location timeout.";
+              suggestion =
+                "Try using Chrome/Edge on mobile for GPS.\n\nOr enter your city manually.";
+              break;
+
+            default:
+              message = "Location error.";
+              suggestion = "Please enter your city manually.";
+          }
+
+          alert(`${message}\n\n${suggestion}`);
+          setLocation(city);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 8000,
+          maximumAge: 600000,
+        }
+      );
+    } catch (error) {
+      console.error("Error in location detection:", error);
+      alert("Failed to detect location. Please enter your city manually.");
+      setLocation(city);
+    }
+  }, [setLocation, city]);
+
   const handleSearch = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
+      if (!query.trim()) return;
+
       try {
-        if (query.trim()) {
-          // TODO: Navigate to search results page
-          console.log("Searching for:", query, "in", location || city);
-          // Example: router.push(`/search?q=${query}&location=${location || city}`);
+        const params = new URLSearchParams();
+        params.set("q", query);
+
+        const userLat = localStorage.getItem("userLat");
+        const userLon = localStorage.getItem("userLon");
+        const locationDetected = localStorage.getItem("locationDetected");
+
+        if (
+          locationDetected === "true" &&
+          userLat &&
+          userLon &&
+          location === "Near me"
+        ) {
+          params.set("lat", userLat);
+          params.set("lon", userLon);
+          params.set("radius", "10");
+        } else {
+          params.set("location", location || city);
         }
+
+        window.location.href = `/search?${params.toString()}`;
       } catch (error) {
         console.error("Search error:", error);
       }
@@ -77,25 +164,16 @@ export function Header() {
     [query, location, city]
   );
 
-  // Handle city selection
   const handleCityChange = useCallback(
     (selectedCity: string) => {
-      try {
-        setCity(selectedCity);
-        setLocation(selectedCity);
-      } catch (error) {
-        console.error("Error changing city:", error);
-      }
+      setCity(selectedCity);
+      setLocation(selectedCity);
+      localStorage.setItem("locationDetected", "false"); // Reset GPS if city picked manually
+      setLocationOpen(false);
     },
     [setCity, setLocation]
   );
 
-  // Scroll to section helper
-  const handleScrollToSection = useCallback((sectionId: string) => {
-    scrollToElement(sectionId);
-  }, []);
-
-  // Memoized header class names
   const headerClassName = useMemo(
     () =>
       cn(
@@ -119,17 +197,11 @@ export function Header() {
             <Link
               href="/"
               className="flex items-center space-x-2 focus-visible-ring"
-              aria-label="CHWK Home"
             >
-              <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-xl">C</span>
               </div>
-              <span
-                className={cn(
-                  "font-bold text-xl md:text-2xl transition-colors",
-                  isScrolled ? "text-gray-900" : "text-gray-900"
-                )}
-              >
+              <span className="font-bold text-xl md:text-2xl text-gray-900">
                 CHWK
               </span>
             </Link>
@@ -137,100 +209,72 @@ export function Header() {
             {/* Desktop Navigation */}
             {!isMobile && (
               <nav className="hidden md:flex items-center space-x-8">
-                <button
-                  onClick={() => handleScrollToSection("categories")}
-                  className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary focus-visible-ring",
-                    isScrolled ? "text-gray-700" : "text-gray-800"
-                  )}
-                >
-                  Categories
-                </button>
-                <button
-                  onClick={() => handleScrollToSection("how-it-works")}
-                  className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary focus-visible-ring",
-                    isScrolled ? "text-gray-700" : "text-gray-800"
-                  )}
-                >
-                  How It Works
-                </button>
-                <button
-                  onClick={() => handleScrollToSection("testimonials")}
-                  className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary focus-visible-ring",
-                    isScrolled ? "text-gray-700" : "text-gray-800"
-                  )}
-                >
-                  Reviews
-                </button>
-                <Link
-                  href="#contact"
-                  className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary focus-visible-ring",
-                    isScrolled ? "text-gray-700" : "text-gray-800"
-                  )}
-                >
-                  Contact
-                </Link>
+                {["categories", "how-it-works", "testimonials"].map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => scrollToElement(id)}
+                    className="text-sm font-medium text-gray-700 transition-colors hover:text-primary capitalize"
+                  >
+                    {id.replace("-", " ")}
+                  </button>
+                ))}
               </nav>
             )}
 
-            {/* Right Section - Desktop */}
+            {/* Right Section */}
             {!isMobile && (
               <div className="hidden md:flex items-center space-x-4">
-                {/* City Selector */}
-                <Sheet>
+                <Sheet open={locationOpen} onOpenChange={setLocationOpen}>
                   <SheetTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2 focus-visible-ring"
-                    >
+                    <Button variant="ghost" size="sm" className="gap-2">
                       <MapPin className="w-4 h-4" />
-                      <span className="text-sm">{city}</span>
+                      <span className="text-sm">{location || city}</span>
                       <ChevronDown className="w-4 h-4" />
                     </Button>
                   </SheetTrigger>
                   <SheetContent side="right" className="w-80">
                     <SheetHeader>
-                      <SheetTitle>Select Your City</SheetTitle>
+                      <SheetTitle>Select Your Location</SheetTitle>
                     </SheetHeader>
-                    <div className="mt-6 space-y-2">
-                      {TIER_1_CITIES.map((cityName) => (
-                        <button
-                          key={cityName}
-                          onClick={() => handleCityChange(cityName)}
-                          className={cn(
-                            "w-full text-left px-4 py-3 rounded-lg transition-colors focus-visible-ring",
-                            city === cityName
-                              ? "bg-primary text-white"
-                              : "hover:bg-gray-100"
-                          )}
-                        >
-                          {cityName}
-                        </button>
-                      ))}
+                    <div className="mt-6 space-y-4">
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start gap-2 text-primary"
+                        onClick={handleDetectLocation}
+                      >
+                        <Navigation className="w-4 h-4" />
+                        Detect My Location
+                      </Button>
+                      <div className="space-y-2">
+                        {TIER_1_CITIES.map((cityName) => (
+                          <button
+                            key={cityName}
+                            onClick={() => handleCityChange(cityName)}
+                            className={cn(
+                              "w-full text-left px-4 py-3 rounded-lg transition-colors",
+                              location === cityName || city === cityName
+                                ? "bg-primary text-white"
+                                : "hover:bg-gray-100"
+                            )}
+                          >
+                            {cityName}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </SheetContent>
                 </Sheet>
 
-                {/* Business Login */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-2 focus-visible-ring"
-                >
+                <Button variant="outline" size="sm" className="gap-2">
                   <Building2 className="w-4 h-4" />
                   For Business
                 </Button>
 
-                {/* Sign In */}
                 {!isSignedIn ? (
                   <Button
                     variant="default"
                     size="sm"
-                    className="gap-2 btn-shine focus-visible-ring"
+                    className="gap-2 btn-shine"
                   >
                     <LogIn className="w-4 h-4" />
                     Sign In
@@ -241,16 +285,13 @@ export function Header() {
               </div>
             )}
 
-            {/* Mobile Menu Toggle */}
-            {/* Mobile Menu Toggle */}
+            {/* Mobile Toggle */}
             {isMobile && (
               <Button
-                type="button"
+                variant="ghost"
                 onClick={toggleMobileMenu}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100 focus-visible-ring"
-                aria-label="Toggle menu"
-                // Fix: Explicitly cast the boolean to a string to satisfy strict ARIA parsers
-                aria-expanded={isMobileMenuOpen ? "true" : "false"}
+                className="p-2"
+                aria-expanded={isMobileMenuOpen}
               >
                 {isMobileMenuOpen ? (
                   <X className="w-6 h-6" />
@@ -261,40 +302,35 @@ export function Header() {
             )}
           </div>
 
-          {/* Search Bar - Desktop (shown when scrolled) */}
+          {/* Scrolled Search Bar */}
           {!isMobile && isScrolled && (
-            <div className="px-4 md:px-6 pb-4 animate-fade-in">
-              <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      placeholder="Search restaurants, salons, services..."
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      className="pl-10 focus-visible-ring"
-                    />
-                  </div>
-                  <Button type="submit" className="btn-shine">
-                    Search
-                  </Button>
+            <div className="px-4 md:px-6 pb-4 animate-in fade-in slide-in-from-top-2">
+              <form
+                onSubmit={handleSearch}
+                className="max-w-2xl mx-auto flex gap-2"
+              >
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    placeholder="Search services..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
+                <Button type="submit">Search</Button>
               </form>
             </div>
           )}
         </div>
       </header>
 
-      {/* Mobile Navigation */}
       <MobileNav
         isOpen={isMobileMenuOpen}
-        onClose={() => toggleMobileMenu()}
+        onClose={toggleMobileMenu}
         city={city}
         onCityChange={handleCityChange}
       />
-
-      {/* Spacer to prevent content from going under fixed header */}
       <div className="h-16 md:h-20" />
     </>
   );

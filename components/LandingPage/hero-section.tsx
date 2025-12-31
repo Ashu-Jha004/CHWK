@@ -62,15 +62,40 @@ export function HeroSection() {
     ].slice(0, 6);
   }, [query, popularSearches, city]);
 
-  // Handle search submission
+  // components/LandingPage/hero-section.tsx
+  // Find and replace the handleSearch function
+
   const handleSearch = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
       try {
         if (query.trim()) {
-          console.log("Searching for:", query, "in", location || city);
-          // TODO: Navigate to search results
-          // router.push(`/search?q=${encodeURIComponent(query)}&location=${encodeURIComponent(location || city)}`);
+          const params = new URLSearchParams();
+          params.set("q", query);
+
+          // Check if location was detected via GPS
+          const userLat = localStorage.getItem("userLat");
+          const userLon = localStorage.getItem("userLon");
+          const locationDetected = localStorage.getItem("locationDetected");
+
+          if (
+            locationDetected === "true" &&
+            userLat &&
+            userLon &&
+            location === "Near me"
+          ) {
+            // Use GPS coordinates for "near me" search
+            params.set("lat", userLat);
+            params.set("lon", userLon);
+            params.set("radius", "10"); // Default 10km radius
+            console.log("Searching with GPS:", userLat, userLon);
+          } else if (location || city) {
+            // Use city name for regular search
+            params.set("location", location || city);
+          }
+
+          // Navigate to search results
+          window.location.href = `/search?${params.toString()}`;
         }
       } catch (error) {
         console.error("Search submission error:", error);
@@ -103,25 +128,90 @@ export function HeroSection() {
   );
 
   // Detect user location
-  const handleDetectLocation = useCallback(() => {
-    try {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            console.log("User location:", position.coords);
-            // TODO: Reverse geocode to get city name
-            // For now, just close the popover
-            setLocationOpen(false);
-          },
-          (error) => {
-            console.error("Geolocation error:", error);
-          }
-        );
-      }
-    } catch (error) {
-      console.error("Error detecting location:", error);
+  // UPDATED CODE:
+  // components/LandingPage/hero-section.tsx
+  // Find and replace the handleDetectLocation function
+
+// components/LandingPage/hero-section.tsx
+// IMPROVED: GPS detection with better error handling
+
+const handleDetectLocation = useCallback(async () => {
+  try {
+    setLocationOpen(false);
+
+    if (!("geolocation" in navigator)) {
+      alert("Geolocation is not supported by your browser. Please enter your city manually.");
+      return;
     }
-  }, []);
+
+    console.log("Requesting location...");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        console.log("Location detected:", { latitude, longitude, accuracy });
+
+        // Update UI
+        setLocation("Near me");
+
+        // Store in localStorage
+        localStorage.setItem("userLat", latitude.toString());
+        localStorage.setItem("userLon", longitude.toString());
+        localStorage.setItem("locationDetected", "true");
+        localStorage.setItem("locationTimestamp", Date.now().toString());
+
+        // Success feedback
+        console.log("✓ Location detected successfully!");
+        // Optional: Add toast notification here
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+
+        // Clear any old location data
+        localStorage.removeItem("locationDetected");
+
+        let message = "";
+        let suggestion = "";
+
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            message = "Location access was denied.";
+            suggestion = "To use 'Near Me' search:\n\n1. Click the lock icon in your browser's address bar\n2. Allow location access\n3. Refresh the page and try again\n\nOr enter your city name manually.";
+            break;
+
+          case error.POSITION_UNAVAILABLE:
+            message = "Location information is unavailable.";
+            suggestion = "This can happen if:\n• GPS signal is weak\n• You're using a desktop without GPS\n• Location services are disabled\n\nPlease enter your city name manually.";
+            break;
+
+          case error.TIMEOUT:
+            message = "Location request timed out.";
+            suggestion = "This usually happens on:\n• Desktop computers\n• Poor GPS signal areas\n• VPN/Proxy usage\n\nTIP: Try using Chrome or Edge on mobile for best results.\n\nFor now, please enter your city name manually.";
+            break;
+
+          default:
+            message = "An unknown error occurred.";
+            suggestion = "Please enter your city name manually.";
+        }
+
+        alert(`${message}\n\n${suggestion}`);
+
+        // Reset location to city
+        setLocation(city);
+      },
+      {
+        enableHighAccuracy: false, // ✅ Changed to false for faster response
+        timeout: 8000, // ✅ Reduced timeout to 8 seconds
+        maximumAge: 600000, // ✅ Accept cached position up to 10 minutes old
+      }
+    );
+  } catch (error) {
+    console.error("Error in location detection:", error);
+    alert("Failed to detect location. Please enter your city manually.");
+    setLocation(city);
+  }
+}, [setLocation, city]);
+
 
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden py-20 md:py-22">

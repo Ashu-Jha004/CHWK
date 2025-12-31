@@ -1,7 +1,43 @@
-import React from "react";
+// app/(customer)/(public)/search/page.tsx
+// FIXED: Direct server-side import (no HTTP)
 
-const search = () => {
-  return <div>search</div>;
+import { SearchResultsClient } from "@/components/search/search-results";
+import { performSearch } from "@/lib/search/server";
+
+export const metadata = {
+  title: "Search Results | Your App Name",
+  description: "Find the best local businesses near you",
 };
 
-export default search;
+interface SearchPageProps {
+  searchParams: Promise<{
+    q?: string;
+    location?: string;
+    lat?: string;
+    lon?: string;
+    radius?: string;
+    category?: string;
+    minRating?: string;
+    priceRange?: string;
+    verified?: string;
+    page?: string;
+    sort?: string;
+  }>;
+}
+
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  // Await searchParams (Next.js 15)
+  const params = await searchParams;
+
+  // ✅ Direct function call - NO HTTP request!
+  const data = await performSearch(params);
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="h-20" />
+      <div className="container-padding py-8">
+        <SearchResultsClient initialData={data} searchParams={params} />
+      </div>
+    </div>
+  );
+}
