@@ -12,6 +12,7 @@ const isPublicRoute = createRouteMatcher([
   "/businesses(.*)",
   "/business_service(.*)",     // SEO business pages
   "/categories(.*)",
+  "/business(.*)",
   "/about",
 
   // Auth pages
