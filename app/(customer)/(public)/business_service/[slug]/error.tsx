@@ -4,7 +4,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw, Home, Search } from "lucide-react";
+import { AlertCircle, RefreshCw, Home, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 interface ErrorProps {
@@ -29,6 +29,13 @@ export default function BusinessDetailError({ error, reset }: ErrorProps) {
 
     // Note: In production, this would be sent to Sentry/LogRocket
   }, [error]);
+
+  const handleClearCache = () => {
+    // Hard reload to clear client-side cache
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background px-4">
@@ -87,6 +94,16 @@ export default function BusinessDetailError({ error, reset }: ErrorProps) {
           >
             <RefreshCw className="h-4 w-4" />
             Try Again
+          </Button>
+
+          <Button
+            onClick={handleClearCache}
+            variant="destructive"
+            size="lg"
+            className="w-full sm:w-auto gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            Clear Cache
           </Button>
 
           <Button
