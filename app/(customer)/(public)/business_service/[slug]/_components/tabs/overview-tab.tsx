@@ -562,7 +562,7 @@ function RelatedBusinessesSection({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground font-bold bg-primary/5 text-primary">
-                    {b.name?.[0].toUpperCase()}
+                    {(b.name?.[0] || "B").toUpperCase()}
                   </div>
                 )}
               </div>

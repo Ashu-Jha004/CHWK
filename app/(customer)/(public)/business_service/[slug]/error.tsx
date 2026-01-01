@@ -53,22 +53,29 @@ export default function BusinessDetailError({ error, reset }: ErrorProps) {
             Don&apos;t worry, we&apos;re working on it!
           </p>
 
-          {/* Error Details (Development Only) */}
-          {process.env.NODE_ENV === "development" && (
-            <details className="mt-6 text-left bg-muted/50 p-4 rounded-lg max-w-lg mx-auto">
-              <summary className="cursor-pointer font-semibold text-sm mb-2">
-                Error Details (Dev Only)
-              </summary>
-              <pre className="text-xs overflow-auto text-destructive">
-                {error.message}
-              </pre>
-              {error.digest && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Error ID: {error.digest}
-                </p>
-              )}
-            </details>
-          )}
+          {/* Error Details (Available for debugging) */}
+          <details className="mt-6 text-left bg-muted/50 p-4 rounded-lg max-w-lg mx-auto">
+            <summary className="cursor-pointer font-semibold text-sm mb-2 text-muted-foreground hover:text-foreground transition-colors">
+              View Error Details
+            </summary>
+            {/* Warning about sensitivity */}
+            <p className="text-[10px] text-muted-foreground mb-2">
+              Please share this with support if the issue persists.
+            </p>
+            <pre className="text-xs overflow-auto text-destructive max-h-40 whitespace-pre-wrap break-words p-2 border border-destructive/20 rounded bg-background">
+              {error.message}
+            </pre>
+            {error.digest && (
+              <p className="text-xs text-muted-foreground mt-2 font-mono">
+                Error ID: {error.digest}
+              </p>
+            )}
+            {error.stack && (
+               <pre className="text-[10px] text-muted-foreground mt-2 overflow-x-auto">
+                 {error.stack}
+               </pre>
+            )}
+          </details>
         </div>
 
         {/* Action Buttons */}
