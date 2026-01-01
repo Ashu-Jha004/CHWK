@@ -180,45 +180,50 @@ async function fetchBusinessBySlug(
 }
 
 async function fetchRelatedBusinesses(business: BusinessDetail) {
-  const categoryIds = business.categories.map((c) => c.categoryId);
+  try {
+    const categoryIds = business.categories.map((c) => c.categoryId);
 
-  return prisma.business.findMany({
-    where: {
-      AND: [
-        { id: { not: business.id } },
-        { status: "ACTIVE" },
-        { deletedAt: null },
-        {
-          OR: [
-            { city: business.city },
-            {
-              categories: {
-                some: {
-                  categoryId: { in: categoryIds },
+    return await prisma.business.findMany({
+      where: {
+        AND: [
+          { id: { not: business.id } },
+          { status: "ACTIVE" },
+          { deletedAt: null },
+          {
+            OR: [
+              { city: business.city },
+              {
+                categories: {
+                  some: {
+                    categoryId: { in: categoryIds },
+                  },
                 },
               },
-            },
-          ],
-        },
-      ],
-    },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      logo: true,
-      city: true,
-      area: true,
-      averageRating: true,
-      totalReviews: true,
-      categories: {
-        take: 1,
-        include: { category: true },
+            ],
+          },
+        ],
       },
-    },
-    take: 6,
-    orderBy: [{ averageRating: "desc" }, { totalReviews: "desc" }],
-  });
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logo: true,
+        city: true,
+        area: true,
+        averageRating: true,
+        totalReviews: true,
+        categories: {
+          take: 1,
+          include: { category: true },
+        },
+      },
+      take: 6,
+      orderBy: [{ averageRating: "desc" }, { totalReviews: "desc" }],
+    });
+  } catch (error) {
+    console.error("Failed to fetch related businesses:", error);
+    return [];
+  }
 }
 
 /* =====================================================

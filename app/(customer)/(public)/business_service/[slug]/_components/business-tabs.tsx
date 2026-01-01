@@ -210,18 +210,10 @@ export function BusinessTabs({
 
 // Error Boundary Wrapper Component
 function ErrorBoundaryWrapper({ children }: { children: React.ReactNode }) {
-  try {
-    return <>{children}</>;
-  } catch (error) {
-    console.error("[TabContentError]", error);
-    return (
-      <ErrorFallback
-        error={error as Error}
-        title="Failed to load content"
-        message="There was an error loading this section. Please try again."
-      />
-    );
-  }
+  // Note: Functional components cannot act as Error Boundaries with try/catch.
+  // Proper error boundaries must be class components.
+  // We rely on page-level error.tsx or parent boundaries for now.
+  return <>{children}</>;
 }
 
 // Tab Content Loading Skeleton
