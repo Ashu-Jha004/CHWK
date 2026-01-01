@@ -43,14 +43,24 @@ interface BusinessHeaderProps {
 export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
   const { isSaved, toggleSave, setShareModalOpen, setReportModalOpen } =
     useBusinessDetailStore();
+
   const isOpen = useMemo(
-    () => isBusinessOpenNow(business, business.hours),
+    () => isBusinessOpenNow(business, business?.hours),
     [business]
   );
+
   const nextOpen = useMemo(
-    () => getNextOpeningTime(business.hours),
-    [business.hours]
+    () => getNextOpeningTime(business?.hours),
+    [business?.hours]
   );
+
+  if (!business) return null;
+
+  const validStats = stats || {
+    averageRating: 0,
+    totalReviews: 0,
+    priceRange: null,
+  };
 
   const whatsappUrl = generateWhatsAppURL(business.phone, business.name);
   const callUrl = generateCallURL(business.phone);
@@ -63,8 +73,9 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
 
   // Get cover image (first featured or first business image)
   const coverImage = useMemo(() => {
-    const featuredImage = business.images.find(img => img.isFeatured && img.isApproved && !img.deletedAt);
-    return featuredImage || business.images.find(img => img.isApproved && !img.deletedAt) || null;
+    if (!business.images || !Array.isArray(business.images)) return null;
+    const featuredImage = business.images.find(img => img?.isFeatured && img?.isApproved && !img?.deletedAt);
+    return featuredImage || business.images.find(img => img?.isApproved && !img?.deletedAt) || null;
   }, [business.images]);
 
   return (
@@ -73,8 +84,8 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
       {coverImage && (
         <div className="relative w-full h-[300px] md:h-[400px] lg:h-[450px] overflow-hidden bg-muted">
           <Image
-            src={coverImage.imageUrl}
-            alt={coverImage.altText || `${business.name} cover`}
+            src={coverImage.imageUrl || "/placeholder-business.jpg"}
+            alt={coverImage.altText || `${business.name || "Business"} cover`}
             fill
             className="object-cover"
             sizes="100vw"
@@ -124,9 +135,9 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
 
                 {/* Categories */}
                 <div className="flex flex-wrap gap-2">
-                  {business.categories.slice(0, 3).map((cat) => (
-                    <Badge key={cat.categoryId} variant="outline">
-                      {cat.category.name}
+                  {business.categories && Array.isArray(business.categories) && business.categories.slice(0, 3).map((cat) => (
+                    <Badge key={cat?.categoryId || Math.random()} variant="outline">
+                      {cat?.category?.name || "Category"}
                     </Badge>
                   ))}
                 </div>
@@ -134,25 +145,25 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
 
               {/* Rating & Reviews */}
               <div className="flex flex-wrap items-center gap-4 text-sm">
-                {stats.averageRating > 0 && (
+                {validStats.averageRating > 0 && (
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 bg-primary/10 px-3 py-1.5 rounded-full">
                       <Star className="h-4 w-4 fill-primary text-primary" />
                       <span className="font-semibold text-foreground">
-                        {stats.averageRating.toFixed(1)}
+                        {validStats.averageRating.toFixed(1)}
                       </span>
                     </div>
                     <span className="text-muted-foreground">
-                      ({stats.totalReviews} reviews)
+                      ({validStats.totalReviews} reviews)
                     </span>
                   </div>
                 )}
 
-                {stats.priceRange && (
+                {validStats.priceRange && (
                   <>
                     <span className="text-muted-foreground">•</span>
                     <span className="text-muted-foreground">
-                      {getPriceRangeLabel(stats.priceRange)}
+                      {getPriceRangeLabel(validStats.priceRange)}
                     </span>
                   </>
                 )}
@@ -227,7 +238,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                 <div className="relative w-32 h-32 rounded-xl overflow-hidden border-2 border-border shadow-lg">
                   <Image
                     src={business.logo}
-                    alt={`${business.name} logo`}
+                    alt={`${business.name || "Business"} logo`}
                     fill
                     className="object-cover"
                     sizes="128px"
