@@ -75,7 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
 
     businessPages = businesses.map((business) => ({
-      url: `${baseUrl}/business_service/${business.slug}`,
+      url: `${baseUrl}/business_service/${business.slug}`.replace(/&/g, "&amp;"),
       lastModified: business.updatedAt,
       changeFrequency: "daily", // Business info can change frequently
       priority: 0.8, // High priority for business pages
@@ -93,7 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { query: "cafes", city: "pune" },
     { query: "doctors", city: "hyderabad" },
   ].map(({ query, city }) => ({
-    url: `${baseUrl}/search?q=${query}&city=${city}`,
+    url: `${baseUrl}/search?q=${query}&city=${city}`.replace(/&/g, "&amp;"),
     lastModified: new Date(),
     changeFrequency: "daily",
     priority: 0.6,
