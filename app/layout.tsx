@@ -7,6 +7,7 @@ import { StructuredData } from "./structured-data";
 import { ClerkProvider } from "@clerk/nextjs";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "sonner";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 // Font configurations with performance optimizations
 const inter = Inter({
   subsets: ["latin"],
@@ -191,6 +192,7 @@ export default function RootLayout({
           <StructuredData />
           <QueryProvider>
             <Providers>{children}</Providers>
+            <InstallPrompt />
             <Toaster />
           </QueryProvider>
         </body>

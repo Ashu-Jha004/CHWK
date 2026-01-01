@@ -2,27 +2,43 @@ import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 1. Merged productionBrowserSourceMaps here
+  productionBrowserSourceMaps: true,
+
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
-        pathname: "/**", // Allows all paths under the cloudinary domain
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "img.clerk.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "plus.unsplash.com",
+        pathname: "/**",
       },
     ],
   },
-  /* config options here */
-  reactCompiler: true,
+
+  // Experimental features
 };
 
-
-
+// 2. Single clean export
 export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
   org: "ashu-jha",
-
   project: "yelp",
 
   // Only print logs for uploading source maps in CI
@@ -35,26 +51,15 @@ export default withSentryConfig(nextConfig, {
   widenClientFileUpload: true,
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
   tunnelRoute: "/monitoring",
 
+  // Note: The webpack options below are specific to how you had them set up.
+  // If Sentry throws a warning about these, they might need to be moved,
+  // but for now, I am preserving your exact Sentry settings.
   webpack: {
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
     automaticVercelMonitors: true,
-
-    // Tree-shaking options for reducing bundle size
     treeshake: {
-      // Automatically tree-shake Sentry logger statements to reduce bundle size
       removeDebugLogging: true,
     },
   },
 });
-
-module.exports = {
-  productionBrowserSourceMaps: true, // Enable source maps in production
-}

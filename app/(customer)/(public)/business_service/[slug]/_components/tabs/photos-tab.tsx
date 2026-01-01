@@ -216,8 +216,8 @@ function GalleryGrid({
           </div>
 
           {/* Type Badge */}
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Badge variant={image.type === "business" ? "default" : "secondary"} className="text-xs">
+          <div className="absolute top-2 right-2">
+            <Badge variant={image.type === "business" ? "default" : "secondary"} className="text-xs shadow-md">
               {image.type === "business" ? "Business" : "Customer"}
             </Badge>
           </div>
