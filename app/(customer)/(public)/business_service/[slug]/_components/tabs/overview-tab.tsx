@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, use } from "react";
 import { BusinessDetail, BusinessStats } from "@/types/customer/business/business-detail";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -532,6 +532,10 @@ function RelatedBusinessesSection({
 }: {
   relatedBusinessesPromise: Promise<Partial<BusinessDetail>[]>;
 }) {
+  const relatedBusinesses = use(relatedBusinessesPromise);
+
+  if (!relatedBusinesses || relatedBusinesses.length === 0) return null;
+
   return (
     <Card className="p-6 space-y-4">
       <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -540,21 +544,50 @@ function RelatedBusinessesSection({
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Placeholder - will load related businesses */}
-        {[1, 2].map((i) => (
-          <div
-            key={i}
-            className="p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors cursor-pointer"
+        {relatedBusinesses.map((b) => (
+          <Link
+            key={b.id}
+            href={`/business_service/${b.slug}`}
+            className="p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors group"
           >
-            <div className="flex gap-3">
-              <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0" />
-              <div className="flex-1 space-y-1">
-                <div className="h-4 bg-muted rounded w-3/4 animate-pulse" />
-                <div className="h-3 bg-muted rounded w-1/2 animate-pulse" />
-                <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
+            <div className="flex gap-4">
+              <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0 border border-border">
+                {b.logo ? (
+                  <Image
+                    src={b.logo}
+                    alt={b.name || "Business"}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground font-bold bg-primary/5 text-primary">
+                    {b.name?.[0].toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="font-semibold truncate group-hover:text-primary transition-colors">
+                  {b.name}
+                </p>
+                <div className="flex items-center gap-1.5 text-sm">
+                  <div className="flex items-center gap-0.5 text-amber-500">
+                    <Star className="h-3.5 w-3.5 fill-current" />
+                    <span className="font-bold">
+                      {b.averageRating?.toFixed(1) || "New"}
+                    </span>
+                  </div>
+                  <span className="text-muted-foreground text-xs">
+                    ({b.totalReviews || 0} reviews)
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {b.area}, {b.city}
+                </p>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </Card>
