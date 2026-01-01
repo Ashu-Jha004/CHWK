@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// app/api/search/route.ts
+
 // Main search API endpoint with intelligent filtering and location-based search
 
 import { NextRequest, NextResponse } from "next/server";

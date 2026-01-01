@@ -1,6 +1,7 @@
 // app/(customer)/(public)/search/page.tsx
 // FIXED: Direct server-side import (no HTTP)
 
+import { Header } from "@/components/LandingPage/layout/header";
 import { SearchResultsClient } from "@/components/search/search-results";
 import { performSearch } from "@/lib/search/server";
 
@@ -34,6 +35,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+            <Header  />
       <div className="h-20" />
       <div className="container-padding py-8">
         <SearchResultsClient initialData={data} searchParams={params} />

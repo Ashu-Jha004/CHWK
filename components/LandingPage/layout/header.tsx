@@ -29,6 +29,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { UserButton } from "@/components/auth/user-button";
+import Image from "next/image";
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -199,7 +200,7 @@ export function Header() {
               className="flex items-center space-x-2 focus-visible-ring"
             >
               <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">C</span>
+                <Image src="/logo.png" alt="Logo" width={50} height={50} />
               </div>
               <span className="font-bold text-xl md:text-2xl text-gray-900">
                 CHWK

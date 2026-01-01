@@ -14,29 +14,33 @@ import {
  * Query qualifiers mapping
  * Maps common search terms to their filter intentions
  */
-const QUALIFIER_PATTERNS = {
+export const ENHANCED_QUALIFIERS = {
+  // Matches: "top rated", "best", "highly rated", "5 star"
   rating: {
-    top: { minRating: 4.5, sort: "rating" },
-    best: { minRating: 4.0, sort: "reviews" }, // Best = rating + review count
-    "highly rated": { minRating: 4.5, sort: "rating" },
-    excellent: { minRating: 4.5, sort: "rating" },
-    "top rated": { minRating: 4.5, sort: "rating" },
+    pattern: /(top[- ]rated|best|highly[- ]rated|excellent|5[- ]star)/gi,
+    filter: { minRating: 4.5, sort: "rating" }
   },
-  price: {
-    cheap: ["BUDGET"],
-    affordable: ["BUDGET", "MODERATE"],
-    budget: ["BUDGET"],
-    expensive: ["EXPENSIVE", "LUXURY"],
-    luxury: ["LUXURY"],
-    premium: ["EXPENSIVE", "LUXURY"],
+  // Matches: "cheap", "budget", "affordable", "low cost"
+  price_low: {
+    pattern: /(cheap|budget|affordable|low[- ]cost|economical)/gi,
+    filter: { priceRange: ["BUDGET"] }
   },
-  distance: {
-    nearby: { radius: 3 },
-    "near me": { radius: 5 },
-    close: { radius: 3 },
-    around: { radius: 10 },
+  // Matches: "luxury", "expensive", "premium", "high end"
+  price_high: {
+    pattern: /(luxury|expensive|premium|high[- ]end|fancy)/gi,
+    filter: { priceRange: ["EXPENSIVE", "LUXURY"] }
   },
-} as const;
+  // Matches: "open now", "available", "working"
+  availability: {
+    pattern: /(open[- ]now|available|working)/gi,
+    filter: { openNow: true }
+  },
+  // Matches: "verified", "trusted", "certified"
+  trust: {
+    pattern: /(verified|trusted|certified|authentic)/gi,
+    filter: { isVerified: true }
+  }
+};
 
 /**
  * Location keywords to detect "near me" intent
@@ -78,92 +82,43 @@ const STOP_WORDS = [
  * @param query - Raw user input (e.g., "top italian restaurants near me")
  * @returns Parsed query with extracted components
  */
-export function parseSearchQuery(query: string): ParsedQuery {
+export function parseSearchQuery(query: string): any {
   try {
     const lowerQuery = query.toLowerCase().trim();
-    const qualifiers: any[] = [];
     let cleanQuery = lowerQuery;
-    let locationIntent: LocationIntent = { type: "none" };
+    const extractedFilters: any = {};
 
-    // 1. Extract location intent
-    for (const keyword of LOCATION_KEYWORDS) {
-      if (lowerQuery.includes(keyword)) {
-        locationIntent = { type: "nearme" };
-        cleanQuery = cleanQuery.replace(keyword, "").trim();
-        break;
+    // 1. Extract Location Intent (Near me / Nearby)
+    const hasNearMe = /(near[- ]me|nearby|around[- ]me|close[- ]to[- ]me)/gi.test(lowerQuery);
+    const locationIntent: LocationIntent = hasNearMe ? { type: "nearme" } : { type: "none" };
+
+    // Clean location keywords from the query
+    cleanQuery = cleanQuery.replace(/(near[- ]me|nearby|around[- ]me|close[- ]to[- ]me)/gi, "").trim();
+
+    // 2. Extract Semantic Qualifiers using Regex
+    Object.entries(ENHANCED_QUALIFIERS).forEach(([key, config]) => {
+      if (config.pattern.test(cleanQuery)) {
+        Object.assign(extractedFilters, config.filter);
+        cleanQuery = cleanQuery.replace(config.pattern, "").trim();
       }
-    }
+    });
 
-    // 2. Extract rating qualifiers
-    for (const [keyword, config] of Object.entries(QUALIFIER_PATTERNS.rating)) {
-      if (lowerQuery.includes(keyword)) {
-        qualifiers.push({
-          type: "rating",
-          value: keyword,
-          filterValue: config.minRating,
-        });
-        cleanQuery = cleanQuery.replace(keyword, "").trim();
-        break; // Only one rating qualifier
-      }
-    }
-
-    // 3. Extract price qualifiers
-    for (const [keyword, priceRanges] of Object.entries(
-      QUALIFIER_PATTERNS.price
-    )) {
-      if (lowerQuery.includes(keyword)) {
-        qualifiers.push({
-          type: "price",
-          value: keyword,
-          filterValue: priceRanges,
-        });
-        cleanQuery = cleanQuery.replace(keyword, "").trim();
-        break; // Only one price qualifier
-      }
-    }
-
-    // 4. Extract distance qualifiers
-    for (const [keyword, config] of Object.entries(
-      QUALIFIER_PATTERNS.distance
-    )) {
-      if (lowerQuery.includes(keyword) && keyword !== "near me") {
-        // Skip "near me" (already handled)
-        qualifiers.push({
-          type: "distance",
-          value: keyword,
-          filterValue: config.radius,
-        });
-        cleanQuery = cleanQuery.replace(keyword, "").trim();
-        break;
-      }
-    }
-
-    // 5. Remove stop words
-    const words = cleanQuery
-      .split(/\s+/)
-      .filter((word) => word.length > 2 && !STOP_WORDS.includes(word));
-
-    // 6. Extract intent (main search terms)
-    const intent = words;
-
-    // 7. Clean up extra spaces
-    cleanQuery = words.join(" ");
+    // 3. Final Cleaning (Remove common filler words)
+    // "Looking for", "find me", "plumber in delhi" -> "plumber"
+    cleanQuery = cleanQuery
+      .replace(/^(looking[- ]for|find[- ]me|search[- ]for|i[- ]need|i[- ]want)/gi, "")
+      .replace(/\s+in\s+.*$/gi, "") // Removes "in [City Name]" if present
+      .trim();
 
     return {
-      cleanQuery,
-      intent,
-      qualifiers,
+      cleanQuery: cleanQuery || lowerQuery, // Fallback to original if over-cleaned
       locationIntent,
+      extractedFilters,
+      rawQuery: query
     };
   } catch (error) {
-    console.error("[parseSearchQuery] Error parsing query:", error);
-    // Fallback: return original query as-is
-    return {
-      cleanQuery: query.trim(),
-      intent: query.toLowerCase().split(/\s+/),
-      qualifiers: [],
-      locationIntent: { type: "none" },
-    };
+    console.error("[Parser Error]: Failed to extract intent", { query, error });
+    return { cleanQuery: query, locationIntent: { type: "none" }, extractedFilters: {}, rawQuery: query };
   }
 }
 

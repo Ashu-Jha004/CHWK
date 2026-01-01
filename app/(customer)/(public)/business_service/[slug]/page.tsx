@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
+import { Header } from "@/components/LandingPage/layout/header";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -59,6 +60,7 @@ export default async function BusinessServicePage({ params }: PageProps) {
 
   return (
     <main className="min-h-screen bg-slate-50/50">
+      <Header  />
       {/* Dynamic Hero Section */}
       <div className="relative h-[45vh] w-full bg-slate-900">
         <Image

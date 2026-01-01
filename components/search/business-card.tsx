@@ -1,20 +1,12 @@
 // components/search/business-card.tsx
-// Individual business card with image, rating, distance
-
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
-import { BusinessSearchResult } from "@/types/search/types";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, MapPin, IndianRupee, CheckCircle2 } from "lucide-react";
+import { Star, MapPin, IndianRupee, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatDistance } from "@/lib/search/utils";
-
-interface BusinessCardProps {
-  business: BusinessSearchResult;
-}
 
 const PRICE_SYMBOLS = {
   BUDGET: "₹",
@@ -23,106 +15,97 @@ const PRICE_SYMBOLS = {
   LUXURY: "₹₹₹₹",
 };
 
-export function BusinessCard({ business }: BusinessCardProps) {
-  const primaryCategory =
-    business.categories.find((c) => c.isPrimary)?.name ||
-    business.categories[0]?.name;
-
-  console.log(business.slug);
+export function BusinessCard({ business }: { business: any }) {
+  console.log(business);
   return (
-    <Card className="card-hover overflow-hidden group h-full">
-      {/* Image */}
-      <div className="relative h-48 bg-gray-200 overflow-hidden">
-        {business.coverImage || business.logo ? (
+    <Link href={`/business_service/${business.slug}`} className="block h-full group">
+      <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 border-muted/60 h-full flex flex-col relative bg-card">
+        {/* Top Image Section */}
+        <div className="relative h-44 w-full bg-muted overflow-hidden">
           <Image
-            src={business.coverImage || business.logo || ""}
+            src={business?.coverImage || "/placeholder-cover.jpg"}
             alt={business.name}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
-            <span className="text-4xl font-bold text-primary/30">
-              {business.name.charAt(0)} helo
-            </span>
-          </div>
-        )}
 
-        {/* Verified Badge */}
-        {business.isVerified && (
-          <Badge className="absolute top-3 right-3 bg-white/90 text-primary border-0">
-            <CheckCircle2 className="h-3 w-3 mr-1" />
-            Verified
-          </Badge>
-        )}
+          {/* Business Logo Overlay */}
+          {business.logo && (
+            <div className="absolute bottom-2 right-2 w-12 h-12 rounded-lg border-2 border-white overflow-hidden shadow-lg bg-white">
+              <Image
+                src={business.logo}
+                alt={`${business.name} logo`}
+                fill
+                className="object-contain"
+              />
+            </div>
+          )}
 
-        {/* Distance Badge */}
-        {business.distance !== undefined && (
-          <Badge className="absolute top-3 left-3 bg-black/70 text-white border-0">
-            <MapPin className="h-3 w-3 mr-1" />
-            {formatDistance(business.distance)}
-          </Badge>
-        )}
-      </div>
-
-      <CardContent className="p-4 space-y-3">
-        {/* Business Name */}
-
-        <div>
-          <Link href={`/business_service/${business.slug}`}>
-            {" "}
-            <h3 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
-              {business.name}
-            </h3>
-          </Link>
-          {primaryCategory && (
-            <p className="text-sm text-muted-foreground">{primaryCategory}</p>
+          {/* Verification Badge */}
+          {business.isVerified && (
+            <div className="absolute top-2 left-2">
+              <Badge className="bg-blue-600 hover:bg-blue-700 text-white border-none flex items-center gap-1 shadow-sm">
+                <CheckCircle2 className="w-3 h-3" /> Verified
+              </Badge>
+            </div>
           )}
         </div>
 
-        {/* Rating & Reviews */}
-        {business.averageRating !== null && business.averageRating > 0 && (
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
-              <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-              <span className="text-sm font-semibold text-primary">
-                {business.averageRating.toFixed(1)}
+        {/* Content Section */}
+        <div className="p-4 flex-1 flex flex-col gap-2">
+          {/* Name and Rating */}
+          <div className="flex justify-between items-start">
+            <h3 className="font-bold text-lg leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+              {business.name}
+            </h3>
+            <div className="flex items-center gap-1 bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-200">
+              <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
+              <span className="text-xs font-bold text-yellow-700">
+                {business.averageRating?.toFixed(1) || "New"}
               </span>
             </div>
-            <span className="text-sm text-muted-foreground">
-              ({business.totalReviews}{" "}
-              {business.totalReviews === 1 ? "review" : "reviews"})
-            </span>
           </div>
-        )}
 
-        {/* Price Range */}
-        {business.priceRange && (
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <IndianRupee className="h-4 w-4" />
-            <span className="text-sm font-mono">
-              {PRICE_SYMBOLS[business.priceRange]}
-            </span>
-          </div>
-        )}
-
-        {/* Location */}
-        <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
-          <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-          <span className="line-clamp-1">
-            {business.area && `${business.area}, `}
-            {business.city}
-          </span>
-        </div>
-
-        {/* Short Description */}
-        {business.shortDescription && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {business.shortDescription}
+          {/* Subtitle / Category */}
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight line-clamp-1">
+             {business.categories?.[0]?.name || "Local Business"} • {business.totalReviews || 0} Reviews
           </p>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* Location & Meta Info */}
+          <div className="space-y-1.5 mt-1">
+            <div className="flex items-center text-muted-foreground text-sm gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-red-500" />
+              <span className="line-clamp-1 italic">{business.area ? `${business.area}, ` : ""}{business.city}</span>
+            </div>
+
+            <div className="flex items-center gap-3 text-xs font-semibold">
+              {business.priceRange && (
+                <div className="flex items-center text-green-700">
+                  <IndianRupee className="w-3 h-3" />
+                  <span>{PRICE_SYMBOLS[business.priceRange as keyof typeof PRICE_SYMBOLS]}</span>
+                </div>
+              )}
+              {/* Optional: Show Distance if lat/lon logic is active */}
+              {business.distance && (
+                <span className="text-blue-600">{business.distance.toFixed(1)} km away</span>
+              )}
+            </div>
+          </div>
+
+          {/* Metadata Keywords (The "Smart Search" Tags) */}
+          <div className="flex flex-wrap gap-1 mt-auto pt-3">
+            {business.metadataKeywords?.slice(0, 3).map((keyword: string) => (
+              <Badge
+                key={keyword}
+                variant="outline"
+                className="text-[10px] font-normal py-0 bg-muted/30 text-muted-foreground border-muted-foreground/20"
+              >
+                {keyword}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </Card>
+    </Link>
   );
 }
