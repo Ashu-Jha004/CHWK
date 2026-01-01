@@ -481,3 +481,12 @@ export const generateGoogleMapsURL = ({
     query
   )}`;
 };
+
+// ===========================
+// Validation Utilities
+// ===========================
+
+export const isValidBusiness = (business: BusinessDetail | null | undefined): boolean => {
+  if (!business) return false;
+  return !!(business.id && business.slug && business.name);
+};
