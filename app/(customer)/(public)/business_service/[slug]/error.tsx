@@ -14,15 +14,20 @@ interface ErrorProps {
 
 export default function BusinessDetailError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    // Log error to error reporting service
-    console.error("[BusinessDetailError]", {
+    // Structured error logging
+    const errorLog = {
+      level: "error",
+      context: "BusinessDetailPage",
       message: error.message,
       digest: error.digest,
       stack: error.stack,
       timestamp: new Date().toISOString(),
-    });
+      url: typeof window !== "undefined" ? window.location.href : "server",
+    };
 
-    // TODO: Send to error tracking service (Sentry, etc.)
+    console.error("[BusinessDetailError]", JSON.stringify(errorLog, null, 2));
+
+    // Note: In production, this would be sent to Sentry/LogRocket
   }, [error]);
 
   return (

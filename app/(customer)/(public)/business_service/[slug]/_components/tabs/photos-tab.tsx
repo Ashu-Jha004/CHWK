@@ -3,7 +3,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BusinessDetail, GalleryFilter } from "@/types/customer/business/business-detail";
+import { BusinessDetail, GalleryFilter, GalleryImage } from "@/types/customer/business/business-detail";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -185,7 +185,7 @@ function GalleryGrid({
   images,
   onImageClick,
 }: {
-  images: any[];
+  images: GalleryImage[];
   onImageClick: (index: number) => void;
 }) {
   return (
@@ -232,7 +232,7 @@ function GalleryList({
   images,
   onImageClick,
 }: {
-  images: any[];
+  images: GalleryImage[];
   onImageClick: (index: number) => void;
 }) {
   return (

@@ -276,7 +276,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
       <Suspense fallback={<BusinessPageSkeleton />}>
         <BusinessPageClient
           business={business}
-          relatedBusinessesPromise={fetchRelatedBusinesses(business) as any}
+          relatedBusinessesPromise={fetchRelatedBusinesses(business)}
         />
       </Suspense>
     </>

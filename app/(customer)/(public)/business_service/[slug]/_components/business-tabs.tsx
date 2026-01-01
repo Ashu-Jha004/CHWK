@@ -3,7 +3,7 @@
 "use client";
 
 import { Suspense, useMemo } from "react";
-import { BusinessDetail, BusinessStats } from "@/types/customer/business/business-detail";
+import { BusinessDetail, BusinessStats, TabId } from "@/types/customer/business/business-detail";
 import { useBusinessDetailStore } from "@/store/customer/business_service/business-detail-store";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -17,6 +17,7 @@ import {
   Image as ImageIcon,
   Star,
   Phone,
+  LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +41,7 @@ interface BusinessTabsProps {
   relatedBusinessesPromise: Promise<Partial<BusinessDetail>[]>;
 }
 
-const TAB_ICONS: Record<string, any> = {
+const TAB_ICONS: Record<string, LucideIcon> = {
   overview: Home,
   about: Info,
   products: ShoppingBag,
@@ -82,7 +83,7 @@ export function BusinessTabs({
     <div id="business-content" className="scroll-mt-6">
       <Tabs
         value={validActiveTab}
-        onValueChange={(value) => setActiveTab(value as any)}
+        onValueChange={(value) => setActiveTab(value as TabId)}
         className="w-full"
       >
         {/* Mobile Tab Selector */}

@@ -160,7 +160,7 @@ export function ChainTab({ business }: ChainTabProps) {
         {/* Placeholder for branch list */}
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Showing all {chain.name} locations. Visit any branch for the same quality service.
+            Showing all {chain.name} locations. Visit our branches for the same quality service.
           </p>
 
           {/* Note: Actual branch data would need to be fetched separately */}

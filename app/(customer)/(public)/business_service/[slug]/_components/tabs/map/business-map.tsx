@@ -5,6 +5,7 @@
 import { useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { MapPin, Loader2 } from "lucide-react";
+import type { Map } from "leaflet";
 
 interface BusinessMapProps {
   latitude: number;
@@ -22,7 +23,7 @@ export function BusinessMap({
   serviceRadius,
 }: BusinessMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
+  const mapInstanceRef = useRef<Map | null>(null);
 
   useEffect(() => {
     // Load Leaflet dynamically
@@ -37,6 +38,7 @@ export function BusinessMap({
         await import("leaflet/dist/leaflet.css");
 
         // Fix marker icon issue with webpack
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         delete (L.Icon.Default.prototype as any)._getIconUrl;
         L.Icon.Default.mergeOptions({
           iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",

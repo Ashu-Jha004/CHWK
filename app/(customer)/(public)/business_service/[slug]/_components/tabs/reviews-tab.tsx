@@ -189,7 +189,7 @@ export function ReviewsTab({ business, stats }: ReviewsTabProps) {
 }
 
 // Review Card Component
-function ReviewCard({ review }: { review: any }) {
+function ReviewCard({ review }: { review: BusinessDetail["reviews"][number] }) {
   return (
     <Card className="p-6 space-y-4 hover:shadow-md transition-shadow">
       {/* User Info & Rating */}
@@ -303,7 +303,7 @@ function ReviewCard({ review }: { review: any }) {
       {/* Review Photos */}
       {review.photos.length > 0 && (
         <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-          {review.photos.map((photo: any) => (
+          {review.photos.map((photo) => (
             <div
               key={photo.id}
               className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
@@ -332,8 +332,8 @@ function ReviewCard({ review }: { review: any }) {
         </Button>
       </div>
 
-      {/* Business Response - If exists */}
-      {review.response && (
+      {/* Business Response - If exists (Commented out until schema supports it) */}
+      {/* {review.response && (
         <>
           <Separator />
           <div className="bg-muted/50 p-4 rounded-lg space-y-2">
@@ -346,7 +346,7 @@ function ReviewCard({ review }: { review: any }) {
             <p className="text-sm leading-relaxed">{review.response.content}</p>
           </div>
         </>
-      )}
+      )} */}
     </Card>
   );
 }
