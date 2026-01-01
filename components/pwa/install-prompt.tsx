@@ -11,6 +11,28 @@ export function InstallPrompt() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      const registerSW = () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((registration) => {
+            console.log("SW registered: ", registration);
+          })
+          .catch((registrationError) => {
+            console.log("SW registration failed: ", registrationError);
+          });
+      };
+
+      if (document.readyState === "complete") {
+        registerSW();
+      } else {
+        window.addEventListener("load", registerSW);
+        return () => window.removeEventListener("load", registerSW);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     // Check if it's iOS
     const isIOSDevice =
       /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
