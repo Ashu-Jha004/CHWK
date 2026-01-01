@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { BusinessDetail, BusinessStats } from "@/types/customer/business/business-detail";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,15 +44,14 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
   const { isSaved, toggleSave, setShareModalOpen, setReportModalOpen } =
     useBusinessDetailStore();
 
-  const isOpen = useMemo(
-    () => isBusinessOpenNow(business, business?.hours),
-    [business]
-  );
+  // Hydration mismatch prevention: Calculate time-based status only on client
+  const [isOpen, setIsOpen] = useState<boolean | null>(null);
+  const [nextOpen, setNextOpen] = useState<string | null>(null);
 
-  const nextOpen = useMemo(
-    () => getNextOpeningTime(business?.hours),
-    [business?.hours]
-  );
+  useEffect(() => {
+    setIsOpen(isBusinessOpenNow(business, business?.hours));
+    setNextOpen(getNextOpeningTime(business?.hours));
+  }, [business]);
 
   if (!business) return null;
 
@@ -191,18 +190,24 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                 ) : (
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span
-                      className={cn(
-                        "font-medium",
-                        isOpen ? "text-green-600 dark:text-green-400" : "text-destructive"
-                      )}
-                    >
-                      {isOpen ? "Open Now" : "Closed"}
-                    </span>
-                    {!isOpen && nextOpen && (
-                      <span className="text-muted-foreground text-xs">
-                        • Opens {nextOpen}
-                      </span>
+                    {isOpen === null ? (
+                      <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+                    ) : (
+                      <>
+                        <span
+                          className={cn(
+                            "font-medium",
+                            isOpen ? "text-green-600 dark:text-green-400" : "text-destructive"
+                          )}
+                        >
+                          {isOpen ? "Open Now" : "Closed"}
+                        </span>
+                        {!isOpen && nextOpen && (
+                          <span className="text-muted-foreground text-xs">
+                            • Opens {nextOpen}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 )}

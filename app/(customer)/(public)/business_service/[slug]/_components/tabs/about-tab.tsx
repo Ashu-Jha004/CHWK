@@ -34,7 +34,7 @@ export function AboutTab({ business, stats }: AboutTabProps) {
   const amenitiesByCategory = useMemo(() => {
     const grouped: Record<string, typeof business.amenities> = {};
 
-    business.amenities.forEach((amenity) => {
+    (business.amenities || []).forEach((amenity) => {
       const category = amenity.amenity.category || "Other";
       if (!grouped[category]) {
         grouped[category] = [];
@@ -109,7 +109,7 @@ export function AboutTab({ business, stats }: AboutTabProps) {
       )}
 
       {/* Categories */}
-      {business.categories.length > 0 && (
+      {business.categories && business.categories.length > 0 && (
         <Card className="p-6 space-y-4">
           <h3 className="text-xl font-semibold flex items-center gap-2">
             <Tags className="h-5 w-5 text-primary" />
@@ -137,7 +137,7 @@ export function AboutTab({ business, stats }: AboutTabProps) {
       )}
 
       {/* Amenities */}
-      {business.amenities.length > 0 && (
+      {business.amenities && business.amenities.length > 0 && (
         <Card className="p-6 space-y-4">
           <h3 className="text-xl font-semibold flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
@@ -189,7 +189,7 @@ export function AboutTab({ business, stats }: AboutTabProps) {
       )}
 
       {/* Service Areas */}
-      {(business.serviceAreas.length > 0 || business.serviceArea.length > 0) && (
+      {((business.serviceAreas && business.serviceAreas.length > 0) || (business.serviceArea && business.serviceArea.length > 0)) && (
         <Card className="p-6 space-y-4">
           <h3 className="text-xl font-semibold flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />
@@ -201,7 +201,7 @@ export function AboutTab({ business, stats }: AboutTabProps) {
           </p>
 
           {/* ServiceArea Model */}
-          {business.serviceAreas.length > 0 && (
+          {business.serviceAreas && business.serviceAreas.length > 0 && (
             <div className="space-y-2">
               {business.serviceAreas.map((area) => (
                 <div
@@ -244,7 +244,7 @@ export function AboutTab({ business, stats }: AboutTabProps) {
           )}
 
           {/* BusinessServiceArea Model */}
-          {business.serviceArea.length > 0 && (
+          {business.serviceArea && business.serviceArea.length > 0 && (
             <div className="space-y-2">
               {business.serviceArea.map((area) => (
                 <div
@@ -407,7 +407,7 @@ export function AboutTab({ business, stats }: AboutTabProps) {
       )}
 
       {/* Verified Documents */}
-      {business.documents.length > 0 && (
+      {business.documents && business.documents.length > 0 && (
         <Card className="p-6 space-y-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />

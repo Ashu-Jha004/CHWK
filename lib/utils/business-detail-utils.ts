@@ -374,6 +374,22 @@ export const calculateBusinessStats = (
   };
 };
 
+export const calculateRatingBreakdown = (
+  reviews: ReviewDisplay[] | undefined | null
+): Record<number, number> => {
+  const breakdown: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  if (!reviews || !Array.isArray(reviews)) return breakdown;
+
+  reviews.forEach((review) => {
+    const rating = review.rating || 0;
+    if (rating >= 1 && rating <= 5) {
+      breakdown[rating] = (breakdown[rating] || 0) + 1;
+    }
+  });
+
+  return breakdown;
+};
+
 // ===========================
 // SEO Utilities
 // ===========================
@@ -404,6 +420,22 @@ export const formatShortAddress = (
     return `${business.addressLine1}, ${business.city}`;
   }
   return `${business.city || ""}, ${business.state || ""}`.replace(/^, |, $/g, "");
+};
+
+export const formatFullAddress = (
+  business: BusinessDetail | null | undefined
+): string => {
+  if (!business) return "";
+  const parts = [
+    business.addressLine1,
+    business.addressLine2,
+    business.landmark ? `Near ${business.landmark}` : null,
+    business.area,
+    business.city,
+    business.state,
+    business.pincode ? `- ${business.pincode}` : null,
+  ];
+  return parts.filter(Boolean).join(", ");
 };
 
 // ===========================

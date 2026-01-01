@@ -19,7 +19,11 @@
       "type": "image/png"
     }
   ],
-  "categories": ["business", "shopping", "lifestyle"],
+  "categories": [
+    "business",
+    "shopping",
+    "lifestyle"
+  ],
   "lang": "en-IN",
   "dir": "ltr"
 }
