@@ -23,9 +23,11 @@ const isPublicRoute = createRouteMatcher([
   "/api/location/(.*)",
   "/api/search(.*)",
 
-  // SEO files
+  // SEO and PWA files
   "/sitemap.xml",
   "/robots.txt",
+  "/site.webmanifest",
+  "/sw.js",
 ]);
 
 // Webhooks must bypass ALL auth logic
@@ -40,7 +42,7 @@ const isOnboardingRoute = createRouteMatcher([
 
 /* =====================================================
    MIDDLEWARE
-===================================================== */
+==================================================== */
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims, isAuthenticated, redirectToSignIn } =
@@ -52,7 +54,7 @@ export default clerkMiddleware(async (auth, req) => {
      1️⃣ ABSOLUTE BYPASS (SEO CRITICAL)
      robots.txt & sitemap.xml must NEVER redirect
   ===================================================== */
-  if (pathname === "/robots.txt" || pathname === "/sitemap.xml") {
+  if (pathname === "/robots.txt" || pathname === "/sitemap.xml" || pathname === "/site.webmanifest" || pathname === "/sw.js") {
     return NextResponse.next();
   }
 
@@ -130,13 +132,15 @@ export default clerkMiddleware(async (auth, req) => {
 export const config = {
   matcher: [
     // All routes except static assets
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|js|webmanifest)$).*)",
 
     // APIs
     "/(api|trpc)(.*)",
 
-    // SEO files
+    // SEO and PWA files
     "/sitemap.xml",
     "/robots.txt",
+    "/site.webmanifest",
+    "/sw.js",
   ],
 };
