@@ -70,14 +70,14 @@ export function OverviewTab({
 
   // Get featured images (first 4)
   const featuredImages = useMemo(
-    () => business.images.slice(0, 4),
+    () => (business.images || []).slice(0, 4),
     [business.images]
   );
 
   // Get featured reviews (top 3 with highest rating)
   const featuredReviews = useMemo(
     () =>
-      business.reviews
+      (business.reviews || [])
         .filter((r) => r.rating >= 4)
         .slice(0, 3),
     [business.reviews]
@@ -418,7 +418,7 @@ export function OverviewTab({
                   </p>
                 )}
 
-                {review.photos.length > 0 && (
+                {review.photos?.length > 0 && (
                   <div className="flex gap-2 overflow-x-auto hide-scrollbar">
                     {review.photos.slice(0, 3).map((photo) => (
                       <div

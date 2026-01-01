@@ -41,7 +41,7 @@ export function PhotosTab({ business }: PhotosTabProps) {
 
   // Convert all images to gallery format
   const allImages = useMemo(
-    () => convertToGalleryImages(business.images, business.photos),
+    () => convertToGalleryImages(business.images || [], business.photos || []),
     [business.images, business.photos]
   );
 

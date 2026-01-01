@@ -33,16 +33,17 @@ export function ReviewsTab({ business, stats }: ReviewsTabProps) {
 
   // Calculate rating breakdown
   const ratingBreakdown = useMemo(
-    () => calculateRatingBreakdown(business.reviews),
+    () => calculateRatingBreakdown(business.reviews || []),
     [business.reviews]
   );
 
   // Filter reviews
   const filteredReviews = useMemo(() => {
+    const reviews = business.reviews || [];
     if (filter === "with-photos") {
-      return business.reviews.filter((r) => r.photos.length > 0);
+      return reviews.filter((r) => r.photos?.length > 0);
     }
-    return business.reviews;
+    return reviews;
   }, [business.reviews, filter]);
 
   // Calculate percentages
@@ -301,7 +302,7 @@ function ReviewCard({ review }: { review: BusinessDetail["reviews"][number] }) {
       )}
 
       {/* Review Photos */}
-      {review.photos.length > 0 && (
+      {review.photos?.length > 0 && (
         <div className="flex gap-2 overflow-x-auto hide-scrollbar">
           {review.photos.map((photo) => (
             <div
