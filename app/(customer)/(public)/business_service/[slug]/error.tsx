@@ -72,6 +72,7 @@ export default function BusinessDetailError({ error, reset }: ErrorProps) {
             <pre className="text-xs overflow-auto text-destructive max-h-40 whitespace-pre-wrap break-words p-2 border border-destructive/20 rounded bg-background">
               {error.message}
             </pre>
+            <h2>Full error:</h2>
             {error.digest && (
               <p className="text-xs text-muted-foreground mt-2 font-mono">
                 Error ID: {error.digest}

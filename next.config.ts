@@ -15,6 +15,8 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 };
 
+
+
 export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
@@ -52,3 +54,7 @@ export default withSentryConfig(nextConfig, {
     },
   },
 });
+
+module.exports = {
+  productionBrowserSourceMaps: true, // Enable source maps in production
+}
