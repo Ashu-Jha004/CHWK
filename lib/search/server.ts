@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import {
+  SearchResponse,
+  BusinessSearchResult,
+  SearchParams as GlobalSearchParams
+} from "@/types/search/types";
 
 interface SearchParams {
   q?: string;
@@ -10,36 +15,10 @@ interface SearchParams {
   sortBy?: 'relevance' | 'rating' | 'recent';
 }
 
-interface SearchResult {
-  id: string;
-  name: string;
-  slug: string;
-  coverImage: string | null;
-  logo: string | null;
-  averageRating: number;
-  priceRange: string;
-  isVerified: boolean;
-  city: string;
-  area: string;
+// Internal interface for the raw SQL result
+interface RawSearchResult extends Omit<BusinessSearchResult, 'categories'> {
+  categories: any; // We'll parse this from JSON if needed, or Prisma might handle it
   rank: number;
-}
-
-interface SearchResponse {
-  results: SearchResult[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    hasMore: boolean;
-  };
-  filters: {
-    availableCategories: Array<{ id: string; count: number }>;
-  };
-  metadata: {
-    searchTime: number;
-    strategy: 'fulltext' | 'fuzzy' | 'fallback';
-    query: string;
-  };
 }
 
 export async function performSearch(params: SearchParams): Promise<SearchResponse> {
@@ -59,38 +38,53 @@ export async function performSearch(params: SearchParams): Promise<SearchRespons
 
   const emptyResponse: SearchResponse = {
     results: [],
-    pagination: { total: 0, page, limit, hasMore: false },
-    filters: { availableCategories: [] },
-    metadata: { searchTime: 0, strategy: 'fallback', query: rawInput }
+    pagination: { total: 0, page, limit, totalPages: 0, hasMore: false },
+    filters: {
+      appliedFilters: params as any,
+      availableFilters: { categories: [], priceRanges: [], cities: [] }
+    },
+    metadata: { searchTime: 0, queryId: 'initial' }
   };
 
   if (!cleanedInput || cleanedInput.length < 2) return emptyResponse;
 
   try {
-    let results: SearchResult[] = [];
+    let results: RawSearchResult[] = [];
     let strategy: 'fulltext' | 'fuzzy' | 'fallback' = 'fulltext';
 
     // Strategy 1: Full-text search with websearch
-    results = await prisma.$queryRaw<SearchResult[]>`
+    results = await prisma.$queryRaw<RawSearchResult[]>`
       SELECT
-        "id", "name", "slug", "coverImage", "logo", "averageRating",
-        "priceRange", "isVerified", "city", "area",
+        b."id", b."name", b."slug", b."coverImage", b."logo", b."averageRating",
+        b."priceRange", b."isVerified", b."city", b."area", b."description",
+        b."shortDescription", b."pincode", b."latitude", b."longitude", b."totalReviews",
+        (
+          SELECT COALESCE(json_agg(json_build_object(
+            'id', c."id",
+            'name', c."name",
+            'slug', c."slug",
+            'isPrimary', bc."isPrimary"
+          )), '[]'::json)
+          FROM "business_categories" bc
+          JOIN "categories" c ON c."id" = bc."categoryId"
+          WHERE bc."businessId" = b."id"
+        ) AS categories,
         ts_rank_cd(
-          setweight(to_tsvector('english', "name"), 'A') ||
-          setweight(search_vector, 'B'),
+          setweight(to_tsvector('english', b."name"), 'A') ||
+          setweight(b.search_vector, 'B'),
           websearch_to_tsquery('english', ${cleanedInput})
         ) AS rank
-      FROM "businesses"
+      FROM "businesses" b
       WHERE
         (
-          setweight(to_tsvector('english', "name"), 'A') ||
-          setweight(search_vector, 'B')
+          setweight(to_tsvector('english', b."name"), 'A') ||
+          setweight(b.search_vector, 'B')
         ) @@ websearch_to_tsquery('english', ${cleanedInput})
-        AND "status" = 'ACTIVE'
-        ${isVerifiedRequested ? Prisma.sql`AND "isVerified" = true` : Prisma.sql``}
-        ${params.categoryId ? Prisma.sql`AND "categoryId" = ${params.categoryId}` : Prisma.sql``}
+        AND b."status" = 'ACTIVE'
+        ${isVerifiedRequested ? Prisma.sql`AND b."isVerified" = true` : Prisma.sql``}
+        ${params.categoryId ? Prisma.sql`AND b."categoryId" = ${params.categoryId}` : Prisma.sql``}
       ORDER BY
-        ${isTopRequested ? Prisma.sql`"averageRating" DESC,` : Prisma.sql``}
+        ${isTopRequested ? Prisma.sql`b."averageRating" DESC,` : Prisma.sql``}
         rank DESC
       LIMIT ${limit}
       OFFSET ${(page - 1) * limit};
@@ -99,28 +93,40 @@ export async function performSearch(params: SearchParams): Promise<SearchRespons
     // Strategy 2: Fuzzy/similarity fallback
     if (results.length === 0) {
       strategy = 'fuzzy';
-      results = await prisma.$queryRaw<SearchResult[]>`
+      results = await prisma.$queryRaw<RawSearchResult[]>`
         SELECT
-          "id", "name", "slug", "coverImage", "logo", "averageRating",
-          "priceRange", "isVerified", "city", "area",
+          b."id", b."name", b."slug", b."coverImage", b."logo", b."averageRating",
+          b."priceRange", b."isVerified", b."city", b."area", b."description",
+          b."shortDescription", b."pincode", b."latitude", b."longitude", b."totalReviews",
+          (
+            SELECT COALESCE(json_agg(json_build_object(
+              'id', c."id",
+              'name', c."name",
+              'slug', c."slug",
+              'isPrimary', bc."isPrimary"
+            )), '[]'::json)
+            FROM "business_categories" bc
+            JOIN "categories" c ON c."id" = bc."categoryId"
+            WHERE bc."businessId" = b."id"
+          ) AS categories,
           GREATEST(
-            similarity("name", ${cleanedInput}),
-            similarity("area", ${cleanedInput}),
-            similarity("city", ${cleanedInput})
+            similarity(b."name", ${cleanedInput}),
+            similarity(b."area", ${cleanedInput}),
+            similarity(b."city", ${cleanedInput})
           ) AS rank
-        FROM "businesses"
+        FROM "businesses" b
         WHERE (
-          "name" % ${cleanedInput}
-          OR "area" % ${cleanedInput}
-          OR "city" % ${cleanedInput}
+          b."name" % ${cleanedInput}
+          OR b."area" % ${cleanedInput}
+          OR b."city" % ${cleanedInput}
         )
-        AND "status" = 'ACTIVE'
+        AND b."status" = 'ACTIVE'
         AND GREATEST(
-          similarity("name", ${cleanedInput}),
-          similarity("area", ${cleanedInput}),
-          similarity("city", ${cleanedInput})
+          similarity(b."name", ${cleanedInput}),
+          similarity(b."area", ${cleanedInput}),
+          similarity(b."city", ${cleanedInput})
         ) > 0.3
-        ${isVerifiedRequested ? Prisma.sql`AND "isVerified" = true` : Prisma.sql``}
+        ${isVerifiedRequested ? Prisma.sql`AND b."isVerified" = true` : Prisma.sql``}
         ORDER BY rank DESC
         LIMIT ${limit};
       `;
@@ -137,20 +143,25 @@ export async function performSearch(params: SearchParams): Promise<SearchRespons
     const total = Number(totalCount[0]?.count || 0);
 
     return {
-      results,
+      results: results as unknown as BusinessSearchResult[],
       pagination: {
         total,
         page,
         limit,
+        totalPages: Math.ceil(total / limit),
         hasMore: page * limit < total
       },
       filters: {
-        availableCategories: [] // Implement async if needed
+        appliedFilters: params as any,
+        availableFilters: {
+          categories: [],
+          priceRanges: [],
+          cities: []
+        }
       },
       metadata: {
         searchTime: Date.now() - startTime,
-        strategy,
-        query: cleanedInput
+        queryId: Math.random().toString(36).substring(7),
       }
     };
 
@@ -161,10 +172,17 @@ export async function performSearch(params: SearchParams): Promise<SearchRespons
       timestamp: new Date().toISOString()
     });
     // Return empty with error metadata for debugging
-    return { ...emptyResponse, metadata: {
-      searchTime: Date.now() - startTime,
-      strategy: 'fallback',
-      query: rawInput
-    }};
+    return {
+      results: [],
+      pagination: { total: 0, page, limit, totalPages: 0, hasMore: false },
+      filters: {
+        appliedFilters: params as any,
+        availableFilters: { categories: [], priceRanges: [], cities: [] }
+      },
+      metadata: {
+        searchTime: Date.now() - startTime,
+        queryId: 'error',
+      }
+    };
   }
 }

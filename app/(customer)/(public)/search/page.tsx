@@ -31,7 +31,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
 
   // ✅ Direct function call - NO HTTP request!
-  const data = await performSearch(params);
+  const data = await performSearch({
+    q: params.q,
+    page: params.page ? parseInt(params.page, 10) : 1,
+    categoryId: params.category,
+    isVerified: params.verified === "true",
+    // Add other conversions if needed (sortBy, etc)
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
