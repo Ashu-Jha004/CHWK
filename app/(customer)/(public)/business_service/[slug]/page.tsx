@@ -65,7 +65,7 @@ export async function generateMetadata({
         url: metaTags.ogUrl,
         title: metaTags.ogTitle,
         description: metaTags.ogDescription,
-        siteName: "YourSiteName", // TODO: Replace with your site name
+        siteName: "CHWK", // TODO : Replace with your site name
         images: metaTags.ogImage
           ? [
               {
@@ -432,7 +432,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
     const relatedBusinessesPromise = fetchRelatedBusinesses(business);
 
     // Generate JSON-LD schemas
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://yourdomain.com";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://chwk.vercel.app/";
     const schemas = generateAllSchemas(business, business.hours, baseUrl);
 
     return (

@@ -1,83 +1,142 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-//onboardingComplete
-const isOnboardingRoute = createRouteMatcher(["/onboarding"]);
-// 1. Define Public Routes (Replaces publicRoutes array)
+
+/* =====================================================
+   ROUTE MATCHERS
+===================================================== */
+
+// Public (SEO + unauthenticated) routes
 const isPublicRoute = createRouteMatcher([
-  "/",
+  "/",                         // Home
   "/search",
   "/businesses(.*)",
-  "/business_service(.*)",
-  '/sitemap.xml',
-  '/robots.txt',
+  "/business_service(.*)",     // SEO business pages
   "/categories(.*)",
   "/about",
-  "/api/businesses/nearby",
-  "api/location/(.*)",
-  "/api/search(.*)",
+
+  // Auth pages
   "/sign-in(.*)",
   "/sign-up(.*)",
+
+  // Public APIs
+  "/api/businesses/nearby",
+  "/api/location/(.*)",
+  "/api/search(.*)",
+
+  // SEO files
+  "/sitemap.xml",
+  "/robots.txt",
 ]);
 
-// 2. Define Webhook/Ignored Routes (Replaces ignoredRoutes)
-const isWebhookRoute = createRouteMatcher(["/api/webhooks(.*)"]);
+// Webhooks must bypass ALL auth logic
+const isWebhookRoute = createRouteMatcher([
+  "/api/webhooks(.*)",
+]);
+
+// Onboarding flow
+const isOnboardingRoute = createRouteMatcher([
+  "/onboarding",
+]);
+
+/* =====================================================
+   MIDDLEWARE
+===================================================== */
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims, isAuthenticated, redirectToSignIn } =
     await auth();
+
   const { pathname } = req.nextUrl;
-  // For users visiting /onboarding, don't try to redirect
-  if (isAuthenticated && isOnboardingRoute(req)) {
+
+  /* =====================================================
+     1️⃣ ABSOLUTE BYPASS (SEO CRITICAL)
+     robots.txt & sitemap.xml must NEVER redirect
+  ===================================================== */
+  if (pathname === "/robots.txt" || pathname === "/sitemap.xml") {
     return NextResponse.next();
-  } // If the user isn't signed in and the route is private, redirect to sign-in
-  if (!isAuthenticated && !isPublicRoute(req))
-    return redirectToSignIn({ returnBackUrl: req.url });
-
-  if (isAuthenticated && !sessionClaims?.metadata?.onboardingComplete) {
-    const onboardingUrl = new URL("/onboarding", req.url);
-    return NextResponse.redirect(onboardingUrl);
   }
-  if (isAuthenticated && !isPublicRoute(req)) return NextResponse.next();
 
-  // Allow webhooks to pass through without any auth checks
+  /* =====================================================
+     2️⃣ WEBHOOKS (NO AUTH / NO REDIRECTS)
+  ===================================================== */
   if (isWebhookRoute(req)) {
     return NextResponse.next();
   }
 
-  // 3. Handle Protected Routes
-  // If the route isn't public and user isn't logged in, Clerk automatically redirects to sign-in
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+  /* =====================================================
+     3️⃣ PUBLIC ROUTES (NO AUTH REQUIRED)
+  ===================================================== */
+  if (isPublicRoute(req)) {
+    return NextResponse.next();
   }
 
-  // 4. Role-Based Access Control (RBAC)
-  if (userId) {
-    const userRole = (sessionClaims?.metadata as { role?: string })?.role;
+  /* =====================================================
+     4️⃣ PRIVATE ROUTES → REQUIRE AUTH
+  ===================================================== */
+  if (!isAuthenticated) {
+    return redirectToSignIn({
+      returnBackUrl: req.url,
+    });
+  }
 
-    // Business owner routes protection
+  /* =====================================================
+     5️⃣ ONBOARDING ENFORCEMENT (PRIVATE ONLY)
+  ===================================================== */
+  const onboardingComplete =
+    (sessionClaims?.metadata as { onboardingComplete?: boolean })
+      ?.onboardingComplete;
+
+  if (
+    isAuthenticated &&
+    !onboardingComplete &&
+    !isOnboardingRoute(req)
+  ) {
+    return NextResponse.redirect(new URL("/onboarding", req.url));
+  }
+
+  /* =====================================================
+     6️⃣ ROLE-BASED ACCESS CONTROL (RBAC)
+  ===================================================== */
+  if (userId) {
+    const role =
+      (sessionClaims?.metadata as { role?: string })?.role ?? "USER";
+
+    // Business owner routes (exclude public business_service pages)
     if (
       pathname.startsWith("/business/") &&
       !pathname.startsWith("/business_service") &&
-      userRole !== "BUSINESS_OWNER" &&
-      userRole !== "ADMIN"
+      role !== "BUSINESS_OWNER" &&
+      role !== "ADMIN"
     ) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    // Admin routes protection
-    if (pathname.startsWith("/admin") && userRole !== "ADMIN") {
+    // Admin-only routes
+    if (pathname.startsWith("/admin") && role !== "ADMIN") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
   }
 
+  /* =====================================================
+     7️⃣ ALLOW REQUEST
+  ===================================================== */
   return NextResponse.next();
 });
 
+/* =====================================================
+   MATCHER CONFIG
+===================================================== */
+
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|sitemap.xml|robots.txt)).*)",
-    // Always run for API routes
+    // All routes except static assets
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+
+    // APIs
     "/(api|trpc)(.*)",
+
+    // SEO files
+    "/sitemap.xml",
+    "/robots.txt",
   ],
 };
