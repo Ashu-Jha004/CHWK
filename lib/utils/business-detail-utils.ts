@@ -348,3 +348,58 @@ export const generatePageDescription = (business: BusinessDetail): string => {
     `${business.shortDescription ?? business.name} in ${business.city}`
   );
 };
+
+// ===========================
+// Location Utilities
+// ===========================
+
+export const formatShortAddress = (
+  business: Pick<BusinessDetail, "addressLine1" | "city" | "state">
+): string => {
+  if (business.addressLine1 && business.city) {
+    return `${business.addressLine1}, ${business.city}`;
+  }
+  return `${business.city}, ${business.state}`;
+};
+
+// ===========================
+// Contact & Action Utilities
+// ===========================
+
+export const formatPhoneNumber = (phone: string): string => {
+  // Basic formatting, can be enhanced
+  return phone.replace(/(\d{3})(\d{3})(\d{4})/, "$1-$2-$3");
+};
+
+export const generateWhatsAppURL = (
+  phone: string | null,
+  text: string = "Hi, I found your business on Yelp clone."
+): string => {
+  if (!phone) return "#";
+  const cleanPhone = phone.replace(/\D/g, "");
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+};
+
+export const generateCallURL = (phone: string | null): string => {
+  if (!phone) return "#";
+  return `tel:${phone}`;
+};
+
+export const generateGoogleMapsURL = ({
+  latitude,
+  longitude,
+  businessName,
+  address,
+}: {
+  latitude: number;
+  longitude: number;
+  businessName?: string;
+  address?: string;
+}): string => {
+  const query = businessName
+    ? `${businessName}, ${address}`
+    : `${latitude},${longitude}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    query
+  )}`;
+};
