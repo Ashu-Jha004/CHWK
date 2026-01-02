@@ -121,3 +121,46 @@ export type CreateReviewFormData = z.infer<typeof createReviewSchema>;
 export type UpdateReviewFormData = z.infer<typeof updateReviewSchema>;
 export type HelpfulVoteFormData = z.infer<typeof helpfulVoteSchema>;
 export type ReviewFiltersFormData = z.infer<typeof reviewFiltersSchema>;
+
+// lib/validations/review.ts
+// Add these schemas at the bottom of the file
+
+// ============================================
+// REVIEW RESPONSE SCHEMAS
+// ============================================
+
+export const createResponseSchema = z.object({
+  reviewId: z.string().cuid("Invalid review ID"),
+  content: z
+    .string()
+    .min(10, "Response must be at least 10 characters")
+    .max(2000, "Response must be less than 2000 characters"),
+});
+
+export const updateResponseSchema = z.object({
+  responseId: z.string().cuid("Invalid response ID"),
+  content: z
+    .string()
+    .min(10, "Response must be at least 10 characters")
+    .max(2000, "Response must be less than 2000 characters"),
+});
+
+export const deleteResponseSchema = z.object({
+  responseId: z.string().cuid("Invalid response ID"),
+});
+
+export const reportReviewSchema = z.object({
+  reviewId: z.string().cuid("Invalid review ID"),
+  reason: z.string().min(10, "Reason must be at least 10 characters").max(500),
+  category: z.enum(["SPAM", "FAKE", "OFFENSIVE", "IRRELEVANT", "OTHER"]),
+  description: z.string().max(1000).optional(),
+});
+
+// ============================================
+// TYPE EXPORTS
+// ============================================
+
+export type CreateResponseFormData = z.infer<typeof createResponseSchema>;
+export type UpdateResponseFormData = z.infer<typeof updateResponseSchema>;
+export type DeleteResponseFormData = z.infer<typeof deleteResponseSchema>;
+export type ReportReviewFormData = z.infer<typeof reportReviewSchema>;

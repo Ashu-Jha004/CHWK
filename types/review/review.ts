@@ -64,6 +64,7 @@ export interface ReviewWithDetails {
   lastEditedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
   user: {
     id: string;
     firstName: string | null;
@@ -146,3 +147,84 @@ export interface CaptchaVerificationResult {
   success: boolean;
   error?: string;
 }
+
+// types/reviews.ts
+// Add these types at the bottom
+
+// ============================================
+// REVIEW RESPONSE TYPES
+// ============================================
+
+export interface CreateResponseInput {
+  reviewId: string;
+  content: string;
+}
+
+export interface UpdateResponseInput {
+  responseId: string;
+  content: string;
+}
+
+export interface ReviewResponseWithDetails {
+  id: string;
+  reviewId: string;
+  content: string;
+  isEdited: boolean;
+  editedAt: Date | null;
+  editableUntil: Date | null;
+  deletedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  user: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    avatar: string | null;
+  };
+}
+
+// ============================================
+// BUSINESS REVIEW DASHBOARD TYPES
+// ============================================
+
+export interface BusinessReviewWithDetails extends ReviewWithDetails {
+  response: ReviewResponseWithDetails | null;
+  // Add reviewer contact info (private to business owner)
+  reviewerEmail?: string;
+  reviewerPhone?: string;
+}
+
+export interface BusinessReviewFilters {
+  businessId: string;
+  rating?: number;
+  hasResponse?: boolean;
+  sortBy?: "recent" | "oldest" | "highest" | "lowest" | "needsResponse";
+  page?: number;
+  limit?: number;
+}
+
+export interface BusinessReviewStats {
+  totalReviews: number;
+  averageRating: number;
+  ratingBreakdown: {
+    5: number;
+    4: number;
+    3: number;
+    2: number;
+    1: number;
+  };
+  responseRate: number;
+  reviewsNeedingResponse: number;
+}
+
+// ============================================
+// REPORT REVIEW TYPES
+// ============================================
+
+export interface ReportReviewInput {
+  reviewId: string;
+  reason: string;
+  category: "SPAM" | "FAKE" | "OFFENSIVE" | "IRRELEVANT" | "OTHER";
+  description?: string;
+}
+

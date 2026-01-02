@@ -16,6 +16,7 @@ import { ProfileContent } from "./profile-content";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { ReviewsManagementTab } from "../business-dashboard/reviews-management-tab";
 
 interface DashboardContentProps {
   business: Business & {
@@ -62,10 +63,7 @@ export function DashboardContent({
 
       case "reviews":
         return (
-          <div className="glass rounded-xl p-8 sm:p-12 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Reviews</h2>
-            <p className="text-muted-foreground">Coming soon...</p>
-          </div>
+          <ReviewsManagementTab businessId={business.id} />
         );
 
       default:

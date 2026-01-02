@@ -274,3 +274,16 @@ body[style*="pointer-events: none"] .ml-cloudinary-widget-container {
 .cloudinary-widget {
   z-index: 99999 !important;
 }
+
+/* app/globals.css - Add at the bottom */
+
+/* Hide scrollbar utility */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
