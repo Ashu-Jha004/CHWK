@@ -276,14 +276,14 @@ export function OverviewTab({
               className={cn(
                 "flex items-start gap-3 p-3 rounded-lg border transition-colors",
                 isOpen
-                  ? "bg-success/5 border-success/20"
+                  ? "bg-secondary/5 border-secondary/20"
                   : "bg-destructive/5 border-destructive/20"
               )}
             >
               <Clock
                 className={cn(
                   "h-5 w-5 flex-shrink-0 mt-0.5",
-                  isOpen ? "text-success" : "text-destructive"
+                  isOpen ? "text-secondary" : "text-destructive"
                 )}
               />
               <div>

@@ -313,7 +313,7 @@ export default function OnboardingPage() {
               <button
                 type="submit"
                 disabled={isSubmitting || isFetchingPin}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold p-3 rounded-lg disabled:opacity-50 shadow-lg shadow-green-100 transition-all active:scale-[0.98]"
+                className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold p-3 rounded-lg disabled:opacity-50 shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
               >
                 {isSubmitting ? "Finalizing..." : "Complete Setup"}
               </button>

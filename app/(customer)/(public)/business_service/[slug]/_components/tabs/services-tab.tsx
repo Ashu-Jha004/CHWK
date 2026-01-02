@@ -403,7 +403,7 @@ function ServiceCard({ service }: { service: MenuItem }) {
 
             {/* Discount Badge */}
             {hasDiscount && (
-              <Badge variant="secondary" className="bg-green-500/10 text-green-700">
+              <Badge variant="secondary" className="bg-secondary/10 text-secondary border-secondary/20">
                 Save {formatPrice(service.price - service.discountedPrice!)}
               </Badge>
             )}

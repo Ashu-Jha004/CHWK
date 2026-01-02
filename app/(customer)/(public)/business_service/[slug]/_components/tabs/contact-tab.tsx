@@ -271,7 +271,7 @@ export function ContactTab({ business }: ContactTabProps) {
               Temporarily Closed
             </Badge>
           ) : business.is24x7 ? (
-            <Badge variant="secondary" className="gap-1 bg-green-500/10 text-green-700 dark:text-green-400">
+            <Badge variant="secondary" className="gap-1 bg-secondary/10 text-secondary border-secondary/20">
               <Clock className="h-3 w-3" />
               Open 24/7
             </Badge>
@@ -281,7 +281,7 @@ export function ContactTab({ business }: ContactTabProps) {
               className={cn(
                 "gap-1",
                 isOpen
-                  ? "bg-green-500/10 text-green-700 dark:text-green-400"
+                  ? "bg-secondary/10 text-secondary border-secondary/20"
                   : "bg-destructive/10 text-destructive"
               )}
             >

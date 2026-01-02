@@ -199,7 +199,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                     Temporarily Closed
                   </Badge>
                 ) : business.is24x7 ? (
-                  <Badge variant="secondary" className="gap-1 bg-success/10 text-success border-success/20">
+                  <Badge variant="secondary" className="gap-1 bg-secondary/10 text-secondary border-secondary/20">
                     <Clock className="h-3 w-3" />
                     Open 24/7
                   </Badge>
@@ -213,7 +213,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                         <span
                           className={cn(
                             "font-medium",
-                            isOpen ? "text-success" : "text-destructive"
+                            isOpen ? "text-secondary" : "text-destructive"
                           )}
                         >
                           {isOpen ? "Open Now" : "Closed"}

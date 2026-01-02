@@ -159,7 +159,7 @@ function StaffCard({ staff }: { staff: BusinessStaff }) {
         {/* Status Badge */}
         <div className="absolute top-3 right-3">
           {staff.isAvailableForBooking && staff.isActive ? (
-            <Badge className="bg-green-600 gap-1">
+            <Badge className="bg-secondary text-secondary-foreground gap-1">
               <CheckCircle2 className="h-3 w-3" />
               Available
             </Badge>

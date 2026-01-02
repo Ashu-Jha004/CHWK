@@ -15,7 +15,7 @@ export default async function DashboardPage() {
     <div className="min-h-screen p-8">
       <h1 className="text-3xl font-bold mb-4">Protected Dashboard</h1>
 
-      <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+      <div className="bg-secondary/10 border border-secondary/20 text-secondary px-4 py-3 rounded mb-6">
         <p className="font-bold">✅ Authentication Working!</p>
         <UserButton />
         <p className="text-sm mt-1">(Using Clerk only, no database yet)</p>

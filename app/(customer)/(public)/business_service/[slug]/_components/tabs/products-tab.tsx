@@ -275,7 +275,7 @@ function ProductCard({ product }: { product: MenuItem }) {
             </Badge>
           )}
           {hasDiscount && (
-            <Badge className="gap-1 bg-green-600">
+            <Badge className="gap-1 bg-secondary text-secondary-foreground border-none">
               <Tag className="h-3 w-3" />
               {discountPercent}% OFF
             </Badge>
@@ -314,12 +314,12 @@ function ProductCard({ product }: { product: MenuItem }) {
         {(product.isVegetarian || product.isVegan || product.isGlutenFree || product.isJain) && (
           <div className="flex flex-wrap gap-1.5">
             {product.isVegetarian && (
-              <Badge variant="outline" className="text-xs bg-green-500/10 text-green-700 border-green-300">
+              <Badge variant="outline" className="text-xs bg-secondary/5 text-secondary border-secondary/20">
                 Veg
               </Badge>
             )}
             {product.isVegan && (
-              <Badge variant="outline" className="text-xs bg-green-600/10 text-green-800 border-green-400">
+              <Badge variant="outline" className="text-xs bg-secondary/10 text-secondary border-secondary/30">
                 Vegan
               </Badge>
             )}

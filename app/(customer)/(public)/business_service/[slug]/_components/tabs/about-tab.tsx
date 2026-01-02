@@ -437,9 +437,9 @@ export function AboutTab({ business, stats }: AboutTabProps) {
                   </p>
                   <Badge
                     variant="secondary"
-                    className="mt-1 text-xs bg-green-500/10 text-green-700 dark:text-green-400"
+                    className="mt-1 text-xs bg-secondary/10 text-secondary border-secondary/20"
                   >
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    <CheckCircle2 className="h-3 w-3 mr-1 text-secondary" />
                     Verified
                   </Badge>
                 </div>

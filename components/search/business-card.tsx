@@ -99,7 +99,7 @@ export function BusinessCard({ business }: { business: any }) {
 
             <div className="flex items-center gap-3 text-xs font-semibold">
               {business.priceRange && (
-                <div className="flex items-center text-green-700">
+                <div className="flex items-center text-secondary">
                   <IndianRupee className="w-3 h-3" />
                   <span>{PRICE_SYMBOLS[business.priceRange as keyof typeof PRICE_SYMBOLS]}</span>
                 </div>

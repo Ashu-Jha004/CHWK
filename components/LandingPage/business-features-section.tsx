@@ -125,8 +125,8 @@ export function BusinessFeaturesSection() {
                 "Real-time lead alerts",
               ].map((text, i) => (
                 <div key={i} className="flex items-center gap-3 text-gray-700">
-                  <div className="bg-green-100 p-1 rounded-full">
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <div className="bg-secondary/10 p-1 rounded-full">
+                    <CheckCircle2 className="w-4 h-4 text-secondary" />
                   </div>
                   <span className="font-medium">{text}</span>
                 </div>

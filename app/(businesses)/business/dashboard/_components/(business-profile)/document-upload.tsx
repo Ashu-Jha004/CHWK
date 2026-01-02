@@ -46,7 +46,7 @@ export const DocumentUpload = ({
   const statusStyles = useMemo(
     () => ({
       PENDING: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
-      VERIFIED: "bg-green-500/10 text-green-600 border-green-200",
+      VERIFIED: "bg-secondary/10 text-secondary border-secondary/20",
       REJECTED: "bg-red-500/10 text-red-600 border-red-200",
     }),
     []

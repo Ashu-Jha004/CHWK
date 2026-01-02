@@ -141,7 +141,7 @@ export function PaymentMethodsSection({
                     />
                   </FormControl>
                   <div className="flex items-start gap-3 flex-1">
-                    <Banknote className="h-5 w-5 text-green-600 mt-0.5" />
+                    <Banknote className="h-5 w-5 text-secondary mt-0.5" />
                     <div className="space-y-1 leading-none">
                       <FormLabel className="cursor-pointer">Cash</FormLabel>
                       <FormDescription>Accept cash payments</FormDescription>
