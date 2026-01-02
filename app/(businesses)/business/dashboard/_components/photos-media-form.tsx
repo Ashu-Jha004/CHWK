@@ -2,8 +2,9 @@
 "use client";
 
 import { useState } from "react";
-import { Business, BusinessImage } from "@prisma/client";
+import { Business, BusinessImage, Photo } from "@prisma/client";
 import { ImageUpload } from "./image-upload";
+import { VideoGalleryForm } from "./video-gallery-form";
 import { CLOUDINARY_FOLDERS } from "@/lib/utils/cloudinary-client.utils";
 import {
   useUpdateLogo,
@@ -13,12 +14,14 @@ import {
   useReorderGallery,
 } from "@/hooks/business-dashboard/use-business-images";
 import { Button } from "@/components/ui/button";
-import { Trash2, GripVertical, Plus, Image as ImageIcon } from "lucide-react";
+import { Trash2, GripVertical, Plus, Image as ImageIcon, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 
 interface PhotosMediaFormProps {
   business: Business & {
     images: BusinessImage[];
+    photos: Photo[];
   };
 }
 
@@ -228,6 +231,26 @@ export function PhotosMediaForm({ business }: PhotosMediaFormProps) {
             </p>
           </div>
         )}
+      </div>
+
+      <Separator className="my-10" />
+
+      {/* Video Gallery Section */}
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <Video className="h-5 w-5 text-primary" />
+            Business Videos
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Manage your YouTube video gallery and virtual tours.
+          </p>
+        </div>
+
+        <VideoGalleryForm
+          businessId={business.id}
+          initialVideos={business.photos}
+        />
       </div>
     </div>
   );

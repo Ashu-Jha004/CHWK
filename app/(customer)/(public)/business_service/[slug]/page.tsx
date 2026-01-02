@@ -20,32 +20,6 @@ interface PageProps {
 }
 
 /* =====================================================
-   LIGHTWEIGHT SEO FETCH (IMPORTANT)
-===================================================== */
-
-async function fetchBusinessSEO(slug: string) {
-  return prisma.business.findUnique({
-    where: { slug, deletedAt: null },
-    select: {
-      slug: true,
-      name: true,
-      city: true,
-      area: true,
-      state: true,
-      latitude: true,
-      longitude: true,
-      averageRating: true,
-      totalReviews: true,
-      logo: true,
-      categories: {
-        take: 1,
-        include: { category: true },
-      },
-    },
-  });
-}
-
-/* =====================================================
    METADATA (SEO)
 ===================================================== */
 
@@ -53,7 +27,7 @@ export async function generateMetadata(
   { params }: PageProps
 ): Promise<Metadata> {
   const { slug } = await params;
-  const business = await fetchBusinessSEO(slug);
+  const business = await fetchBusinessBySlug(slug);
 
   if (!business) {
     return {
@@ -126,19 +100,26 @@ export async function generateMetadata(
 ===================================================== */
 
 export async function generateStaticParams() {
+  // Only pre-render the top 200 businesses to speed up dev/build
+  // Others will be generated on demand (ISR)
   const businesses = await prisma.business.findMany({
-    where: { status: "ACTIVE", deletedAt: null },
+    where: {
+      status: "ACTIVE",
+      deletedAt: null
+    },
     select: { slug: true },
-    take: 1000,
-    orderBy: [{ averageRating: "desc" }, { totalReviews: "desc" }],
+    take: 200,
+    orderBy: [
+      { averageRating: "desc" },
+      { totalReviews: "desc" }
+    ],
   });
 
   return businesses.map((b) => ({ slug: b.slug }));
 }
 
 /* =====================================================
-/* =====================================================
-   FULL DATA FETCH
+   FULL DATA FETCH (DEDUPLICATED)
 ===================================================== */
 
 const fetchBusinessBySlug = cache(async (slug: string): Promise<BusinessDetail | null> => {
@@ -146,26 +127,34 @@ const fetchBusinessBySlug = cache(async (slug: string): Promise<BusinessDetail |
     const business = await prisma.business.findUnique({
       where: { slug, deletedAt: null },
       include: {
-        images: { where: { deletedAt: null, isApproved: true } },
-        documents: { where: { status: "VERIFIED" } },
+        images: { where: { deletedAt: null, isApproved: true }, take: 5 },
+        documents: { where: { status: "VERIFIED" }, take: 3 },
         categories: { include: { category: true } },
         amenities: { include: { amenity: true } },
-        serviceAreas: { where: { isActive: true } },
-        staff: { where: { deletedAt: null, isActive: true }, take: 8 }, // Reduced from 20
+        serviceAreas: { where: { isActive: true }, take: 5 },
+        staff: { where: { deletedAt: null, isActive: true }, take: 4 },
         hours: { orderBy: { dayOfWeek: "asc" } },
-        menuItems: { where: { deletedAt: null }, take: 12 }, // Reduced from 100
+        menuItems: { where: { deletedAt: null }, take: 8 },
         reviews: {
           where: {
             deletedAt: null,
             status: "APPROVED",
             isPublished: true,
           },
-          take: 5, // Reduced from 50 (Client fetches via API)
-          orderBy: { createdAt: 'desc' }
+          take: 3,
+          orderBy: { createdAt: "desc" },
+          include: {
+            user: { select: { id: true, firstName: true, lastName: true, avatar: true } },
+            photos: { where: { deletedAt: null, isApproved: true }, take: 3 }
+          }
         },
-        photos: { where: { deletedAt: null, isApproved: true }, take: 10 },
+        photos: {
+          where: { deletedAt: null, isApproved: true },
+          orderBy: { createdAt: "desc" },
+          take: 50
+        },
         chain: true,
-        _count: { select: { reviews: true, photos: true } },
+        _count: { select: { reviews: true, photos: true, menuItems: true, staff: true } },
       },
     });
 
@@ -174,7 +163,8 @@ const fetchBusinessBySlug = cache(async (slug: string): Promise<BusinessDetail |
     }
 
     return business as BusinessDetail;
-  } catch {
+  } catch (error) {
+    console.error("Fetch Business Error:", error);
     return null;
   }
 });

@@ -38,6 +38,15 @@ export default async function DashboardPage() {
             amenity: true,
           },
         },
+        photos: {
+          where: {
+            type: "VIDEO",
+            deletedAt: null,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
       },
     }),
     prisma.businessHours.findMany({

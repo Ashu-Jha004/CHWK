@@ -3,6 +3,7 @@
 "use client";
 
 import { Suspense, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { BusinessDetail, BusinessStats, TabId } from "@/types/customer/business/business-detail";
 import { useBusinessDetailStore } from "@/store/customer/business_service/business-detail-store";
 import { Card } from "@/components/ui/card";
@@ -21,16 +22,43 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Tab Components (we'll create these in next steps)
-import { OverviewTab } from "./tabs/overview-tab";
-import { AboutTab } from "./tabs/about-tab";
-import { ProductsTab } from "./tabs/products-tab";
-import { ServicesTab } from "./tabs/services-tab";
-import { StaffTab } from "./tabs/staff-tab";
-import { ChainTab } from "./tabs/chain-tab";
-import { PhotosTab } from "./tabs/photos-tab";
-import { ReviewsTab } from "./tabs/reviews-tab";
-import { ContactTab } from "./tabs/contact-tab";
+// Lazy-loaded Tab Components with dynamic imports
+const OverviewTab = dynamic(() => import("./tabs/overview-tab").then(mod => ({ default: mod.OverviewTab })), {
+  loading: () => <TabContentSkeleton />,
+});
+
+const AboutTab = dynamic(() => import("./tabs/about-tab").then(mod => ({ default: mod.AboutTab })), {
+  loading: () => <TabContentSkeleton />,
+});
+
+const ProductsTab = dynamic(() => import("./tabs/products-tab").then(mod => ({ default: mod.ProductsTab })), {
+  loading: () => <TabContentSkeleton />,
+});
+
+const ServicesTab = dynamic(() => import("./tabs/services-tab").then(mod => ({ default: mod.ServicesTab })), {
+  loading: () => <TabContentSkeleton />,
+});
+
+const StaffTab = dynamic(() => import("./tabs/staff-tab").then(mod => ({ default: mod.StaffTab })), {
+  loading: () => <TabContentSkeleton />,
+});
+
+const ChainTab = dynamic(() => import("./tabs/chain-tab").then(mod => ({ default: mod.ChainTab })), {
+  loading: () => <TabContentSkeleton />,
+});
+
+const PhotosTab = dynamic(() => import("./tabs/photos-tab").then(mod => ({ default: mod.PhotosTab })), {
+  loading: () => <TabContentSkeleton />,
+});
+
+const ReviewsTab = dynamic(() => import("./tabs/reviews-tab").then(mod => ({ default: mod.ReviewsTab })), {
+  loading: () => <TabContentSkeleton />,
+});
+
+const ContactTab = dynamic(() => import("./tabs/contact-tab").then(mod => ({ default: mod.ContactTab })), {
+  loading: () => <TabContentSkeleton />,
+});
+
 import { ErrorFallback } from "./error-fallback";
 import { Skeleton } from "@/components/ui/skeleton";
 

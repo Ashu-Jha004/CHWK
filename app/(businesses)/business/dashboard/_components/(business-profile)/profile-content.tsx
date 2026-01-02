@@ -9,8 +9,9 @@ import {
   BusinessCategory,
   BusinessHours,
   BusinessImage,
-  BusinessDocument, // 1. Added Import
+  BusinessDocument,
   Category,
+  Photo,
 } from "@prisma/client";
 import { BasicInfoForm } from "./basic-info-form";
 import { BusinessHoursForm } from "../business-hours-form";
@@ -18,12 +19,13 @@ import { PhotosMediaForm } from "../photos-media-form";
 import { ProfileTabs } from "./profile-tabs";
 import { CategoriesAmenitiesForm } from "../categories-amenities-form";
 import { ServiceSettingsForm } from "../service-settings/service-settings-form";
-import { LegalDocumentsForm } from "../legal-documents-form"; // 2. Added Import
+import { LegalDocumentsForm } from "../legal-documents-form";
 
 interface ProfileContentProps {
   business: Business & {
     images: BusinessImage[];
-    documents: BusinessDocument[]; // 3. Added to Type Definition
+    documents: BusinessDocument[];
+    photos: Photo[];
     categories: (BusinessCategory & {
       category: Category;
     })[];

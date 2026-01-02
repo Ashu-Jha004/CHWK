@@ -48,6 +48,9 @@ import { useBusinessDetailStore } from "@/store/customer/business_service/busine
 import { cn } from "@/lib/utils";
 import { getYouTubeEmbedUrl } from "@/lib/utils/video-helper";
 
+import { VideoPreviewGrid } from "@/components/business/video-preview-grid";
+import { LazyRender } from "@/components/lazy-render";
+
 interface OverviewTabProps {
   business: BusinessDetail;
   stats: BusinessStats;
@@ -59,7 +62,7 @@ export function OverviewTab({
   stats,
   relatedBusinessesPromise,
 }: OverviewTabProps) {
-  const { setActiveTab, setGalleryOpen, setGalleryIndex } = useBusinessDetailStore();
+  const { setActiveTab, setGalleryOpen, setGalleryIndex, setGalleryFilter } = useBusinessDetailStore();
 
   const isOpen = useMemo(
     () => isBusinessOpenNow(business, business.hours),
@@ -106,42 +109,61 @@ export function OverviewTab({
       {business.introVideoUrl && (
         <IntroVideoSection videoUrl={business.introVideoUrl} />
       )}
+
+      {/* NEW: Video Gallery Section */}
+      {business.photos.length > 0 && (
+        <LazyRender rootMargin="300px">
+          <VideoPreviewGrid
+            videos={business.photos.filter(p => p.type === "VIDEO")}
+            totalCount={business.photos.filter(p => p.type === "VIDEO").length}
+            onViewAll={() => {
+              setGalleryFilter("video");
+              setActiveTab("photos");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
+        </LazyRender>
+      )}
+
       {/* Hero Image Gallery Preview */}
       {featuredImages.length > 0 && (
-        <Card className="overflow-hidden">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2">
-            {featuredImages.map((image, index) => (
-              <div
-                key={image.id}
-                className="relative aspect-square rounded-lg overflow-hidden group cursor-pointer"
-                onClick={() => handleImageClick(index)}
-              >
-                <Image
-                  src={image.imageUrl}
-                  alt={image.altText || `${business.name} photo ${index + 1}`}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-110"
-                  sizes="(max-width: 768px) 50vw, 25vw"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-              </div>
-            ))}
-          </div>
-
-          {stats?.totalPhotos > 4 && (
-            <div className="p-4 border-t border-border">
-              <Button
-                variant="ghost"
-                className="w-full gap-2"
-                onClick={handleViewAllPhotos}
-              >
-                <ImageIcon className="h-4 w-4" />
-                View All {stats?.totalPhotos || 0} Photos
-                <ChevronRight className="h-4 w-4 ml-auto" />
-              </Button>
+        <LazyRender rootMargin="200px">
+          <Card className="overflow-hidden">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2">
+              {featuredImages.map((image, index) => (
+                <div
+                  key={image.id}
+                  className="relative aspect-square rounded-lg overflow-hidden group cursor-pointer"
+                  onClick={() => handleImageClick(index)}
+                >
+                  <Image
+                    src={image.imageUrl}
+                    alt={image.altText || `${business.name} photo ${index + 1}`}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                </div>
+              ))}
             </div>
-          )}
-        </Card>
+
+            {stats?.totalPhotos > 4 && (
+              <div className="p-4 border-t border-border">
+                <Button
+                  variant="ghost"
+                  className="w-full gap-2"
+                  onClick={handleViewAllPhotos}
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  View All {stats?.totalPhotos || 0} Photos
+                  <ChevronRight className="h-4 w-4 ml-auto" />
+                </Button>
+              </div>
+            )}
+          </Card>
+        </LazyRender>
       )}
 
       {/* Quick Stats Grid */}

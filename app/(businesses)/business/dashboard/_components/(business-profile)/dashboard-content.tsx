@@ -8,9 +8,10 @@ import {
   BusinessImage,
   BusinessCategory,
   BusinessAmenity,
-  BusinessDocument, // ✅ Added Import
+  BusinessDocument,
   Category,
   Amenity,
+  Photo,
 } from "@prisma/client";
 import { ProfileContent } from "./profile-content";
 import { RefreshCw } from "lucide-react";
@@ -21,7 +22,8 @@ import { ReviewsManagementTab } from "../business-dashboard/reviews-management-t
 interface DashboardContentProps {
   business: Business & {
     images: BusinessImage[];
-    documents: BusinessDocument[]; // ✅ Added to Type Definition
+    documents: BusinessDocument[];
+    photos: Photo[];
     categories: (BusinessCategory & {
       category: Category;
     })[];

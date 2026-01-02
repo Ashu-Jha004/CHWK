@@ -27,6 +27,8 @@ import { useGalleryState, useGalleryActions } from "@/store/customer/business_se
 import { formatDate } from "@/lib/utils/business-detail-utils";
 import { cn } from "@/lib/utils";
 import { useBusinessDetailStore } from "@/store/customer/business_service/business-detail-store";
+import { getYouTubeEmbedUrl } from "@/lib/utils/video-helper";
+import { getYouTubeID } from "@/lib/video";
 
 interface GalleryLightboxProps {
   images: any[];
@@ -172,10 +174,13 @@ export function GalleryLightbox({ images, business }: GalleryLightboxProps) {
                   </div>
                   {currentImage.type && (
                     <Badge
-                      variant={currentImage.type === "business" ? "default" : "secondary"}
-                      className="text-xs"
+                      variant={currentImage.type === "video" ? "default" : currentImage.type === "business" ? "default" : "secondary"}
+                      className={cn(
+                        "text-xs",
+                        currentImage.type === "video" && "bg-primary hover:bg-primary"
+                      )}
                     >
-                      {currentImage.type === "business" ? "Business" : "Customer"}
+                      {currentImage.type === "video" ? "Video" : currentImage.type === "business" ? "Business" : "Customer"}
                     </Badge>
                   )}
                 </div>
@@ -254,25 +259,37 @@ export function GalleryLightbox({ images, business }: GalleryLightboxProps) {
             </div>
           </div>
 
-          {/* Main Image */}
-          <div className="flex-1 flex items-center justify-center p-16 overflow-hidden">
-            <div
-              className="relative transition-transform duration-300 ease-out"
-              style={{
-                transform: `scale(${zoom})`,
-                maxWidth: "100%",
-                maxHeight: "100%",
-              }}
-            >
-              <Image
-                src={currentImage.url}
-                alt={currentImage.altText || currentImage.caption || "Gallery image"}
-                width={currentImage.width || 1200}
-                height={currentImage.height || 800}
-                className="max-w-full max-h-[70vh] w-auto h-auto object-contain"
-                priority
-              />
-            </div>
+          {/* Main Content (Image or Video) */}
+          <div className="flex-1 flex items-center justify-center p-8 md:p-16 overflow-hidden">
+            {currentImage.type === "video" ? (
+              <div className="w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden shadow-2xl">
+                 <iframe
+                    src={getYouTubeEmbedUrl(currentImage.url) + "&mute=0"}
+                    title={currentImage.caption || "Video Player"}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+              </div>
+            ) : (
+              <div
+                className="relative transition-transform duration-300 ease-out"
+                style={{
+                  transform: `scale(${zoom})`,
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                }}
+              >
+                <Image
+                  src={currentImage.url}
+                  alt={currentImage.altText || currentImage.caption || "Gallery image"}
+                  width={currentImage.width || 1200}
+                  height={currentImage.height || 800}
+                  className="max-w-full max-h-[70vh] md:max-h-[80vh] w-auto h-auto object-contain"
+                  priority
+                />
+              </div>
+            )}
           </div>
 
           {/* Navigation Arrows */}
@@ -313,12 +330,17 @@ export function GalleryLightbox({ images, business }: GalleryLightboxProps) {
                   )}
                 >
                   <Image
-                    src={img.url}
+                    src={img.thumbnailUrl || img.url}
                     alt={`Thumbnail ${idx + 1}`}
                     fill
                     className="object-cover"
                     sizes="80px"
                   />
+                  {img.type === "video" && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                      <Play className="h-4 w-4 text-white fill-white" />
+                    </div>
+                  )}
                 </button>
               ))}
             </div>

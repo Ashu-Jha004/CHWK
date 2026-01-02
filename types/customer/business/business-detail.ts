@@ -92,12 +92,12 @@ export interface GalleryImage {
   altText?: string | null;
   width?: number | null;
   height?: number | null;
-  type: "business" | "user" | "review";
+  type: "business" | "user" | "review" | "video";
   uploadedBy?: string | null;
   createdAt: Date;
 }
 
-export type GalleryFilter = "all" | "business" | "interior" | "exterior" | "menu" | "user";
+export type GalleryFilter = "all" | "business" | "interior" | "exterior" | "menu" | "user" | "video";
 
 export interface GalleryState {
   currentIndex: number;

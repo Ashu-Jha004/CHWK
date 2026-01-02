@@ -22,6 +22,7 @@ import {
   Review,
   PriceRange,
 } from "@prisma/client";
+import { getYouTubeID } from "@/lib/video";
 
 // ===========================
 // Date & Time Utilities
@@ -234,18 +235,30 @@ export const convertToGalleryImages = (
 
   const userGallery = safeUserPhotos
     .filter((p) => p && p.isApproved && !p.isFlagged)
-    .map((p) => ({
-      id: p.id,
-      url: p.url,
-      thumbnailUrl: p.thumbnailUrl,
-      caption: p.caption,
-      altText: null,
-      width: p.width,
-      height: p.height,
-      type: "user" as const,
-      uploadedBy: p.userId,
-      createdAt: p.createdAt || new Date(),
-    }));
+    .map((p) => {
+      const isVideo = p.type === "VIDEO";
+      let thumbnailUrl = p.thumbnailUrl;
+
+      if (isVideo && !thumbnailUrl) {
+        const videoId = getYouTubeID(p.url);
+        if (videoId) {
+           thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+        }
+      }
+
+      return {
+        id: p.id,
+        url: p.url,
+        thumbnailUrl: thumbnailUrl,
+        caption: p.caption,
+        altText: null,
+        width: p.width,
+        height: p.height,
+        type: (isVideo ? "video" : "user") as "user" | "video",
+        uploadedBy: p.userId,
+        createdAt: p.createdAt || new Date(),
+      };
+    });
 
   return [...businessGallery, ...userGallery];
 };
