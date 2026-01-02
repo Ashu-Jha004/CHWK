@@ -23,6 +23,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/businesses/nearby",
   "/api/location/(.*)",
   "/api/search(.*)",
+  "/api/reviews/list(.*)",
+  "/api/reviews/vote(.*)",
 
   // SEO and PWA files
   "/sitemap.xml",
@@ -45,7 +47,7 @@ const isOnboardingRoute = createRouteMatcher([
    MIDDLEWARE
 ==================================================== */
 
-export const proxy = clerkMiddleware(async (auth, req) => {
+export default clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims, isAuthenticated, redirectToSignIn } =
     await auth();
 

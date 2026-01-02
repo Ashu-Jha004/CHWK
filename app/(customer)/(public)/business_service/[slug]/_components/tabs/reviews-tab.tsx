@@ -4,6 +4,7 @@
 
 import { useMemo, useState, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,7 @@ export function ReviewsTab({
   const [editingReview, setEditingReview] = useState<ReviewWithDetails | null>(null);
 
   const { isSignedIn, userId } = useAuth();
+  const router = useRouter();
 
   // ============================================
   // FETCH REVIEWS
@@ -228,7 +230,10 @@ export function ReviewsTab({
                 </div>
               ) : null
             ) : (
-              <Button className="w-full gap-2" disabled>
+              <Button
+                className="w-full gap-2"
+                onClick={() => router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`)}
+              >
                 <Edit className="h-4 w-4" />
                 Sign in to Review
               </Button>
