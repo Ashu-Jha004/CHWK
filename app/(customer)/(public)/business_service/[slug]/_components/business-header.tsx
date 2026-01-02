@@ -8,6 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Star,
   MapPin,
   Clock,
@@ -25,6 +31,7 @@ import Image from "next/image";
 import {
   formatPhoneNumber,
   formatShortAddress,
+  formatFullAddress,
   getPriceRangeLabel,
   isBusinessOpenNow,
   getNextOpeningTime,
@@ -125,7 +132,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                     {business.name}
                   </h1>
                   {business.isVerified && (
-                    <Badge variant="secondary" className="gap-1 mt-1">
+                    <Badge variant="secondary" className="gap-1 mt-1 bg-secondary/10 text-secondary border-secondary/20">
                       <CheckCircle2 className="h-3 w-3" />
                       Verified
                     </Badge>
@@ -170,10 +177,19 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
 
               {/* Address & Status */}
               <div className="flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  <span>{formatShortAddress(business)}</span>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2 text-muted-foreground cursor-help min-w-0 max-w-[200px] sm:max-w-[400px]">
+                        <MapPin className="h-4 w-4 flex-shrink-0" />
+                        <span className="truncate">{formatShortAddress(business)}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs text-center">
+                      {formatFullAddress(business)}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
                 <span className="text-muted-foreground">•</span>
 
@@ -183,7 +199,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                     Temporarily Closed
                   </Badge>
                 ) : business.is24x7 ? (
-                  <Badge variant="secondary" className="gap-1 bg-green-500/10 text-green-700 dark:text-green-400">
+                  <Badge variant="secondary" className="gap-1 bg-success/10 text-success border-success/20">
                     <Clock className="h-3 w-3" />
                     Open 24/7
                   </Badge>
@@ -197,7 +213,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                         <span
                           className={cn(
                             "font-medium",
-                            isOpen ? "text-green-600 dark:text-green-400" : "text-destructive"
+                            isOpen ? "text-success" : "text-destructive"
                           )}
                         >
                           {isOpen ? "Open Now" : "Closed"}

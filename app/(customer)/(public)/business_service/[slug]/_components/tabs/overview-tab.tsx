@@ -5,6 +5,12 @@
 import { useMemo, use } from "react";
 import { BusinessDetail, BusinessStats } from "@/types/customer/business/business-detail";
 import { Card } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -253,10 +259,10 @@ export function OverviewTab({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {/* Verified Badge */}
           {business.isVerified && (
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-              <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-secondary/5 border border-secondary/10">
+              <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-sm">Verified Business</p>
+                <p className="font-medium text-sm text-secondary">Verified Business</p>
                 <p className="text-xs text-muted-foreground">
                   Identity and documents verified
                 </p>
@@ -268,16 +274,16 @@ export function OverviewTab({
           {!business.isTemporarilyClosed && (
             <div
               className={cn(
-                "flex items-start gap-3 p-3 rounded-lg border",
+                "flex items-start gap-3 p-3 rounded-lg border transition-colors",
                 isOpen
-                  ? "bg-green-500/5 border-green-500/20"
-                  : "bg-orange-500/5 border-orange-500/20"
+                  ? "bg-success/5 border-success/20"
+                  : "bg-destructive/5 border-destructive/20"
               )}
             >
               <Clock
                 className={cn(
                   "h-5 w-5 flex-shrink-0 mt-0.5",
-                  isOpen ? "text-green-600" : "text-orange-600"
+                  isOpen ? "text-success" : "text-destructive"
                 )}
               />
               <div>
@@ -506,12 +512,22 @@ export function OverviewTab({
             </div>
           )}
 
-          {/* Address */}
           <div className="flex items-start gap-3">
             <MapPin className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-muted-foreground">Address</p>
-              <p className="text-foreground">{formatFullAddress(business)}</p>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-foreground truncate cursor-help">
+                      {formatFullAddress(business)}
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-center">
+                    {formatFullAddress(business)}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <Button
                 variant="link"
                 size="sm"
@@ -589,10 +605,19 @@ function RelatedBusinessesSection({
                     ({b.totalReviews || 0} reviews)
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {b.area}, {b.city}
-                </p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-xs text-muted-foreground truncate flex items-center gap-1 cursor-help">
+                        <MapPin className="h-3 w-3" />
+                        {b.area}, {b.city}
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      {b.area}, {b.city}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </Link>

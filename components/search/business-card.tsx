@@ -5,6 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Star, MapPin, IndianRupee, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,7 +50,7 @@ export function BusinessCard({ business }: { business: any }) {
           {/* Verification Badge */}
           {business.isVerified && (
             <div className="absolute top-2 left-2">
-              <Badge className="bg-blue-600 hover:bg-blue-700 text-white border-none flex items-center gap-1 shadow-sm">
+              <Badge className="bg-secondary text-secondary-foreground border-none flex items-center gap-1 shadow-md">
                 <CheckCircle2 className="w-3 h-3" /> Verified
               </Badge>
             </div>
@@ -73,10 +79,23 @@ export function BusinessCard({ business }: { business: any }) {
 
           {/* Location & Meta Info */}
           <div className="space-y-1.5 mt-1">
-            <div className="flex items-center text-muted-foreground text-sm gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-red-500" />
-              <span className="line-clamp-1 italic">{business.area ? `${business.area}, ` : ""}{business.city}</span>
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center text-muted-foreground text-sm gap-1.5 min-w-0 cursor-help">
+                    <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                    <span className="truncate italic">
+                      {business.area ? `${business.area}, ` : ""}
+                      {business.city}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  {business.area ? `${business.area}, ` : ""}
+                  {business.city}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
             <div className="flex items-center gap-3 text-xs font-semibold">
               {business.priceRange && (

@@ -5,6 +5,12 @@
 import { useMemo } from "react";
 import { BusinessDetail, BusinessStats } from "@/types/customer/business/business-detail";
 import { Card } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -459,8 +465,19 @@ export function AboutTab({ business, stats }: AboutTabProps) {
           Location
         </h3>
 
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">{formatFullAddress(business)}</p>
+        <div className="space-y-2 min-w-0">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="text-sm text-muted-foreground truncate cursor-help">
+                  {formatFullAddress(business)}
+                </p>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs text-center">
+                {formatFullAddress(business)}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           {business.landmark && (
             <div className="flex items-start gap-2 text-sm text-muted-foreground">

@@ -86,29 +86,6 @@ export function BusinessTabs({
         onValueChange={(value) => setActiveTab(value as TabId)}
         className="w-full"
       >
-        {/* Mobile Tab Selector */}
-        {isMobile && (
-          <Card className="mb-4 p-1 overflow-x-auto hide-scrollbar sticky top-0 z-10 bg-card/95 backdrop-blur-lg">
-            <TabsList className="w-full h-auto flex-wrap justify-start gap-1 bg-transparent">
-              {visibleTabs.map((tab) => {
-                const Icon = TAB_ICONS[tab.id];
-                return (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={tab.id}
-                    className={cn(
-                      "flex-shrink-0 gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{TAB_LABELS[tab.id]}</span>
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-          </Card>
-        )}
-
         {/* Tab Content */}
         <div className="space-y-6">
           {/* Overview Tab */}

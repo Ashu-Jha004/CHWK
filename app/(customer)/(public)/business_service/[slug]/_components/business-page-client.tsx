@@ -73,10 +73,8 @@ export function BusinessPageClient({
             {/* Sidebar Navigation - Desktop */}
             <aside
               className={cn(
-                "hidden lg:block",
-                "sticky top-8 self-start",
-                "h-fit max-h-[calc(100vh-6rem)] overflow-y-auto hide-scrollbar",
-                "transition-all duration-300"
+                "lg:sticky lg:top-8 lg:self-start transition-all duration-300",
+                "h-fit lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto hide-scrollbar"
               )}
             >
               <BusinessSidebar

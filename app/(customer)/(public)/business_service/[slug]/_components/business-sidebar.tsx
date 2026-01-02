@@ -57,7 +57,7 @@ export function BusinessSidebar({
   stats,
   visibleTabs,
 }: BusinessSidebarProps) {
-  const { activeTab, setActiveTab } = useBusinessDetailStore();
+  const { activeTab, setActiveTab, isMobile } = useBusinessDetailStore();
 
   // Calculate badges for tabs
   const tabBadges = useMemo(
@@ -82,44 +82,61 @@ export function BusinessSidebar({
   };
 
   return (
-    <Card className="p-4">
-      <nav className="space-y-1" aria-label="Business navigation">
+    <Card
+      className={cn(
+        "p-4",
+        isMobile &&
+          "p-2 border-x-0 border-t-0 rounded-none shadow-sm sticky top-0 z-10 bg-card/95 backdrop-blur-md mb-4"
+      )}
+    >
+      <nav
+        className={cn(isMobile ? "flex items-center gap-1 overflow-x-auto hide-scrollbar" : "space-y-1")}
+        aria-label="Business navigation"
+      >
         {visibleTabs.map((tab, index) => {
           const Icon = TAB_ICONS[tab.id];
           const isActive = activeTab === tab.id;
           const badge = tabBadges[tab.id as keyof typeof tabBadges];
 
           return (
-            <div key={tab.id}>
-              {index === 6 && <Separator className="my-2" />}
+            <div key={tab.id} className={cn(isMobile && "flex-shrink-0")}>
+              {!isMobile && index === 6 && <Separator className="my-2" />}
               <Button
                 variant={isActive ? "secondary" : "ghost"}
                 className={cn(
                   "w-full justify-start gap-3 h-auto py-2.5 px-3",
+                  isMobile &&
+                    "flex-col items-center justify-center gap-1 py-2 px-3 min-w-[75px]",
                   isActive && "bg-primary/10 text-primary font-semibold"
                 )}
                 onClick={() => handleTabClick(tab.id as TabId)}
               >
-                <Icon className="h-4 w-4 flex-shrink-0" />
-                <span className="flex-1 text-left truncate">
-                  {TAB_LABELS[tab.id]}
-                </span>
-                {badge && badge > 0 ? (
-                  <Badge
-                    variant={isActive ? "default" : "secondary"}
-                    className="ml-auto text-xs px-2 py-0 h-5"
-                  >
-                    {badge > 999 ? "999+" : badge}
-                  </Badge>
-                ) : null}
+                <Icon className={cn("h-4 w-4 flex-shrink-0", isMobile && "h-5 w-5")} />
+                <div className={cn("flex items-center gap-1.5", isMobile && "gap-1")}>
+                  <span className={cn("flex-1 text-left truncate", isMobile && "text-[10px] text-center font-medium")}>
+                    {TAB_LABELS[tab.id]}
+                  </span>
+                  {badge && badge > 0 ? (
+                    <Badge
+                      variant={isActive ? "default" : "secondary"}
+                      className={cn(
+                        "ml-auto text-xs px-2 py-0 h-5",
+                        isMobile && "ml-0 h-3.5 px-1 text-[8px] font-bold"
+                      )}
+                    >
+                      {badge > 999 ? "999+" : badge}
+                    </Badge>
+                  ) : null}
+                </div>
               </Button>
             </div>
           );
         })}
       </nav>
 
-      {/* Quick Info Section */}
-      <div className="mt-4 pt-4 border-t border-border space-y-3 px-2">
+      {/* Quick Info Section - Hidden on mobile */}
+      {!isMobile && (
+        <div className="mt-4 pt-4 border-t border-border space-y-3 px-2">
         <div className="space-y-2 text-sm">
           {stats.averageRating > 0 && (
             <div className="flex items-center justify-between">
@@ -154,6 +171,7 @@ export function BusinessSidebar({
           )}
         </div>
       </div>
+      )}
     </Card>
   );
 }
