@@ -384,7 +384,7 @@ export function AboutTab({ business, stats }: AboutTabProps) {
       </div>
 
       {/* Price Range */}
-      {stats.priceRange && (
+      {stats?.priceRange && (
         <Card className="p-6 space-y-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Award className="h-5 w-5 text-primary" />

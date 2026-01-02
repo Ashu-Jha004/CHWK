@@ -158,20 +158,28 @@ export const generateLocalBusinessSchema = (
     const reviewSchemas = business.reviews
       .filter((r) => r.isPublished && r.status === "APPROVED")
       .slice(0, 5)
-      .map((review) => ({
-        "@type": "Review" as const,
-        author: {
-          "@type": "Person" as const,
-          name: `${review.user.firstName || ""} ${review.user.lastName || ""}`.trim() || "Anonymous",
-        },
-        datePublished: review.createdAt.toISOString(),
-        reviewBody: review.content || "",
-        reviewRating: {
-          "@type": "Rating" as const,
-          ratingValue: review.rating,
-          bestRating: 5,
-        },
-      }));
+      .map((review) => {
+        const datePublished = review.createdAt instanceof Date
+          ? review.createdAt.toISOString()
+          : typeof review.createdAt === "string"
+            ? new Date(review.createdAt).toISOString()
+            : new Date().toISOString();
+
+        return {
+          "@type": "Review" as const,
+          author: {
+            "@type": "Person" as const,
+            name: `${review.user?.firstName || ""} ${review.user?.lastName || ""}`.trim() || "Anonymous",
+          },
+          datePublished,
+          reviewBody: review.content || "",
+          reviewRating: {
+            "@type": "Rating" as const,
+            ratingValue: review.rating,
+            bestRating: 5,
+          },
+        };
+      });
 
     // Payment methods
     const paymentMethods: string[] = [];
@@ -249,7 +257,9 @@ export const generateLocalBusinessSchema = (
  */
 const determineBusinessType = (business: BusinessDetail): string => {
   try {
-    const categories = business.categories.map((c) => c.category.name.toLowerCase());
+    const categories = (business.categories || [])
+      .map((c) => c.category?.name?.toLowerCase())
+      .filter(Boolean);
 
     // Restaurant & Food
     if (
@@ -587,8 +597,11 @@ export const generateMetaTags = (
     const businessUrl = `${baseUrl}/business_service/${business.slug}`;
     const title = generatePageTitle(business);
     const description = generatePageDescription(business);
-    const keywords = business.metadataKeywords.join(", ") ||
-      `${business.name}, ${business.city}, ${business.categories.map(c => c.category.name).join(", ")}`;
+    const keywords = (business.metadataKeywords || []).join(", ") ||
+      `${business.name}, ${business.city}, ${(business.categories || [])
+        .map((c) => c.category?.name)
+        .filter(Boolean)
+        .join(", ")}`;
     const ogImage = business.coverImage || business.logo || business.images[0]?.imageUrl || "";
 
     return {

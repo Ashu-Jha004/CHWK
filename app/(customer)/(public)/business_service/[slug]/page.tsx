@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 
 import { prisma } from "@/lib/prisma";
 import { BusinessDetail } from "@/types/customer/business/business-detail";
@@ -137,12 +137,11 @@ export async function generateStaticParams() {
 }
 
 /* =====================================================
+/* =====================================================
    FULL DATA FETCH
 ===================================================== */
 
-async function fetchBusinessBySlug(
-  slug: string
-): Promise<BusinessDetail | null> {
+const fetchBusinessBySlug = cache(async (slug: string): Promise<BusinessDetail | null> => {
   try {
     const business = await prisma.business.findUnique({
       where: { slug, deletedAt: null },
@@ -152,18 +151,19 @@ async function fetchBusinessBySlug(
         categories: { include: { category: true } },
         amenities: { include: { amenity: true } },
         serviceAreas: { where: { isActive: true } },
-        staff: { where: { deletedAt: null, isActive: true }, take: 20 },
+        staff: { where: { deletedAt: null, isActive: true }, take: 8 }, // Reduced from 20
         hours: { orderBy: { dayOfWeek: "asc" } },
-        menuItems: { where: { deletedAt: null }, take: 100 },
+        menuItems: { where: { deletedAt: null }, take: 12 }, // Reduced from 100
         reviews: {
           where: {
             deletedAt: null,
             status: "APPROVED",
             isPublished: true,
           },
-          take: 50,
+          take: 5, // Reduced from 50 (Client fetches via API)
+          orderBy: { createdAt: 'desc' }
         },
-        photos: { where: { deletedAt: null, isApproved: true } },
+        photos: { where: { deletedAt: null, isApproved: true }, take: 10 },
         chain: true,
         _count: { select: { reviews: true, photos: true } },
       },
@@ -177,7 +177,7 @@ async function fetchBusinessBySlug(
   } catch {
     return null;
   }
-}
+});
 
 async function fetchRelatedBusinesses(business: BusinessDetail) {
   try {

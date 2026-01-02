@@ -128,7 +128,7 @@ export function OverviewTab({
             ))}
           </div>
 
-          {stats.totalPhotos > 4 && (
+          {stats?.totalPhotos > 4 && (
             <div className="p-4 border-t border-border">
               <Button
                 variant="ghost"
@@ -136,7 +136,7 @@ export function OverviewTab({
                 onClick={handleViewAllPhotos}
               >
                 <ImageIcon className="h-4 w-4" />
-                View All {stats.totalPhotos} Photos
+                View All {stats?.totalPhotos || 0} Photos
                 <ChevronRight className="h-4 w-4 ml-auto" />
               </Button>
             </div>
@@ -147,7 +147,7 @@ export function OverviewTab({
       {/* Quick Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Rating Card */}
-        {stats.averageRating > 0 && (
+        {stats?.averageRating > 0 && (
           <Card className="p-4 space-y-2">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Star className="h-4 w-4" />
@@ -155,10 +155,10 @@ export function OverviewTab({
             </div>
             <div className="space-y-1">
               <div className="text-3xl font-bold text-foreground">
-                {stats.averageRating.toFixed(1)}
+                {stats?.averageRating?.toFixed(1)}
               </div>
               <div className="text-xs text-muted-foreground">
-                {stats.totalReviews} reviews
+                {stats?.totalReviews || 0} reviews
               </div>
             </div>
           </Card>
@@ -175,7 +175,7 @@ export function OverviewTab({
           </div>
           <div className="space-y-1">
             <div className="text-3xl font-bold text-foreground">
-              {stats.totalReviews}
+              {stats?.totalReviews || 0}
             </div>
             <div className="text-xs text-muted-foreground flex items-center gap-1">
               View all
@@ -195,7 +195,7 @@ export function OverviewTab({
           </div>
           <div className="space-y-1">
             <div className="text-3xl font-bold text-foreground">
-              {stats.totalPhotos}
+              {stats?.totalPhotos || 0}
             </div>
             <div className="text-xs text-muted-foreground flex items-center gap-1">
               View gallery
@@ -205,21 +205,21 @@ export function OverviewTab({
         </Card>
 
         {/* Products/Services Card */}
-        {(stats.totalProducts > 0 || stats.totalServices > 0) && (
+        {(stats?.totalProducts > 0 || stats?.totalServices > 0) && (
           <Card className="p-4 space-y-2">
             <div className="flex items-center gap-2 text-muted-foreground">
-              {stats.totalProducts > 0 ? (
+              {stats?.totalProducts > 0 ? (
                 <Package className="h-4 w-4" />
               ) : (
                 <Wrench className="h-4 w-4" />
               )}
               <span className="text-sm font-medium">
-                {stats.totalProducts > 0 ? "Products" : "Services"}
+                {stats?.totalProducts > 0 ? "Products" : "Services"}
               </span>
             </div>
             <div className="space-y-1">
               <div className="text-3xl font-bold text-foreground">
-                {stats.totalProducts > 0 ? stats.totalProducts : stats.totalServices}
+                {stats?.totalProducts > 0 ? stats.totalProducts : stats?.totalServices}
               </div>
               <div className="text-xs text-muted-foreground">Available</div>
             </div>
@@ -350,13 +350,13 @@ export function OverviewTab({
           )}
 
           {/* Staff Count */}
-          {stats.totalStaff > 0 && (
+          {stats?.totalStaff > 0 && (
             <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/50 border border-border">
               <Users className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-sm">Professional Staff</p>
                 <p className="text-xs text-muted-foreground">
-                  {stats.totalStaff} team {stats.totalStaff === 1 ? "member" : "members"}
+                  {stats?.totalStaff} team {stats?.totalStaff === 1 ? "member" : "members"}
                 </p>
               </div>
             </div>
@@ -372,7 +372,7 @@ export function OverviewTab({
               <Star className="h-5 w-5 text-primary" />
               Featured Reviews
             </h2>
-            {stats.totalReviews > 3 && (
+            {stats?.totalReviews > 3 && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -393,17 +393,17 @@ export function OverviewTab({
               >
                 <div className="flex items-start gap-3">
                   <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                    {review.user.avatar ? (
+                    {review.user?.avatar || review.photos?.[0]?.url ? (
                       <Image
-                        src={review.user.avatar}
-                        alt={`${review.user.firstName || "User"}'s avatar`}
+                        src={review.user?.avatar || review.photos?.[0]?.url || ""}
+                        alt={`${review.user?.firstName || "User"}'s avatar`}
                         fill
                         className="object-cover"
                         sizes="40px"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground font-semibold">
-                        {(review.user.firstName?.[0] || "U").toUpperCase()}
+                        {(review.user?.firstName?.[0] || "U").toUpperCase()}
                       </div>
                     )}
                   </div>
@@ -411,7 +411,7 @@ export function OverviewTab({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-medium truncate">
-                        {review.user.firstName} {review.user.lastName}
+                        {review.user?.firstName || "Anonymous"} {review.user?.lastName || ""}
                       </p>
                       <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full flex-shrink-0">
                         <Star className="h-3 w-3 fill-primary text-primary" />

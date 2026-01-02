@@ -1,0 +1,77 @@
+# CHWK PROJECT DOCUMENTATION
+
+## 1. PROJECT OVERVIEW
+CHWK is a high-performance, premium local business directory designed with a vibrant Indian aesthetic. It connects users with local services through a seamless, mobile-first experience.
+
+## 2. TECH STACK
+### Core
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript
+- **State Management**: TanStack Query (Server State), Zustand (Client State)
+- **Form Handling**: React Hook Form, Zod (Validation)
+
+### Styling & UI
+- **CSS**: Tailwind CSS 4
+- **Components**: Radix UI (Primitives), Lucide React (Icons)
+- **Design Patterns**: Glassmorphism, Card Hover Effects, Text Gradients
+
+### Backend & Database
+- **ORM**: Prisma
+- **Database**: PostgreSQL (via Supabase/Neon)
+- **Auth**: Clerk (Role-based access: Admin, Business, Customer)
+
+### Services & Integration
+- **Media**: Cloudinary (Images), YouTube (Intro Videos)
+- **Maps**: Leaflet (Interactive business locations)
+- **Monitoring**: Sentry (Error tracking)
+- **SEO**: JSON-LD Structured Data, Dynamic Sitemaps, Robots.txt
+
+---
+
+## 3. KEY FEATURES
+### Search & Discovery
+- Intellectual search by name, category, or city.
+- Advanced filtering system for business discovery.
+- Category-based browsing on the landing page.
+
+### Business Profiles (Next-Gen)
+- Multi-tab architecture:
+  - **Overview**: Intro video, quick stats, highlights.
+  - **About**: Detailed description and business story.
+  - **Services/Products**: Catalog of offerings.
+  - **Staff**: Team profiles and expertise.
+  - **Reviews**: User ratings and feedback system.
+  - **Photos/Gallery**: Cloudinary-powered image grid.
+  - **Map**: Interactive Leaflet map with service area visualization.
+
+### Progressive Web App (PWA)
+- Fully installable on Mobile (iOS/Android) and Desktop.
+- Service worker for caching and performance.
+- Custom "Install App" triggers and prompt management.
+
+### SEO Strategy
+- Automatic generation of `sitemap.xml`.
+- Individual JSON-LD schemas for every business page.
+- Optimized meta tags for social sharing and Google ranking.
+
+---
+
+## 4. ROUTING & STRUCTURE
+- `/`: Premium Landing Page.
+- `/search`: Discovery and results page.
+- `/business_service/[slug]`: Dynamic business detail pages.
+- `/sign-in` & `/sign-up`: Clerk-managed authentication.
+- `/onboarding`: Multi-step business registration flow.
+- `/dashboard`: Management interface for business owners.
+
+---
+
+## 5. DESIGN SYSTEM
+- **Primary Color**: #FF6B35 (Energy & Warmth)
+- **Secondary Color**: #22223B (Trust & Professionalism)
+- **Accent Color**: #F7B801 (Reviews & Highlights)
+- **Success Color**: #2A9D8F (Verified Badges)
+- **Typography**: Poppins (Display), Inter (UI/Body)
+- **Feel**: Premium, Vibrant, Responsive, and Fast.
+
+---
+© 2026 CHWK Project - Documentation v1.0

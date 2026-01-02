@@ -43,15 +43,15 @@ export function BusinessPageClient({
       { id: "about", visible: true },
       {
         id: "products",
-        visible: business.offersProducts && stats.totalProducts > 0,
+        visible: business.offersProducts && stats?.totalProducts > 0,
       },
       {
         id: "services",
-        visible: business.offersServices && stats.totalServices > 0,
+        visible: business.offersServices && stats?.totalServices > 0,
       },
-      { id: "staff", visible: stats.totalStaff > 0 },
+      { id: "staff", visible: stats?.totalStaff > 0 },
       { id: "chain", visible: business.chainId !== null && business.chain !== null },
-      { id: "photos", visible: stats.totalPhotos > 0 },
+      { id: "photos", visible: stats?.totalPhotos > 0 },
       { id: "reviews", visible: true }, // Always show (can write reviews)
       { id: "contact", visible: true },
     ];

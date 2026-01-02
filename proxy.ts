@@ -45,7 +45,7 @@ const isOnboardingRoute = createRouteMatcher([
    MIDDLEWARE
 ==================================================== */
 
-export default clerkMiddleware(async (auth, req) => {
+export const proxy = clerkMiddleware(async (auth, req) => {
   const { userId, sessionClaims, isAuthenticated, redirectToSignIn } =
     await auth();
 

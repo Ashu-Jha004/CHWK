@@ -111,7 +111,7 @@ export function BusinessTabs({
           </TabsContent>
 
           {/* Products Tab */}
-          {stats.totalProducts > 0 && (
+          {stats?.totalProducts > 0 && (
             <TabsContent value="products" className="mt-0">
               <Suspense fallback={<TabContentSkeleton />}>
                 <ErrorBoundaryWrapper>
@@ -122,7 +122,7 @@ export function BusinessTabs({
           )}
 
           {/* Services Tab */}
-          {stats.totalServices > 0 && (
+          {stats?.totalServices > 0 && (
             <TabsContent value="services" className="mt-0">
               <Suspense fallback={<TabContentSkeleton />}>
                 <ErrorBoundaryWrapper>
@@ -133,7 +133,7 @@ export function BusinessTabs({
           )}
 
           {/* Staff Tab */}
-          {stats.totalStaff > 0 && (
+          {stats?.totalStaff > 0 && (
             <TabsContent value="staff" className="mt-0">
               <Suspense fallback={<TabContentSkeleton />}>
                 <ErrorBoundaryWrapper>
@@ -167,7 +167,14 @@ export function BusinessTabs({
           <TabsContent value="reviews" className="mt-0">
             <Suspense fallback={<TabContentSkeleton />}>
               <ErrorBoundaryWrapper>
-                <ReviewsTab business={business} stats={stats} />
+                <ReviewsTab
+                  businessId={business.id}
+                  businessName={business.name}
+                  initialStats={{
+                    averageRating: stats?.averageRating || 0,
+                    totalReviews: stats?.totalReviews || 0,
+                  }}
+                />
               </ErrorBoundaryWrapper>
             </Suspense>
           </TabsContent>

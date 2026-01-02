@@ -293,6 +293,7 @@ export function Header() {
                 )}
 
                 {!isSignedIn ? (
+                  <Link href="/auth/sign-in">
                   <Button
                     variant="default"
                     size="sm"
@@ -301,6 +302,7 @@ export function Header() {
                     <LogIn className="w-4 h-4" />
                     Sign In
                   </Button>
+                  </Link>
                 ) : (
                   <UserButton />
                 )}
