@@ -2,6 +2,8 @@
 
 import { useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useBusiness } from "@/context/business-context";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   MapPin,
@@ -13,7 +15,10 @@ import {
   LogIn,
   User,
   X,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { uiSelectors } from "@/store/landing_page/ui-store";
 import { cn, scrollToElement } from "@/lib/utils";
 import { TIER_1_CITIES } from "@/lib/(landing_page)/constants";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +40,28 @@ export function MobileNav({
   city,
   onCityChange,
 }: MobileNavProps) {
+  const router = useRouter();
+  const { isBusinessOwner } = useBusiness();
+  const { query, setQuery, location } = uiSelectors.useSearch();
+
+  const handleSearch = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!query.trim()) return;
+
+      try {
+        const params = new URLSearchParams();
+        params.set("q", query);
+        params.set("location", location || city);
+        router.push(`/search?${params.toString()}`);
+        onClose();
+      } catch (error) {
+        console.error("Search error:", error);
+      }
+    },
+    [query, location, city, router, onClose]
+  );
+
   // Prevent body scroll when menu is open
   useEffect(() => {
     if (isOpen) {
@@ -110,6 +137,24 @@ export function MobileNav({
             >
               <X className="w-6 h-6" />
             </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="p-6 border-b">
+            <form onSubmit={handleSearch} className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  placeholder="Search for services..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="pl-10 h-12 bg-gray-50 border-gray-200 focus:bg-white transition-all rounded-xl"
+                />
+              </div>
+              <Button type="submit" className="w-full h-12 rounded-xl btn-shine font-semibold">
+                Search
+              </Button>
+            </form>
           </div>
 
           {/* City Selector */}
@@ -188,14 +233,31 @@ export function MobileNav({
               <p className="text-xs text-gray-500 font-semibold uppercase mb-2">
                 For Businesses
               </p>
-              <Button
-                variant="outline"
-                className="w-full justify-start gap-3"
-                onClick={onClose}
-              >
-                <Building2 className="w-5 h-5" />
-                List Your Business
-              </Button>
+              {isBusinessOwner ? (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-3"
+                  onClick={() => {
+                    router.push("/business/dashboard");
+                    onClose();
+                  }}
+                >
+                  <Building2 className="w-5 h-5" />
+                  Business Dashboard
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-3"
+                  onClick={() => {
+                    router.push("/business/onboarding");
+                    onClose();
+                  }}
+                >
+                  <Building2 className="w-5 h-5" />
+                  List Your Business
+                </Button>
+              )}
             </div>
           </div>
 

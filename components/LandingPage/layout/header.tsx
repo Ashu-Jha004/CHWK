@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
+import { useBusiness } from "@/context/business-context";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,6 +39,8 @@ export function Header() {
   const scrollDirection = useScrollDirection({ threshold: 50 });
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { isSignedIn, isLoaded } = useUser();
+  const router = useRouter();
+  const { isBusinessOwner } = useBusiness();
 
   const { isOpen: isMobileMenuOpen, toggle: toggleMobileMenu } =
     uiSelectors.useMobileMenu();
@@ -266,10 +270,27 @@ export function Header() {
                   </SheetContent>
                 </Sheet>
 
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Building2 className="w-4 h-4" />
-                  For Business
-                </Button>
+                {isBusinessOwner ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => router.push("/business/dashboard")}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    Dashboard
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => router.push("/business/onboarding")}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    For Businesses
+                  </Button>
+                )}
 
                 {!isSignedIn ? (
                   <Button
@@ -323,6 +344,7 @@ export function Header() {
               </form>
             </div>
           )}
+
         </div>
       </header>
 
@@ -332,7 +354,7 @@ export function Header() {
         city={city}
         onCityChange={handleCityChange}
       />
-      <div className="h-16 md:h-20" />
+      <div className={cn("h-16 md:h-20", isMobile && "h-28")} />
     </>
   );
 }

@@ -179,7 +179,7 @@ export function ShareModal({ business }: ShareModalProps) {
                 <div className="w-8 h-8 rounded-full bg-[#25D366] flex items-center justify-center flex-shrink-0">
                   <MessageCircle className="h-4 w-4 text-white fill-white" />
                 </div>
-                <span>WhatsApp</span>
+                <span>WhatsApps</span>
               </Button>
 
               {/* Email */}

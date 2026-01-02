@@ -96,6 +96,10 @@ export function OverviewTab({
 
   return (
     <div className="space-y-6">
+      {/* Intro Video Section */}
+      {business.introVideoUrl && (
+        <IntroVideoSection videoUrl={business.introVideoUrl} />
+      )}
       {/* Hero Image Gallery Preview */}
       {featuredImages.length > 0 && (
         <Card className="overflow-hidden">
@@ -217,10 +221,7 @@ export function OverviewTab({
         )}
       </div>
 
-      {/* Intro Video Section */}
-      {business.introVideoUrl && (
-        <IntroVideoSection videoUrl={business.introVideoUrl} />
-      )}
+
 
       {/* About Section Preview */}
       {business.description && (

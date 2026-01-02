@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState, useCallback } from "react";
+import { BusinessProvider } from "@/context/business-context";
 
 /**
  * Global Providers Component
@@ -57,7 +58,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <BusinessProvider>{children}</BusinessProvider>
       {/* React Query Devtools - only in development */}
       {process.env.NODE_ENV === "development" && (
         <ReactQueryDevtools

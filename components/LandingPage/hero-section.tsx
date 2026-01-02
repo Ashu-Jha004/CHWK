@@ -357,7 +357,7 @@ export function HeroSection() {
   const handleSuggestionClick = useCallback(
     (item: any | any) => {
       if (item.type === "business" && "slug" in item) {
-        router.push(`/bisiness_service/${item.slug}`);
+        router.push(`/business_service/${item.slug}`);
       } else {
         setQuery(item.text);
         setShowSuggestions(false);

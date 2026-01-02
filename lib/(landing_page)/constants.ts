@@ -13,7 +13,7 @@ import {
 // Brand colors matching modern Indian aesthetic
 export const BRAND_COLORS = {
   primary: "#FF6B35",
-  secondary: "#004E89",
+  secondary: "#41d555ff",
   accent: "#F7B801",
   success: "#2A9D8F",
 } as const;
