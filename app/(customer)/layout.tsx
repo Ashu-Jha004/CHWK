@@ -12,11 +12,8 @@ export default function CustomerLayout({
 
       {/* 2. Main Content Area */}
       <div className="flex-1 flex flex-col">
-        {/* Top Header */}
-
-        {/* Page Content */}
-        <main className="p-8">
-          <div className="max-w-5xl mx-auto">{children}</div>
+        <main className="flex-1">
+          {children}
         </main>
       </div>
     </div>

@@ -110,7 +110,7 @@ export function BusinessTabs({
         )}
 
         {/* Tab Content */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Overview Tab */}
           <TabsContent value="overview" className="mt-0">
             <Suspense fallback={<TabContentSkeleton />}>

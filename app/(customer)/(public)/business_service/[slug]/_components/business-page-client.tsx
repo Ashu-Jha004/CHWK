@@ -14,6 +14,7 @@ import { ReportModal } from "./modals/report-modal";
 import { cn } from "@/lib/utils";
 import { calculateBusinessStats } from "@/lib/utils/business-detail-utils";
 import { useMediaQuery } from "@/hooks/customer/business_service/use-media-query";
+import { Header } from "@/components/LandingPage/layout/header";
 
 interface BusinessPageClientProps {
   business: BusinessDetail;
@@ -59,20 +60,22 @@ export function BusinessPageClient({
   }, [business, stats]);
 
   return (
+
     <>
+     <Header  />
       {/* Business Header */}
       <BusinessHeader business={business} stats={stats} />
 
       {/* Main Content Area */}
-      <div className="min-h-screen bg-muted/30">
-        <div className="container-padding section-spacing-tight">
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 relative">
+      <div className="min-h-screen bg-muted/30 pb-12">
+        <div className="max-w-7xl mx-auto container-padding section-spacing-tight">
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8 relative">
             {/* Sidebar Navigation - Desktop */}
             <aside
               className={cn(
                 "hidden lg:block",
-                "sticky top-6 self-start",
-                "h-fit max-h-[calc(100vh-8rem)] overflow-y-auto",
+                "sticky top-8 self-start",
+                "h-fit max-h-[calc(100vh-6rem)] overflow-y-auto hide-scrollbar",
                 "transition-all duration-300"
               )}
             >
@@ -84,7 +87,7 @@ export function BusinessPageClient({
             </aside>
 
             {/* Main Content */}
-            <main className="min-w-0 pb-20 lg:pb-6">
+            <main className="min-w-0 pb-20 lg:pb-0">
               <BusinessTabs
                 business={business}
                 stats={stats}

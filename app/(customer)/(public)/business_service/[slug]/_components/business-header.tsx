@@ -96,7 +96,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
 
           {/* Optional: Business name overlay on cover */}
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-12">
-            <div className="container-padding">
+            <div className="max-w-7xl mx-auto container-padding">
               <div className="max-w-4xl">
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white drop-shadow-lg mb-2">
                   {business.name}
@@ -114,7 +114,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
 
       {/* Main Header - Always visible */}
       <div className="border-b border-border bg-card">
-        <div className="container-padding py-6">
+        <div className="max-w-7xl mx-auto container-padding py-6">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6">
             {/* Left: Business Info */}
             <div className="space-y-4">

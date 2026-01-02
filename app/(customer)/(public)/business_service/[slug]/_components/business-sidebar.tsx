@@ -82,7 +82,7 @@ export function BusinessSidebar({
   };
 
   return (
-    <Card className="p-2 sticky top-6">
+    <Card className="p-4">
       <nav className="space-y-1" aria-label="Business navigation">
         {visibleTabs.map((tab, index) => {
           const Icon = TAB_ICONS[tab.id];
