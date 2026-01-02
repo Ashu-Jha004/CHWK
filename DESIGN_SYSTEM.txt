@@ -1,0 +1,92 @@
+# CHWK Design System
+
+## 1. Brand Philosophy
+CHWK is a modern local business directory designed with a vibrant Indian aesthetic. It combines trust, energy, and accessibility to connect users with local services seamlessly.
+
+## 2. Color Palette
+The colors are chosen to reflect professional trust while maintaining a warm, energetic feel.
+
+### Core Colors
+- **Primary**: #FF6B35 (hsl(17 100% 60%))
+  - *Usage*: Main buttons, active states, brand icon, primary accents.
+- **Secondary**: #004E89 (hsl(203 100% 27%))
+  - *Usage*: Navigation, trust-related elements, headers in dark mode.
+- **Accent**: #F7B801 (hsl(43 100% 49%))
+  - *Usage*: Reviews, ratings, highlighting special offers, gradients.
+- **Success**: #2A9D8F
+  - *Usage*: Verified badges, success messages, positive metrics.
+- **Destructive**: hsl(0 84.2% 60.2%)
+  - *Usage*: Error messages, delete actions, warnings.
+
+### Neutral Colors
+- **Background**: hsl(0 0% 100%) (Pure White)
+- **Foreground**: hsl(222.2 84% 4.9%) (Charcoal / Dark Blue-Black)
+- **Muted**: hsl(210 40% 96.1%) (Light Gray BG)
+- **Muted Foreground**: hsl(215.4 16.3% 46.9%) (Soft Gray Text)
+- **Border**: hsl(214.3 31.8% 91.4%) (Standard Dividers)
+
+---
+
+## 3. Typography
+We use a clean, modern type system for readability and hierarchy.
+
+### Font Families
+- **Primary (Sans)**: Inter
+  - *Usage*: Body text, UI elements, labels.
+  - *Stack*: Inter, system-ui, sans-serif.
+- **Secondary (Display)**: Poppins
+  - *Usage*: Headings, Titles, Hero Sections, Brand callouts.
+  - *Weights*: 400 (Regular), 500 (Medium), 600 (Semi-bold), 700 (Bold).
+
+### Typography Scale
+- **Small**: 0.875rem (14px)
+- **Base**: 1rem (16px)
+- **Large**: 1.125rem (18px)
+- **X-Large**: 1.25rem (20px)
+- **Display XL**: 1.25rem to 2.25rem (Responsive)
+- **Display 2XL**: 1.5rem to 3rem (Responsive)
+- **Display 3XL**: 1.875rem to 3.75rem (Responsive)
+
+---
+
+## 4. Spacing & Layout
+Standardized spacing ensures consistency across the platform.
+
+### Layout Padding
+- **Horizontal (Mobile)**: 1rem (px-4)
+- **Horizontal (Tablet)**: 1.5rem (px-6)
+- **Horizontal (Desktop)**: 2rem (px-8)
+
+### Vertical Spacing
+- **Tight Section**: 2rem to 3rem (8-12 Tailwind units)
+- **Standard Section**: 3rem to 5rem (12-20 Tailwind units)
+- **Relaxed Section**: 4rem to 8rem (16-32 Tailwind units)
+
+---
+
+## 5. UI Elements & Effects
+Signature styles that define the application's premium look.
+
+### Effects
+- **Glassmorphism**: `glass` class.
+  - *Properties*: Background white (0.1 opac), 10px Blur, 20% white border.
+- **Card Hover**: `card-hover` class.
+  - *Action*: Translates -2px on Y-axis with 300ms transition and deep shadow.
+- **Text Gradient**: `text-gradient` class.
+  - *Colors*: Linear 135deg from Primary (#FF6B35) to Accent (#F7B801).
+- **Corner Radius**:
+  - Standard (lg): 0.5rem (8px)
+
+### Interactive Elements
+- **Button Shine**: Suble light sweep animation on hover.
+- **Animated Underline**: Links grow an underline from 0% to 100% width on hover.
+
+---
+
+## 6. Breakpoints
+- **Mobile**: < 640px
+- **Small (sm)**: 640px
+- **Medium (md)**: 768px
+- **Large (lg)**: 1024px
+- **Extra Large (xl)**: 1280px
+- **2XL**: 1536px

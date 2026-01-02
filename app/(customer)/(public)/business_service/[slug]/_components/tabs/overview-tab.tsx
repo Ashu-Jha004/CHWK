@@ -27,6 +27,7 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertCircle,
+  Youtube,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -39,6 +40,7 @@ import {
 } from "@/lib/utils/business-detail-utils";
 import { useBusinessDetailStore } from "@/store/customer/business_service/business-detail-store";
 import { cn } from "@/lib/utils";
+import { getYouTubeEmbedUrl } from "@/lib/utils/video-helper";
 
 interface OverviewTabProps {
   business: BusinessDetail;
@@ -214,6 +216,11 @@ export function OverviewTab({
           </Card>
         )}
       </div>
+
+      {/* Intro Video Section */}
+      {business.introVideoUrl && (
+        <IntroVideoSection videoUrl={business.introVideoUrl} />
+      )}
 
       {/* About Section Preview */}
       {business.description && (
@@ -589,6 +596,33 @@ function RelatedBusinessesSection({
             </div>
           </Link>
         ))}
+      </div>
+    </Card>
+  );
+}
+
+function IntroVideoSection({ videoUrl }: { videoUrl: string }) {
+  const embedUrl = useMemo(() => getYouTubeEmbedUrl(videoUrl), [videoUrl]);
+
+  if (!embedUrl) return null;
+
+  return (
+    <Card className="overflow-hidden bg-background border-border shadow-sm">
+      <div className="p-4 flex items-center gap-2 border-b border-border bg-muted/20">
+         <div className="p-1.5 rounded-full bg-red-100 dark:bg-red-900/30">
+            <Youtube className="h-4 w-4 text-red-600 dark:text-red-500" />
+         </div>
+         <h2 className="font-semibold">Video Tour</h2>
+      </div>
+      <div className="relative w-full aspect-video bg-black">
+         <iframe
+            src={embedUrl}
+            title="Business Intro Video"
+            className="absolute top-0 left-0 w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            loading="lazy"
+          />
       </div>
     </Card>
   );

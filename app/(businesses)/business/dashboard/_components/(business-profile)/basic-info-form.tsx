@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Business } from "@prisma/client";
 import { Save, Loader2 } from "lucide-react";
+import { Youtube } from "lucide-react";
 import {
   basicInfoSchema,
   BasicInfoFormData,
@@ -16,6 +17,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "../form-field";
 import { cn } from "@/lib/utils";
 import { SEOMetaDialog } from "./seo/seo-meta-dialog";
+import { VideoManagementDialog } from "../video/video-management-dialog";
+import { useMemo } from "react";
+import { getYouTubeEmbedUrl } from "@/lib/utils/video-helper";
 
 interface BasicInfoFormProps {
   business: Business;
@@ -51,7 +55,10 @@ export function BasicInfoForm({ business }: BasicInfoFormProps) {
       branchName: business.branchName || "",
     },
   });
-
+const mainPreviewUrl = useMemo(
+    () => getYouTubeEmbedUrl(business.introVideoUrl),
+    [business.introVideoUrl]
+  );
   const onSubmit = (data: BasicInfoFormData) => {
     mutation.mutate(data);
   };
@@ -80,6 +87,40 @@ export function BasicInfoForm({ business }: BasicInfoFormProps) {
               disabled={mutation.isPending}
             />
           </FormField>
+          {/* NEW: Intro Video Section */}
+      <div className="space-y-6 rounded-xl border border-white/20 bg-white/5 p-6 glass card-hover">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h3 className="font-cal text-xl text-[#004E89]">Intro Video</h3>
+            <p className="text-sm text-muted-foreground">
+              Feature a YouTube video to give customers a tour of your business.
+            </p>
+          </div>
+          <VideoManagementDialog
+            businessId={business.id}
+            currentVideoUrl={business.introVideoUrl}
+          />
+        </div>
+
+        {mainPreviewUrl ? (
+          <div className="relative aspect-video w-full max-w-2xl overflow-hidden rounded-lg border border-white/20 shadow-lg">
+            <iframe
+              src={mainPreviewUrl}
+              className="h-full w-full"
+              title="Business Intro Video"
+              allowFullScreen
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-white/20 py-12 bg-muted/5">
+            <div className="rounded-full bg-[#FF6B35]/10 p-4">
+              <Youtube className="h-8 w-8 text-[#FF6B35]" />
+            </div>
+            <p className="mt-4 text-sm font-medium">No video added yet</p>
+            <p className="text-xs text-muted-foreground">Add a YouTube link to increase visibility</p>
+          </div>
+        )}
+      </div>
           <SEOMetaDialog
             businessId={business.id}
             businessName={business.name}

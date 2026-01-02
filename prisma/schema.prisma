@@ -87,6 +87,7 @@ model Business {
   logoPublicId              String?
   coverImage                String?
   coverImagePublicId        String?
+  introVideoUrl             String?
   chainId                   String?
   branchName                String?
   email                     String?

@@ -1,6 +1,16 @@
 // lib/validations/business.ts
 import { z } from "zod";
 
+const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(watch\?v=|embed\/|v\/|shorts\/)?([a-zA-Z0-9_-]{11})(\S+)?$/;
+
+export const videoSchema = z.object({
+  introVideoUrl: z
+    .string()
+    .url("Please enter a valid URL")
+    .regex(youtubeRegex, "Please enter a valid YouTube video link")
+    .optional()
+    .or(z.literal("")),
+});
 /**
  * Phone number validation (Indian format)
  */
@@ -121,3 +131,4 @@ export const basicInfoSchema = z.object({
 });
 
 export type BasicInfoFormData = z.infer<typeof basicInfoSchema>;
+export type VideoFormData = z.infer<typeof videoSchema>;
