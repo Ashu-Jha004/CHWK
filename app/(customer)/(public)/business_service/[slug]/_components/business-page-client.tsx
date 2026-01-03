@@ -11,6 +11,7 @@ import { BusinessTabs } from "./business-tabs";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { ShareModal } from "./modals/share-modal";
 import { ReportModal } from "./modals/report-modal";
+import { FileComplaintModal } from "./modals/file-complaint-modal";
 import { cn } from "@/lib/utils";
 import { calculateBusinessStats } from "@/lib/utils/business-detail-utils";
 import { useMediaQuery } from "@/hooks/customer/business_service/use-media-query";
@@ -103,6 +104,7 @@ export function BusinessPageClient({
       {/* Modals */}
       <ShareModal business={business} />
       <ReportModal business={business} />
+      <FileComplaintModal business={business} />
     </>
   );
 }

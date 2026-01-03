@@ -27,7 +27,7 @@ export async function generateMetadata(
   { params }: PageProps
 ): Promise<Metadata> {
   const { slug } = await params;
-  const business = await fetchBusinessBySlug(slug);
+  const business = await fetchSEOData(slug); // Use lightweight fetch for metadata
 
   if (!business) {
     return {
@@ -77,6 +77,14 @@ export async function generateMetadata(
               height: 630,
               alt: business.name,
             },
+            ...(business.images?.[0]?.imageUrl
+                ? [{
+                    url: business.images[0].imageUrl,
+                    width: 1200,
+                    height: 630,
+                    alt: business.name,
+                  }]
+                : [])
           ]
         : [],
     },
@@ -100,42 +108,82 @@ export async function generateMetadata(
 ===================================================== */
 
 export async function generateStaticParams() {
-  // Only pre-render the top 200 businesses to speed up dev/build
-  // Others will be generated on demand (ISR)
-  const businesses = await prisma.business.findMany({
-    where: {
-      status: "ACTIVE",
-      deletedAt: null
-    },
-    select: { slug: true },
-    take: 200,
-    orderBy: [
-      { averageRating: "desc" },
-      { totalReviews: "desc" }
-    ],
-  });
+    // Only pre-render the top 10 businesses to speed up dev/build
+    const businesses = await prisma.business.findMany({
+      where: {
+        status: "ACTIVE",
+        deletedAt: null
+      },
+      select: { slug: true },
+      take: 10, // Reduced from 200 to 10 for Dev Performance
+      orderBy: [
+        { averageRating: "desc" },
+        { totalReviews: "desc" }
+      ],
+    });
 
   return businesses.map((b) => ({ slug: b.slug }));
 }
 
 /* =====================================================
-   FULL DATA FETCH (DEDUPLICATED)
+   DATA FETCHING (SPLIT FOR PERFORMANCE)
 ===================================================== */
 
+// 1. Lightweight fetch for SEO only (Fast)
+const fetchSEOData = cache(async (slug: string) => {
+  try {
+    return await prisma.business.findUnique({
+      where: { slug, deletedAt: null },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        shortDescription: true,
+        description: true,
+        logo: true,
+        coverImage: true,
+        city: true,
+        area: true,
+        state: true,
+        latitude: true,
+        longitude: true,
+        totalReviews: true,
+        averageRating: true,
+        metadataKeywords: true,
+        metaTitle: true,
+        metaDescription: true,
+        categories: {
+          take: 1,
+          include: { category: true }
+        },
+        images: {
+            where: { isApproved: true },
+            take: 1,
+            select: { imageUrl: true }
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Fetch SEO Error:", error);
+    return null;
+  }
+});
+
+// 2. Heavy fetch for Page Content (Streamed)
 const fetchBusinessBySlug = cache(async (slug: string): Promise<BusinessDetail | null> => {
   try {
     const business = await prisma.business.findUnique({
       where: { slug, deletedAt: null },
       include: {
-        images: { where: { deletedAt: null, isApproved: true }, take: 5 },
-        documents: { where: { status: "VERIFIED" }, take: 3 },
+        images: { where: { deletedAt: null, isApproved: true }, take: 8 },
+        documents: { where: { status: "VERIFIED" }, take: 2 },
         categories: { include: { category: true } },
         amenities: { include: { amenity: true } },
         serviceAreas: { where: { isActive: true }, take: 5 },
         serviceArea: { where: { isActive: true }, take: 5 },
         staff: {
           where: { deletedAt: null, isActive: true },
-          take: 12,
+          take: 8,
           include: {
             workingHours: {
               orderBy: { dayOfWeek: "asc" },
@@ -143,24 +191,24 @@ const fetchBusinessBySlug = cache(async (slug: string): Promise<BusinessDetail |
           },
         },
         hours: { orderBy: { dayOfWeek: "asc" } },
-        menuItems: { where: { deletedAt: null }, take: 8 },
+        menuItems: { where: { deletedAt: null }, take: 12 },
         reviews: {
           where: {
             deletedAt: null,
             status: "APPROVED",
             isPublished: true,
           },
-          take: 3,
+          take: 5,
           orderBy: { createdAt: "desc" },
           include: {
             user: { select: { id: true, firstName: true, lastName: true, avatar: true } },
-            photos: { where: { deletedAt: null, isApproved: true }, take: 3 }
+            photos: { where: { deletedAt: null, isApproved: true }, take: 2 }
           }
         },
         photos: {
           where: { deletedAt: null, isApproved: true },
           orderBy: { createdAt: "desc" },
-          take: 50
+          take: 20
         },
         chain: true,
         _count: { select: { reviews: true, photos: true, menuItems: true, staff: true } },
@@ -231,6 +279,18 @@ async function fetchRelatedBusinesses(business: BusinessDetail) {
 
 export default async function BusinessDetailPage({ params }: PageProps) {
   const { slug } = await params;
+
+  // Note: We intentionally do NOT await the heavy data fetch here.
+  // We let the Suspense boundary handle the loading state while the data streams in.
+
+  return (
+    <Suspense fallback={<BusinessPageSkeleton />}>
+      <BusinessPageContent slug={slug} />
+    </Suspense>
+  );
+}
+
+async function BusinessPageContent({ slug }: { slug: string }) {
   const business = await fetchBusinessBySlug(slug);
 
   if (!business) notFound();

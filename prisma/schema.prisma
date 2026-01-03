@@ -47,6 +47,8 @@ model User {
   reviewVotes      ReviewVote[]
   reviews          Review[]
   savedBusinesses  SavedBusiness[]
+  notifications    Notification[]
+  viewedBusinesses BusinessView[]
 
   @@index([email])
   @@index([username])
@@ -139,6 +141,7 @@ model Business {
   totalBookings             Int                      @default(0)
   totalPhotos               Int                      @default(0)
   totalComplaints           Int                      @default(0)
+  viewCount                 Int                      @default(0)
   metaTitle                 String?
   metaDescription           String?
   metadataKeywords          String[]
@@ -185,6 +188,7 @@ model Business {
   reviews                   Review[]
   savedBy                   SavedBusiness[]
   serviceAreas              ServiceArea[]
+  views                     BusinessView[]
 
   @@index([slug])
   @@index([status])
@@ -1313,4 +1317,43 @@ enum ServiceType {
   CONSULTATION
   RENTAL
   SUBSCRIPTION
+}
+
+model BusinessView {
+  id         String   @id @default(cuid())
+  businessId String
+  userId     String?
+  ipAddress  String?
+  visitedAt  DateTime @default(now())
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([visitedAt])
+  @@map("business_views")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  COMPLAINT_UPDATE
+  REVIEW_RECEIVED
+  ORDER_UPDATE
+  BOOKING_UPDATE
+  SYSTEM_ALERT
 }

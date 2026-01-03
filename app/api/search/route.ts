@@ -323,6 +323,15 @@ async function searchWithDistance(
 ) {
   const offset = (page - 1) * limit;
 
+  // Calculate Bounding Box to use Indexes
+  const latDelta = radiusKm / 111.32; // 1 degree lat is ~111.32km
+  const lonDelta = radiusKm / (111.32 * Math.cos(userLat * (Math.PI / 180)));
+
+  const minLat = userLat - latDelta;
+  const maxLat = userLat + latDelta;
+  const minLon = userLon - lonDelta;
+  const maxLon = userLon + lonDelta;
+
   // Build SQL for distance calculation
   const distanceFormula = `
     (6371 * acos(
@@ -335,16 +344,20 @@ async function searchWithDistance(
   `;
 
   // Get business IDs within radius using raw SQL
+  // Added Bounding Box Check: latitude BETWEEN ${minLat} AND ${maxLat} ...
   const businessIdsInRadius: any[] = await prisma.$queryRaw`
     SELECT
       id,
       ${Prisma.raw(distanceFormula)} as distance
     FROM businesses
     WHERE
-      ${Prisma.raw(distanceFormula)} <= ${radiusKm}
+      latitude BETWEEN ${minLat} AND ${maxLat}
+      AND longitude BETWEEN ${minLon} AND ${maxLon}
+      AND ${Prisma.raw(distanceFormula)} <= ${radiusKm}
       AND status IN ('ACTIVE', 'CLAIMED')
       AND "deletedAt" IS NULL
     ORDER BY distance ASC
+    LIMIT 100 -- Limit potential intermediate matches
   `;
 
   const businessIds = businessIdsInRadius.map((b) => b.id);

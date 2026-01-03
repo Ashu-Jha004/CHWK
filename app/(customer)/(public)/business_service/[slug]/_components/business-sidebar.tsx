@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
   Star,
   Phone,
+  MessageSquareWarning,
 } from "lucide-react";
 import { useBusinessDetailStore } from "@/store/customer/business_service/business-detail-store";
 import { cn } from "@/lib/utils";
@@ -57,7 +58,7 @@ export function BusinessSidebar({
   stats,
   visibleTabs,
 }: BusinessSidebarProps) {
-  const { activeTab, setActiveTab, isMobile } = useBusinessDetailStore();
+  const { activeTab, setActiveTab, isMobile, setComplaintModalOpen } = useBusinessDetailStore();
 
   // Calculate badges for tabs
   const tabBadges = useMemo(
@@ -133,6 +134,17 @@ export function BusinessSidebar({
           );
         })}
       </nav>
+
+      <div className="mt-2 px-1">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 hover:bg-destructive/10 hover:text-destructive group"
+            onClick={() => setComplaintModalOpen(true)}
+          >
+             <MessageSquareWarning className="h-4 w-4 text-muted-foreground group-hover:text-destructive" />
+             <span className="text-muted-foreground group-hover:text-destructive">Report an Issue</span>
+          </Button>
+      </div>
 
       {/* Quick Info Section - Hidden on mobile */}
       {!isMobile && (

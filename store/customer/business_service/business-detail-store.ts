@@ -81,6 +81,10 @@ interface BusinessDetailState {
   reportModalOpen: boolean;
   setReportModalOpen: (open: boolean) => void;
 
+  // Complaint Modal
+  complaintModalOpen: boolean;
+  setComplaintModalOpen: (open: boolean) => void;
+
   // Global Reset
   resetAllFilters: () => void;
 }
@@ -116,6 +120,7 @@ export const useBusinessDetailStore = create<BusinessDetailState>()(
       isSaved: false,
       shareModalOpen: false,
       reportModalOpen: false,
+      complaintModalOpen: false,
 
       // Tab Navigation Actions
       setActiveTab: (tab) => {
@@ -212,6 +217,9 @@ export const useBusinessDetailStore = create<BusinessDetailState>()(
 
       // Report Modal Actions
       setReportModalOpen: (open) => set({ reportModalOpen: open }),
+
+      // Complaint Modal Actions
+      setComplaintModalOpen: (open) => set({ complaintModalOpen: open }),
 
       // Global Reset
       resetAllFilters: () =>
@@ -358,5 +366,13 @@ export const useReportModal = () =>
     useShallow((state) => ({
       isOpen: state.reportModalOpen,
       setOpen: state.setReportModalOpen,
+    }))
+  );
+
+export const useComplaintModal = () =>
+  useBusinessDetailStore(
+    useShallow((state) => ({
+      isOpen: state.complaintModalOpen,
+      setOpen: state.setComplaintModalOpen,
     }))
   );

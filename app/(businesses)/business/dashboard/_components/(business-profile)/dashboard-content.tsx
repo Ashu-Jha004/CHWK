@@ -1,4 +1,3 @@
-// app/(businesses)/business/dashboard/_components/(business-profile)/dashboard-content.tsx
 "use client";
 
 import { useDashboardStore } from "@/store/business-dashboard";
@@ -19,6 +18,8 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { ReviewsManagementTab } from "../business-dashboard/reviews-management-tab";
 import { StaffManagementTab } from "../business-dashboard/staff-management-tab";
+import { OverviewTab } from "../overview-tab";
+import { ComplaintsManagementTab } from "../business-dashboard/complaints-management-tab";
 
 interface DashboardContentProps {
   business: Business & {
@@ -50,14 +51,7 @@ export function DashboardContent({
   const renderContent = () => {
     switch (activeTab) {
       case "overview":
-        return (
-          <div className="glass rounded-xl p-8 sm:p-12 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-              Dashboard Overview
-            </h2>
-            <p className="text-muted-foreground">Coming soon...</p>
-          </div>
-        );
+        return <OverviewTab businessId={business.id} />;
 
       case "profile":
         return (
@@ -69,9 +63,12 @@ export function DashboardContent({
           <ReviewsManagementTab businessId={business.id} />
         );
 
+      case "complaints":
+        return <ComplaintsManagementTab businessId={business.id} />;
+
       case "staff":
         return (
-          <StaffManagementTab businessId={business.id} />
+           <StaffManagementTab businessId={business.id} />
         );
 
       default:
