@@ -132,7 +132,16 @@ const fetchBusinessBySlug = cache(async (slug: string): Promise<BusinessDetail |
         categories: { include: { category: true } },
         amenities: { include: { amenity: true } },
         serviceAreas: { where: { isActive: true }, take: 5 },
-        staff: { where: { deletedAt: null, isActive: true }, take: 4 },
+        serviceArea: { where: { isActive: true }, take: 5 },
+        staff: {
+          where: { deletedAt: null, isActive: true },
+          take: 12,
+          include: {
+            workingHours: {
+              orderBy: { dayOfWeek: "asc" },
+            },
+          },
+        },
         hours: { orderBy: { dayOfWeek: "asc" } },
         menuItems: { where: { deletedAt: null }, take: 8 },
         reviews: {

@@ -23,7 +23,11 @@ import {
 import Image from "next/image";
 import { formatPhoneNumber } from "@/lib/utils/business-detail-utils";
 import { cn } from "@/lib/utils";
-import { BusinessStaff } from "@prisma/client";
+import { BusinessStaff, StaffWorkingHours, DayOfWeek } from "@prisma/client";
+
+type StaffWithHours = BusinessStaff & {
+  workingHours?: StaffWorkingHours[];
+};
 
 interface StaffTabProps {
   business: BusinessDetail;
@@ -135,8 +139,31 @@ export function StaffTab({ business }: StaffTabProps) {
 }
 
 // Staff Card Component
-function StaffCard({ staff }: { staff: BusinessStaff }) {
+function StaffCard({ staff }: { staff: StaffWithHours }) {
   const [showContact, setShowContact] = useState(false);
+  const [showHours, setShowHours] = useState(false);
+
+  const DAYS_OF_WEEK: DayOfWeek[] = [
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+    "SUNDAY",
+  ];
+
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(":");
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  const getDayShort = (day: DayOfWeek) => {
+    return day.slice(0, 3);
+  };
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
@@ -245,6 +272,90 @@ function StaffCard({ staff }: { staff: BusinessStaff }) {
               <div className="flex items-start gap-2 text-sm">
                 <Award className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                 <span className="line-clamp-2">{staff.qualifications}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Working Hours */}
+        {staff.workingHours && staff.workingHours.length > 0 && (
+          <div className="pt-3 border-t border-border">
+            {!showHours ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2"
+                onClick={() => setShowHours(true)}
+              >
+                <Clock className="h-4 w-4" />
+                View Working Hours
+              </Button>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary" />
+                    Working Hours
+                  </h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowHours(false)}
+                  >
+                    Hide
+                  </Button>
+                </div>
+
+                {/* Weekly Overview */}
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {DAYS_OF_WEEK.map((day) => {
+                    const hours = staff.workingHours?.find((h) => h.dayOfWeek === day);
+                    const isAvailable = hours?.isAvailable ?? false;
+                    return (
+                      <Badge
+                        key={day}
+                        variant={isAvailable ? "default" : "outline"}
+                        className="text-xs"
+                      >
+                        {getDayShort(day)}
+                      </Badge>
+                    );
+                  })}
+                </div>
+
+                {/* Detailed Hours */}
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {DAYS_OF_WEEK.map((day) => {
+                    const hours = staff.workingHours?.find((h) => h.dayOfWeek === day);
+                    if (!hours || !hours.isAvailable) return null;
+
+                    return (
+                      <div
+                        key={day}
+                        className="flex justify-between items-start text-sm p-2 rounded-md bg-muted/50"
+                      >
+                        <span className="font-medium capitalize min-w-[80px]">
+                          {day.slice(0, 3)}
+                        </span>
+                        <div className="text-right">
+                          <div className="font-medium">
+                            {formatTime(hours.startTime)} - {formatTime(hours.endTime)}
+                          </div>
+                          {hours.breakStartTime && hours.breakEndTime && (
+                            <div className="text-xs text-muted-foreground">
+                              Break: {formatTime(hours.breakStartTime)} - {formatTime(hours.breakEndTime)}
+                            </div>
+                          )}
+                          {hours.note && (
+                            <div className="text-xs text-muted-foreground italic">
+                              {hours.note}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

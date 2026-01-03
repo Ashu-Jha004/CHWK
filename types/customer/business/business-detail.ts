@@ -8,6 +8,7 @@ import {
   BusinessAmenity,
   BusinessServiceArea,
   BusinessStaff,
+  StaffWorkingHours,
   BusinessDocument,
   Category,
   Amenity,
@@ -37,7 +38,9 @@ export type BusinessDetail = Business & {
   })[];
   serviceAreas: ServiceArea[];
   serviceArea: BusinessServiceArea[];
-  staff: BusinessStaff[];
+  staff: (BusinessStaff & {
+    workingHours: StaffWorkingHours[];
+  })[];
   hours: BusinessHours[];
   menuItems: MenuItem[];
   reviews: (Review & {

@@ -18,6 +18,7 @@ import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { ReviewsManagementTab } from "../business-dashboard/reviews-management-tab";
+import { StaffManagementTab } from "../business-dashboard/staff-management-tab";
 
 interface DashboardContentProps {
   business: Business & {
@@ -66,6 +67,11 @@ export function DashboardContent({
       case "reviews":
         return (
           <ReviewsManagementTab businessId={business.id} />
+        );
+
+      case "staff":
+        return (
+          <StaffManagementTab businessId={business.id} />
         );
 
       default:
