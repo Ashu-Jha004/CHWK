@@ -9,9 +9,15 @@ import { headers } from "next/headers";
  */
 const SearchParamsSchema = z.object({
   query: z.string().min(2).max(100).trim(),
+  location: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  radius: z.number().optional(),
   city: z.string().optional(),
-  categoryId: z.string().optional(), // Removed UUID restriction as slugs are often used
+  categoryId: z.string().optional(),
   isVerified: z.boolean().optional(),
+  minRating: z.number().optional(),
+  priceRange: z.array(z.string()).optional(),
   limit: z.number().int().positive().min(1).max(50).default(12),
   page: z.number().int().positive().default(1),
 });
@@ -104,11 +110,17 @@ export async function searchBusinessesAction(params: any): Promise<SearchActionR
     // C. Circuit Breaker & Timeout
     const results = await Promise.race([
       searchCircuitBreaker.execute(() => performSearch({
-        q: validated.data.query,
+        query: validated.data.query,
+        location: validated.data.location,
+        latitude: validated.data.latitude,
+        longitude: validated.data.longitude,
+        radius: validated.data.radius,
         page: validated.data.page,
         limit: validated.data.limit,
-        categoryId: validated.data.categoryId,
+        categorySlug: validated.data.categoryId,
         isVerified: validated.data.isVerified,
+        minRating: validated.data.minRating,
+        priceRange: validated.data.priceRange as any,
       })),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Search Timeout")), 5000)

@@ -240,7 +240,7 @@ if (business.ownerId) {
         console.error("[Review Create] Email notification failed:", error);
       });
 
-      console.log(`[Review] Email notification sent to business owner: ${business.ownerId}`);
+
     }
   } catch (error) {
     // Log error but don't fail the review creation

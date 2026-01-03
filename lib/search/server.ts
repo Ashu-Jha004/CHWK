@@ -5,184 +5,210 @@ import {
   BusinessSearchResult,
   SearchParams as GlobalSearchParams
 } from "@/types/search/types";
+import {
+  parseSearchQuery,
+  isOpenNow,
+  isValidCoordinates
+} from "@/lib/search/utils";
+import { matchCategories } from "@/lib/search/category-matcher";
+import { searchWithDistance, searchRegular } from "@/lib/search/search-service";
+import { getSpellingSuggestion, findSimilarTerms, fuzzySearchBusinesses } from "@/lib/search/fuzzy-matcher";
 
-interface SearchParams {
-  q?: string;
-  page?: number;
-  limit?: number;
-  categoryId?: string;
-  isVerified?: boolean;
-  sortBy?: 'relevance' | 'rating' | 'recent';
-}
-
-// Internal interface for the raw SQL result
-interface RawSearchResult extends Omit<BusinessSearchResult, 'categories'> {
-  categories: any; // We'll parse this from JSON if needed, or Prisma might handle it
-  rank: number;
-}
-
-export async function performSearch(params: SearchParams): Promise<SearchResponse> {
+export async function performSearch(params: GlobalSearchParams): Promise<SearchResponse> {
   const startTime = Date.now();
-  const rawInput = (params.q || "").trim().slice(0, 200);
+  const queryId = Math.random().toString(36).substring(7);
+
+  // Use the shared parser
+  const parsedQuery = parseSearchQuery(params.query || "");
+
+  // Match categories
+  const matchedCategories = await matchCategories(parsedQuery.cleanQuery, 3);
+  const categoryIds = matchedCategories.map(c => c.id);
+
+  // Check for spelling suggestions if no categories matched
+  let spellingSuggestion: string | null = null;
+  let fuzzyResults: any[] = [];
+
+  if (parsedQuery.cleanQuery && matchedCategories.length === 0) {
+    // Try to find spelling correction
+    spellingSuggestion = await getSpellingSuggestion(parsedQuery.cleanQuery);
+
+    // Also get fuzzy search results as fallback
+    fuzzyResults = await fuzzySearchBusinesses(parsedQuery.cleanQuery, 5);
+  }
+
   const page = Math.max(1, params.page || 1);
   const limit = Math.min(50, Math.max(1, params.limit || 12));
 
-  // Intent parsing
-  const isTopRequested = /\b(top|best|highest rated)\b/i.test(rawInput);
-  const isVerifiedRequested = params.isVerified || /\b(verified|trusted)\b/i.test(rawInput);
-
-  // Clean search terms
-  const cleanedInput = rawInput
-    .replace(/\b(top|best|verified|trusted|in|at|near|me)\b/gi, "")
-    .trim();
-
-  const emptyResponse: SearchResponse = {
-    results: [],
-    pagination: { total: 0, page, limit, totalPages: 0, hasMore: false },
-    filters: {
-      appliedFilters: params as any,
-      availableFilters: { categories: [], priceRanges: [], cities: [] }
-    },
-    metadata: { searchTime: 0, queryId: 'initial' }
+  // Build Where Clause (Mirroring route.ts logic)
+  const where: Prisma.BusinessWhereInput = {
+    status: { in: ["ACTIVE", "CLAIMED"] },
+    deletedAt: null,
   };
 
-  if (!cleanedInput || cleanedInput.length < 2) return emptyResponse;
+  // Text Search (Name, Description, Keywords, PRODUCTS)
+  if (parsedQuery.cleanQuery) {
+    const orConditions: Prisma.BusinessWhereInput[] = [
+      { name: { contains: parsedQuery.cleanQuery, mode: "insensitive" as const } },
+      { description: { contains: parsedQuery.cleanQuery, mode: "insensitive" as const } },
+      { metadataKeywords: { has: parsedQuery.cleanQuery } },
+      {
+        menuItems: {
+          some: {
+            OR: [
+              { name: { contains: parsedQuery.cleanQuery, mode: "insensitive" as const } },
+              { description: { contains: parsedQuery.cleanQuery, mode: "insensitive" as const } },
+              { tags: { has: parsedQuery.cleanQuery } }
+            ]
+          }
+        }
+      }
+    ];
 
-  try {
-    let results: RawSearchResult[] = [];
-    let strategy: 'fulltext' | 'fuzzy' | 'fallback' = 'fulltext';
-
-    // Strategy 1: Full-text search with websearch
-    results = await prisma.$queryRaw<RawSearchResult[]>`
-      SELECT
-        b."id", b."name", b."slug", b."coverImage", b."logo", b."averageRating",
-        b."priceRange", b."isVerified", b."city", b."area", b."description",
-        b."shortDescription", b."pincode", b."latitude", b."longitude", b."totalReviews",
-        (
-          SELECT COALESCE(json_agg(json_build_object(
-            'id', c."id",
-            'name', c."name",
-            'slug', c."slug",
-            'isPrimary', bc."isPrimary"
-          )), '[]'::json)
-          FROM "business_categories" bc
-          JOIN "categories" c ON c."id" = bc."categoryId"
-          WHERE bc."businessId" = b."id"
-        ) AS categories,
-        ts_rank_cd(
-          setweight(to_tsvector('english', b."name"), 'A') ||
-          setweight(b.search_vector, 'B'),
-          websearch_to_tsquery('english', ${cleanedInput})
-        ) AS rank
-      FROM "businesses" b
-      WHERE
-        (
-          setweight(to_tsvector('english', b."name"), 'A') ||
-          setweight(b.search_vector, 'B')
-        ) @@ websearch_to_tsquery('english', ${cleanedInput})
-        AND b."status" = 'ACTIVE'
-        ${isVerifiedRequested ? Prisma.sql`AND b."isVerified" = true` : Prisma.sql``}
-        ${params.categoryId ? Prisma.sql`AND b."categoryId" = ${params.categoryId}` : Prisma.sql``}
-      ORDER BY
-        ${isTopRequested ? Prisma.sql`b."averageRating" DESC,` : Prisma.sql``}
-        rank DESC
-      LIMIT ${limit}
-      OFFSET ${(page - 1) * limit};
-    `;
-
-    // Strategy 2: Fuzzy/similarity fallback
-    if (results.length === 0) {
-      strategy = 'fuzzy';
-      results = await prisma.$queryRaw<RawSearchResult[]>`
-        SELECT
-          b."id", b."name", b."slug", b."coverImage", b."logo", b."averageRating",
-          b."priceRange", b."isVerified", b."city", b."area", b."description",
-          b."shortDescription", b."pincode", b."latitude", b."longitude", b."totalReviews",
-          (
-            SELECT COALESCE(json_agg(json_build_object(
-              'id', c."id",
-              'name', c."name",
-              'slug', c."slug",
-              'isPrimary', bc."isPrimary"
-            )), '[]'::json)
-            FROM "business_categories" bc
-            JOIN "categories" c ON c."id" = bc."categoryId"
-            WHERE bc."businessId" = b."id"
-          ) AS categories,
-          GREATEST(
-            similarity(b."name", ${cleanedInput}),
-            similarity(b."area", ${cleanedInput}),
-            similarity(b."city", ${cleanedInput})
-          ) AS rank
-        FROM "businesses" b
-        WHERE (
-          b."name" % ${cleanedInput}
-          OR b."area" % ${cleanedInput}
-          OR b."city" % ${cleanedInput}
-        )
-        AND b."status" = 'ACTIVE'
-        AND GREATEST(
-          similarity(b."name", ${cleanedInput}),
-          similarity(b."area", ${cleanedInput}),
-          similarity(b."city", ${cleanedInput})
-        ) > 0.3
-        ${isVerifiedRequested ? Prisma.sql`AND b."isVerified" = true` : Prisma.sql``}
-        ORDER BY rank DESC
-        LIMIT ${limit};
-      `;
+    // If categories matched, include them in OR (not as strict AND filter)
+    if (categoryIds.length > 0) {
+      orConditions.push({
+        categories: {
+          some: { categoryId: { in: categoryIds } }
+        }
+      });
     }
 
-    // Get total count for pagination (only if results found)
-    const totalCount = results.length > 0 ? await prisma.$queryRaw<[{ count: bigint }]>`
-      SELECT COUNT(*) as count
-      FROM "businesses"
-      WHERE search_vector @@ websearch_to_tsquery('english', ${cleanedInput})
-        AND "status" = 'ACTIVE'
-    ` : [{ count: BigInt(0) }];
+    where.OR = orConditions;
+  } else if (categoryIds.length > 0) {
+    // If no query but categories found, only search by categories
+    where.categories = {
+      some: { categoryId: { in: categoryIds } }
+    };
+  }
 
-    const total = Number(totalCount[0]?.count || 0);
+  // User-specified category filter (strict)
+  if (params.categorySlug) {
+    where.categories = { some: { category: { slug: params.categorySlug } } };
+  }
+
+  // Check if location is just "Near me" or similar phrases (don't use as city filter)
+  const isNearMePhrase = params.location &&
+    /(near\s+me|nearby|close\s+to\s+me|around\s+me)/i.test(params.location);
+
+  // Location Filter (City/Area/Pincode) - Only if NOT "near me" / GPS
+  const isLocationSearch =
+    isValidCoordinates(params.latitude, params.longitude) &&
+    (parsedQuery.locationIntent.type === "nearme" || isNearMePhrase || !params.location);
+
+  if (params.location && !isLocationSearch && !isNearMePhrase) {
+     // Location must be added as AND with the existing OR conditions
+     // We need to wrap it properly
+     const existingOR = where.OR;
+
+     if (existingOR) {
+       // If we already have OR conditions, we need to combine them
+       // The logic is: (existing OR conditions) AND (location matches)
+       where.AND = [
+         { OR: existingOR },
+         {
+           OR: [
+             { city: { contains: params.location, mode: "insensitive" as const } },
+             { area: { contains: params.location, mode: "insensitive" as const } },
+             { pincode: { contains: params.location } },
+           ]
+         }
+       ];
+       delete where.OR;
+     } else {
+       // No existing OR, just add location filter
+       where.OR = [
+         { city: { contains: params.location, mode: "insensitive" as const } },
+         { area: { contains: params.location, mode: "insensitive" as const } },
+         { pincode: { contains: params.location } },
+       ];
+     }
+  }
+
+  // Filters
+  if (params.isVerified) where.isVerified = true;
+  if (params.priceRange && params.priceRange.length > 0) where.priceRange = { in: params.priceRange };
+  if (params.minRating) where.averageRating = { gte: params.minRating };
+
+  try {
+    let result: { businesses: any[], totalCount: number };
+
+    if (isLocationSearch && params.latitude && params.longitude) {
+       result = await searchWithDistance(
+         where,
+         params.latitude,
+         params.longitude,
+         params.radius || 10,
+         page,
+         limit,
+         params.sortBy || "distance"
+       );
+    } else {
+       result = await searchRegular(
+         where,
+         page,
+         limit,
+         params.sortBy || 'relevance'
+       );
+    }
+
+
+
+    // Transform results (Standardize to BusinessSearchResult)
+    // searchWithDistance and searchRegular already return formatted-ish results
+    // but we need to map categories format if needed.
+    // Actually, search-service returns categories in nested format.
+    // We need to flatten categories for the frontend type.
+
+    // Check search-service output structure:
+    // categories: { category: { id, name, slug } }[]
+    // BusinessSearchResult expects categories: { id, name, slug, isPrimary }[]
+
+    const results = result.businesses.map(b => ({
+      ...b,
+      categories: b.categories.map((c: any) => ({
+        id: c.category.id,
+        name: c.category.name,
+        slug: c.category.slug,
+        isPrimary: c.isPrimary || false
+      })),
+      // isOpen and distance are already calculated in service
+    })) as unknown as BusinessSearchResult[];
 
     return {
-      results: results as unknown as BusinessSearchResult[],
+      results,
       pagination: {
-        total,
+        total: result.totalCount,
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
-        hasMore: page * limit < total
+        totalPages: Math.ceil(result.totalCount / limit),
+        hasMore: (page * limit) < result.totalCount
       },
       filters: {
-        appliedFilters: params as any,
+        appliedFilters: params,
         availableFilters: {
-          categories: [],
-          priceRanges: [],
-          cities: []
+            categories: matchedCategories.map(c => ({ slug: c.slug, name: c.name, count: 0 })),
+            priceRanges: [],
+            cities: []
         }
+      },
+      suggestions: {
+        didYouMean: spellingSuggestion || undefined,
+        relatedSearches: fuzzyResults.map(r => r.name).slice(0, 3),
       },
       metadata: {
         searchTime: Date.now() - startTime,
-        queryId: Math.random().toString(36).substring(7),
+        queryId
       }
     };
 
   } catch (error) {
-    console.error("[Search Engine Error]:", {
-      error,
-      query: rawInput,
-      timestamp: new Date().toISOString()
-    });
-    // Return empty with error metadata for debugging
+    console.error("[Search Engine SSR Error]:", error);
     return {
       results: [],
       pagination: { total: 0, page, limit, totalPages: 0, hasMore: false },
-      filters: {
-        appliedFilters: params as any,
-        availableFilters: { categories: [], priceRanges: [], cities: [] }
-      },
-      metadata: {
-        searchTime: Date.now() - startTime,
-        queryId: 'error',
-      }
+      filters: { appliedFilters: params, availableFilters: { categories: [], priceRanges: [], cities: [] } },
+      metadata: { searchTime: Date.now() - startTime, queryId: 'error' }
     };
   }
 }

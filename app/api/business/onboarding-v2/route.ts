@@ -199,9 +199,7 @@ export async function POST(request: NextRequest) {
           data: { role: "BUSINESS_OWNER" },
         });
       } else {
-        console.log(
-          `[Onboarding] ✅ User found with BUSINESS_OWNER role: ${user.id}`
-        );
+
       }
     }
 
@@ -508,7 +506,7 @@ export async function POST(request: NextRequest) {
       return biz;
     });
 
-    console.log(`[Onboarding] 🎉 SUCCESS! Business registered: ${business.id}`);
+
 
     // ========== STEP 7: RETURN SUCCESS RESPONSE ==========
     return NextResponse.json(

@@ -1,4 +1,3 @@
-
 // Main search API endpoint with intelligent filtering and location-based search
 
 import { NextRequest, NextResponse } from "next/server";
@@ -11,8 +10,10 @@ import {
   generateQueryId,
   shouldSuggestExpandRadius,
   buildSearchPattern,
+  isOpenNow,
 } from "@/lib/search/utils";
 import { matchCategories } from "@/lib/search/category-matcher";
+import { searchWithDistance, searchRegular } from "@/lib/search/search-service";
 import {
   SearchParams,
   SearchResponse,
@@ -30,18 +31,15 @@ export async function GET(request: NextRequest) {
   try {
     // 1. Extract and validate search parameters
     const searchParams = extractSearchParams(request);
-    console.log(`[Search ${queryId}] Params:`, searchParams);
+
 
     // 2. Parse search query to extract intent
     const parsedQuery = parseSearchQuery(searchParams.query);
-    console.log(`[Search ${queryId}] Parsed:`, parsedQuery);
+
 
     // 3. Match categories based on query
     const matchedCategories = await matchCategories(parsedQuery.cleanQuery, 3);
-    console.log(
-      `[Search ${queryId}] Matched categories:`,
-      matchedCategories.map((c) => c.name)
-    );
+
 
     // 4. Build Prisma where clause
     const whereClause = await buildWhereClause(
@@ -51,79 +49,91 @@ export async function GET(request: NextRequest) {
     );
 
     // 5. Determine if location-based search
+    // Only use GPS if: user said "near me" OR no location text provided
+    // DO NOT use GPS if user typed "Hyderabad" even if browser sends coordinates
+    const isNearMePhrase = searchParams.location &&
+      /(near\s+me|nearby|close\s+to\s+me|around\s+me)/i.test(searchParams.location as string);
+
     const isLocationSearch =
-      parsedQuery.locationIntent.type === "nearme" &&
-      isValidCoordinates(searchParams.latitude, searchParams.longitude);
+      isValidCoordinates(searchParams.latitude, searchParams.longitude) &&
+      (parsedQuery.locationIntent.type === "nearme" ||
+       isNearMePhrase ||
+       !searchParams.location);
 
-    let businesses: any[] = [];
+    let businesses: BusinessSearchResult[] = []; // Changed type to BusinessSearchResult[]
     let totalCount = 0;
+    let expandedRadius = false;
 
-    if (isLocationSearch && searchParams.latitude && searchParams.longitude) {
-      // Location-based search with Haversine distance calculation
-      const result = await searchWithDistance(
-        whereClause,
-        searchParams.latitude,
-        searchParams.longitude,
-        searchParams.radius || 10,
-        searchParams.page || 1,
-        searchParams.limit || 12,
-        searchParams.sortBy || "distance"
-      );
-      businesses = result.businesses;
-      totalCount = result.totalCount;
-    } else {
-      // Regular search without distance calculation
-      const result = await searchRegular(
-        whereClause,
-        searchParams.page || 1,
-        searchParams.limit || 12,
-        searchParams.sortBy || "relevance"
-      );
-      businesses = result.businesses;
-      totalCount = result.totalCount;
+    // Helper to execute search
+    const executeSearch = async (radiusOverride?: number) => {
+      if (isLocationSearch && searchParams.latitude && searchParams.longitude) {
+        return await searchWithDistance(
+          whereClause,
+          searchParams.latitude,
+          searchParams.longitude,
+          radiusOverride || searchParams.radius || 10,
+          searchParams.page || 1,
+          searchParams.limit || 12,
+          searchParams.sortBy || "distance"
+        );
+      } else {
+        return await searchRegular(
+          whereClause,
+          searchParams.page || 1,
+          searchParams.limit || 12,
+          searchParams.sortBy || "relevance"
+        );
+      }
+    };
+
+    // Initial Search
+    let result = await executeSearch();
+    businesses = result.businesses.map((b: any) => ({
+        ...b,
+        categories: b.categories?.map((c: any) => ({
+            id: c.category.id,
+            name: c.category.name,
+            slug: c.category.slug,
+            isPrimary: c.isPrimary || false
+        })) || []
+    })) as unknown as BusinessSearchResult[];
+    totalCount = result.totalCount;
+
+    // SAFETY NET: Zero-Result Fallback
+    if (totalCount === 0 && isLocationSearch) {
+       const currentRadius = searchParams.radius || 10;
+       if (currentRadius < 50) { // Max limit
+         const newRadius = currentRadius * 2;
+
+
+         // Retry with expanded radius
+         result = await executeSearch(newRadius);
+         if (result.totalCount > 0) {
+            businesses = result.businesses.map((b: any) => ({
+                ...b,
+                categories: b.categories?.map((c: any) => ({
+                    id: c.category.id,
+                    name: c.category.name,
+                    slug: c.category.slug,
+                    isPrimary: c.isPrimary || false
+                })) || []
+            })) as unknown as BusinessSearchResult[];
+           totalCount = result.totalCount;
+           expandedRadius = true;
+         }
+       }
     }
 
-    // 6. Transform results
-    const results: BusinessSearchResult[] = businesses.map((business) => ({
-      id: business.id,
-      slug: business.slug,
-      name: business.name,
-      description: business.description,
-      shortDescription: business.shortDescription,
-      logo: business.logo,
-      coverImage: business.coverImage,
-      city: business.city,
-      area: business.area,
-      pincode: business.pincode,
-      latitude: business.latitude,
-      longitude: business.longitude,
-      distance: business.distance,
-      averageRating: business.averageRating,
-      totalReviews: business.totalReviews,
-      priceRange: business.priceRange,
-      isVerified: business.isVerified,
-      categories: business.categories.map((bc: any) => ({
-        id: bc.category.id,
-        name: bc.category.name,
-        slug: bc.category.slug,
-        isPrimary: bc.isPrimary,
-      })),
-    }));
-
-    // 7. Build pagination metadata
+    // 6. Build pagination metadata
     const page = searchParams.page || 1;
     const limit = searchParams.limit || 12;
     const totalPages = Math.ceil(totalCount / limit);
+    const expandRadius = shouldSuggestExpandRadius(totalCount, searchParams.radius || 10);
 
-    // 8. Check if should suggest expanding radius
-    const expandRadius =
-      isLocationSearch &&
-      shouldSuggestExpandRadius(totalCount, searchParams.radius || 10);
-
-    // 9. Build response
+    // 7. Build response
     const searchTime = Date.now() - startTime;
     const response: SearchResponse = {
-      results,
+      results: businesses,
       pagination: {
         total: totalCount,
         page,
@@ -137,14 +147,14 @@ export async function GET(request: NextRequest) {
           categories: matchedCategories.map((c) => ({
             slug: c.slug,
             name: c.name,
-            count: 0, // TODO: Implement count aggregation
+            count: 0,
           })),
           priceRanges: [],
           cities: [],
         },
       },
       suggestions: {
-        expandRadius: expandRadius ? true : undefined,
+        expandRadius: expandRadius || expandedRadius ? true : undefined,
         relatedSearches: matchedCategories.slice(0, 3).map((c) => c.name),
       },
       metadata: {
@@ -153,23 +163,20 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    console.log(
-      `[Search ${queryId}] Completed in ${searchTime}ms | Results: ${totalCount}`
-    );
 
-    // 10. Log search query for analytics (fire-and-forget)
+
+    // 8. Log search query for analytics (fire-and-forget)
     logSearchQuery(searchParams, parsedQuery, totalCount, queryId).catch(
       (err) => console.error("Error logging search:", err)
     );
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error(`[Search ${queryId}] Error:`, error);
+    console.error(`[Search] Error:`, error);
     return NextResponse.json(
       {
         error: "Search failed",
         message: error instanceof Error ? error.message : "Unknown error",
-        queryId,
       },
       { status: 500 }
     );
@@ -241,7 +248,7 @@ async function buildWhereClause(
     deletedAt: null,
   };
 
-  // Text search on name, description, and keywords
+  // Text search on name, description, keywords, AND menu items (Products/Services)
   if (parsedQuery.cleanQuery) {
     const searchPattern = buildSearchPattern(parsedQuery.cleanQuery);
     where.OR = [
@@ -249,7 +256,19 @@ async function buildWhereClause(
       {
         description: { contains: parsedQuery.cleanQuery, mode: "insensitive" },
       },
-      { metadataKeywords: { hasSome: parsedQuery.intent } },
+      { metadataKeywords: { has: parsedQuery.cleanQuery } },
+      // Product/Service Search: Check menu items
+      {
+        menuItems: {
+          some: {
+            OR: [
+              { name: { contains: parsedQuery.cleanQuery, mode: "insensitive" } },
+              { description: { contains: parsedQuery.cleanQuery, mode: "insensitive" } },
+              { tags: { has: parsedQuery.cleanQuery } }
+            ]
+          }
+        }
+      }
     ];
   }
 
@@ -271,32 +290,44 @@ async function buildWhereClause(
   }
 
   // Location filter (city/pincode) - only if NOT using GPS
-  if (
-    params.location &&
-    !isValidCoordinates(params.latitude, params.longitude)
-  ) {
-    where.OR = [
-      { city: { contains: params.location, mode: "insensitive" } },
-      { pincode: { equals: params.location } },
-    ];
+  const isNearMePhrase = params.location &&
+    /(near\s+me|nearby|close\s+to\s+me|around\s+me)/i.test(params.location);
+
+  if (params.location && !isValidCoordinates(params.latitude, params.longitude) && !isNearMePhrase) {
+    const existingOR = where.OR;
+
+    if (existingOR) {
+      // Combine with existing OR using AND
+      where.AND = [
+        { OR: existingOR },
+        {
+          OR: [
+            { city: { contains: params.location, mode: "insensitive" as const } },
+            { area: { contains: params.location, mode: "insensitive" as const } },
+            { pincode: { equals: params.location } },
+          ]
+        }
+      ];
+      delete where.OR;
+    } else {
+      where.OR = [
+        { city: { contains: params.location, mode: "insensitive" as const } },
+        { area: { contains: params.location, mode: "insensitive" as const } },
+        { pincode: { equals: params.location } },
+      ];
+    }
   }
 
-  // Rating filter (from qualifiers or explicit)
-  const ratingQualifier = parsedQuery.qualifiers.find(
-    (q: any) => q.type === "rating"
-  );
-  if (ratingQualifier) {
-    where.averageRating = { gte: ratingQualifier.filterValue };
+  // Rating filter (from extracted filters or explicit)
+  if (parsedQuery.extractedFilters?.minRating) {
+    where.averageRating = { gte: parsedQuery.extractedFilters.minRating };
   } else if (params.minRating) {
     where.averageRating = { gte: params.minRating };
   }
 
-  // Price range filter (from qualifiers or explicit)
-  const priceQualifier = parsedQuery.qualifiers.find(
-    (q: any) => q.type === "price"
-  );
-  if (priceQualifier) {
-    where.priceRange = { in: priceQualifier.filterValue };
+  // Price range filter (from extracted filters or explicit)
+  if (parsedQuery.extractedFilters?.priceRange) {
+    where.priceRange = { in: parsedQuery.extractedFilters.priceRange };
   } else if (params.priceRange && params.priceRange.length > 0) {
     where.priceRange = { in: params.priceRange };
   }
@@ -309,180 +340,7 @@ async function buildWhereClause(
   return where;
 }
 
-/**
- * Search with distance calculation (Haversine formula via raw SQL)
- */
-async function searchWithDistance(
-  where: Prisma.BusinessWhereInput,
-  userLat: number,
-  userLon: number,
-  radiusKm: number,
-  page: number,
-  limit: number,
-  sortBy: string
-) {
-  const offset = (page - 1) * limit;
 
-  // Calculate Bounding Box to use Indexes
-  const latDelta = radiusKm / 111.32; // 1 degree lat is ~111.32km
-  const lonDelta = radiusKm / (111.32 * Math.cos(userLat * (Math.PI / 180)));
-
-  const minLat = userLat - latDelta;
-  const maxLat = userLat + latDelta;
-  const minLon = userLon - lonDelta;
-  const maxLon = userLon + lonDelta;
-
-  // Build SQL for distance calculation
-  const distanceFormula = `
-    (6371 * acos(
-      cos(radians(${userLat})) *
-      cos(radians(latitude)) *
-      cos(radians(longitude) - radians(${userLon})) +
-      sin(radians(${userLat})) *
-      sin(radians(latitude))
-    ))
-  `;
-
-  // Get business IDs within radius using raw SQL
-  // Added Bounding Box Check: latitude BETWEEN ${minLat} AND ${maxLat} ...
-  const businessIdsInRadius: any[] = await prisma.$queryRaw`
-    SELECT
-      id,
-      ${Prisma.raw(distanceFormula)} as distance
-    FROM businesses
-    WHERE
-      latitude BETWEEN ${minLat} AND ${maxLat}
-      AND longitude BETWEEN ${minLon} AND ${maxLon}
-      AND ${Prisma.raw(distanceFormula)} <= ${radiusKm}
-      AND status IN ('ACTIVE', 'CLAIMED')
-      AND "deletedAt" IS NULL
-    ORDER BY distance ASC
-    LIMIT 100 -- Limit potential intermediate matches
-  `;
-
-  const businessIds = businessIdsInRadius.map((b) => b.id);
-
-  if (businessIds.length === 0) {
-    return { businesses: [], totalCount: 0 };
-  }
-
-  // Add ID filter to where clause
-  const finalWhere: Prisma.BusinessWhereInput = {
-    ...where,
-    id: { in: businessIds },
-  };
-
-  // Get total count
-  const totalCount = await prisma.business.count({ where: finalWhere });
-
-  // Get businesses with categories
-  const businesses = await prisma.business.findMany({
-    where: finalWhere,
-    include: {
-      categories: {
-        include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
-        },
-        where: {
-          category: {
-            isActive: true,
-          },
-        },
-      },
-    },
-    skip: offset,
-    take: limit,
-  });
-
-  // Add distance to each business
-  const businessesWithDistance = businesses.map((business) => {
-    const distanceData = businessIdsInRadius.find((b) => b.id === business.id);
-    return {
-      ...business,
-      distance: distanceData ? Number(distanceData.distance.toFixed(1)) : null,
-    };
-  });
-
-  // Sort based on sortBy parameter
-  if (sortBy === "distance") {
-    businessesWithDistance.sort(
-      (a, b) => (a.distance || 999) - (b.distance || 999)
-    );
-  } else if (sortBy === "rating") {
-    businessesWithDistance.sort(
-      (a, b) => (b.averageRating || 0) - (a.averageRating || 0)
-    );
-  } else if (sortBy === "reviews") {
-    businessesWithDistance.sort((a, b) => b.totalReviews - a.totalReviews);
-  }
-
-  return { businesses: businessesWithDistance, totalCount };
-}
-
-/**
- * Regular search without distance calculation
- */
-async function searchRegular(
-  where: Prisma.BusinessWhereInput,
-  page: number,
-  limit: number,
-  sortBy: string
-) {
-  const offset = (page - 1) * limit;
-
-  // Determine order by
-  let orderBy: Prisma.BusinessOrderByWithRelationInput[] = [];
-
-  if (sortBy === "rating") {
-    orderBy = [{ averageRating: "desc" }, { totalReviews: "desc" }];
-  } else if (sortBy === "reviews") {
-    orderBy = [{ totalReviews: "desc" }, { averageRating: "desc" }];
-  } else {
-    // Relevance: prioritize verified, then rating
-    orderBy = [
-      { isVerified: "desc" },
-      { averageRating: "desc" },
-      { totalReviews: "desc" },
-    ];
-  }
-
-  // Get total count
-  const totalCount = await prisma.business.count({ where });
-
-  // Get businesses
-  const businesses = await prisma.business.findMany({
-    where,
-    include: {
-      categories: {
-        include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
-        },
-        where: {
-          category: {
-            isActive: true,
-          },
-        },
-      },
-    },
-    orderBy,
-    skip: offset,
-    take: limit,
-  });
-
-  return { businesses, totalCount };
-}
 
 /**
  * Log search query for analytics

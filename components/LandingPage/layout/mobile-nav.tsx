@@ -3,7 +3,7 @@
 import { useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useBusiness } from "@/context/business-context";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   MapPin,
@@ -40,7 +40,8 @@ export function MobileNav({
   city,
   onCityChange,
 }: MobileNavProps) {
-  const router = useRouter();
+   const router = useRouter();
+   const pathname = usePathname();
   const { isBusinessOwner } = useBusiness();
   const { query, setQuery, location } = uiSelectors.useSearch();
 
@@ -266,7 +267,10 @@ export function MobileNav({
             <Button
               className="w-full gap-2 btn-shine"
               size="lg"
-              onClick={onClose}
+              onClick={() => {
+                router.push(`/sign-in?redirect_url=${encodeURIComponent(pathname)}`);
+                onClose();
+              }}
             >
               <LogIn className="w-5 h-5" />
               Sign In / Sign Up

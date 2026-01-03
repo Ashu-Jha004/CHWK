@@ -49,12 +49,20 @@ export function BusinessCard({ business }: { business: any }) {
 
           {/* Verification Badge */}
           {business.isVerified && (
-            <div className="absolute top-2 left-2">
+            <div className="absolute top-2 left-2 flex gap-1">
               <Badge className="bg-secondary text-secondary-foreground border-none flex items-center gap-1 shadow-md">
                 <CheckCircle2 className="w-3 h-3" /> Verified
               </Badge>
             </div>
           )}
+
+          {/* Open Status Badge (Mocked for now as backend logic needs date-fns) */}
+          <div className="absolute top-2 right-2">
+             <Badge variant={business.isOpen === false ? "destructive" : "default"}
+                    className={cn("shadow-md", business.isOpen === false ? "bg-red-500" : "bg-green-600 hover:bg-green-700")}>
+               {business.isOpen === false ? "Closed" : "Open Now"}
+             </Badge>
+          </div>
         </div>
 
         {/* Content Section */}

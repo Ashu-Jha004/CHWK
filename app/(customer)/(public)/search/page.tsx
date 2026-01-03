@@ -32,11 +32,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // ✅ Direct function call - NO HTTP request!
   const data = await performSearch({
-    q: params.q,
+    query: params.q || "",
+    location: params.location,
+    latitude: params.lat ? parseFloat(params.lat) : undefined,
+    longitude: params.lon ? parseFloat(params.lon) : undefined,
+    radius: params.radius ? parseInt(params.radius) : undefined,
     page: params.page ? parseInt(params.page, 10) : 1,
-    categoryId: params.category,
+    limit: 12,
+    categorySlug: params.category,
     isVerified: params.verified === "true",
-    // Add other conversions if needed (sortBy, etc)
+    minRating: params.minRating ? parseFloat(params.minRating) : undefined,
+    priceRange: params.priceRange ? params.priceRange.split(",") as any : undefined,
+    sortBy: (params.sort as any) || "relevance",
   });
 
   return (

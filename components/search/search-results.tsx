@@ -4,10 +4,11 @@
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { SearchResponse } from "@/types/search/types";
-import { SearchFilters } from "./search-filters";
+import { FilterSidebar } from "./filter-sidebar";
 import { BusinessGrid } from "./business-grid";
 import { SearchHeader } from "./search-header";
 import { EmptySearchState } from "./empty-search-state";
+import { SpellCorrectionBanner } from "./spell-correction-banner";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useBusinessSearch } from "@/hooks/search/use-business-search";
@@ -97,6 +98,14 @@ export function SearchResultsClient({
   return (
     <div className={isPlaceholderData || isLoading ? "opacity-60 transition-opacity" : "opacity-100"}>
       <div className="space-y-6">
+      {/* Show spell correction banner if suggestion exists */}
+      {currentData.suggestions?.didYouMean && currentData.results.length === 0 && (
+        <SpellCorrectionBanner
+          originalQuery={searchParams.q || ""}
+          suggestedQuery={currentData.suggestions.didYouMean}
+        />
+      )}
+
       <SearchHeader
   query={searchParams.q || ""}
   // Add optional chaining here to prevent the 'total' of undefined error
@@ -108,18 +117,21 @@ export function SearchResultsClient({
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <aside className="lg:col-span-1">
-            <SearchFilters
-              currentFilters={{
-                radius: parseInt(searchParams.radius || "10"),
-                minRating: parseFloat(searchParams.minRating || "0") || undefined,
-                priceRange: searchParams.priceRange?.split(",") as any,
-                verified: searchParams.verified === "true",
-              }}
-              onFilterChange={handleFilterChange}
-              availableCategories={
-                currentData.filters?.availableFilters?.categories || []
-              }
-            />
+            <div className="sticky top-24">
+              <FilterSidebar
+                currentFilters={{
+                  radius: parseInt(searchParams.radius || "10"),
+                  minRating: parseFloat(searchParams.minRating || "0") || undefined,
+                  priceRange: searchParams.priceRange?.split(",") as any,
+                  verified: searchParams.verified === "true",
+                  category: searchParams.category,
+                }}
+                onFilterChange={handleFilterChange}
+                availableCategories={
+                  currentData.filters?.availableFilters?.categories || []
+                }
+              />
+            </div>
           </aside>
 
           <main className="lg:col-span-3 space-y-6">

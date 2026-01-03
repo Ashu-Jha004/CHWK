@@ -10,6 +10,43 @@ import {
   Coordinates,
 } from "@/types/search/types";
 
+// Days mapping for Date.getDay() (0=Sunday) to Prisma DayOfWeek
+const DAY_MAP = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+
+export function isOpenNow(hours: any[]): boolean {
+  if (!hours || hours.length === 0) return false;
+
+  const now = new Date();
+  // Convert to IST (Asia/Kolkata) for accurate local status
+  const istTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+
+  const currentDay = DAY_MAP[istTime.getDay()];
+  const currentHour = istTime.getHours();
+  const currentMinute = istTime.getMinutes();
+  const currentTimeVal = currentHour * 60 + currentMinute;
+
+  // Find today's hours
+  const todayHours = hours.find(h => h.dayOfWeek === currentDay);
+
+  if (!todayHours || todayHours.isClosed) return false;
+
+  // Parse Open/Close times (e.g., "09:00", "22:00")
+  const [openH, openM] = todayHours.openTime.split(":").map(Number);
+  const [closeH, closeM] = todayHours.closeTime.split(":").map(Number);
+
+  const openTimeVal = openH * 60 + openM;
+  const closeTimeVal = closeH * 60 + closeM;
+
+  // Handle crossing midnight? Assuming not for now unless business allows it
+  if (closeTimeVal < openTimeVal) {
+    // Late night closure (e.g. 11:00 AM to 02:00 AM)
+    // If current time is after open OR before close
+    return currentTimeVal >= openTimeVal || currentTimeVal <= closeTimeVal;
+  }
+
+  return currentTimeVal >= openTimeVal && currentTimeVal <= closeTimeVal;
+}
+
 /**
  * Query qualifiers mapping
  * Maps common search terms to their filter intentions

@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Navigation,
 } from "lucide-react";
+import { parseSmartQuery } from "@/lib/search/query-parser";
 import { uiSelectors } from "@/store/landing_page/ui-store";
 import { CATEGORIES, TIER_1_CITIES } from "@/lib/(landing_page)/constants";
 import { cn, scrollToElement } from "@/lib/utils";
@@ -246,6 +247,10 @@ export function HeroSection() {
   // SEARCH HANDLER WITH ERROR HANDLING
   // ============================================
 
+  // ============================================
+  // SEARCH HANDLER WITH SMART PARSING
+  // ============================================
+
   const handleSearch = useCallback(
     (e?: React.FormEvent) => {
       e?.preventDefault();
@@ -254,23 +259,35 @@ export function HeroSection() {
         const trimmedQuery = query.trim();
 
         if (!trimmedQuery) {
-         toast("Empty search");
+          toast("Empty search");
           inputRef.current?.focus();
           return;
         }
 
         if (trimmedQuery.length < 2) {
-         toast("Query too short");
+          toast("Query too short");
           return;
         }
 
+        // SMART PARSE LOGIC
+        const { query: cleanQuery, location: parsedLocation } = parseSmartQuery(trimmedQuery);
+
         const params = new URLSearchParams();
-        params.set("q", trimmedQuery);
+        params.set("q", cleanQuery);
 
         // Get location data securely [web:26]
         const storedLocation = LocationStorage.get();
 
-        if (storedLocation && location === "Near me") {
+        // Priority:
+        // 1. Parsed location from query ("Pizza in Brooklyn")
+        // 2. "Near me" with GPS
+        // 3. Current selected location/city
+
+        if (parsedLocation) {
+             params.set("location", parsedLocation);
+             // Optionally update UI state to reflect this discovery
+             setLocation(parsedLocation);
+        } else if (storedLocation && location === "Near me") {
           // Use GPS coordinates for "near me" search
           params.set("lat", storedLocation.latitude.toString());
           params.set("lon", storedLocation.longitude.toString());
@@ -284,10 +301,10 @@ export function HeroSection() {
         router.push(`/search?${params.toString()}`);
       } catch (error) {
         console.error("Search error:", error);
-       toast("Search error");
+        toast("Search error");
       }
     },
-    [query, location, city, router, toast]
+    [query, location, city, router, toast, setLocation]
   );
 
   // ============================================

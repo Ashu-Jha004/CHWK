@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useBusiness } from "@/context/business-context";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -40,6 +40,7 @@ export function Header() {
   const isMobile = useMediaQuery("(max-width: 768px)");
   const { isSignedIn, isLoaded } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
   const { isBusinessOwner } = useBusiness();
 
   const { isOpen: isMobileMenuOpen, toggle: toggleMobileMenu } =
@@ -293,7 +294,7 @@ export function Header() {
                 )}
 
                 {!isSignedIn ? (
-                  <Link href="/auth/sign-in">
+                  <Link href={`/sign-in?redirect_url=${encodeURIComponent(pathname)}`}>
                   <Button
                     variant="default"
                     size="sm"
