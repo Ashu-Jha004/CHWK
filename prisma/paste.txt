@@ -1,0 +1,1623 @@
+[
+  {
+    "text": "AC Service",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Installation & setup",
+        "subSubCategories": [
+          { "text": "New AC installation" },
+          { "text": "Uninstallation" },
+          { "text": "AC shifting" },
+          { "text": "Copper pipe fitting" },
+          { "text": "Stand/Bracket installation" }
+        ]
+      },
+      {
+        "text": "Repair",
+        "subSubCategories": [
+          { "text": "No cooling" },
+          { "text": "Water leakage" },
+          { "text": "Noise/vibration" },
+          { "text": "PCB/Capacitor issue" },
+          { "text": "Compressor issue" }
+        ]
+      },
+      {
+        "text": "Maintenance",
+        "subSubCategories": [
+          { "text": "General service" },
+          { "text": "Deep cleaning" },
+          { "text": "Gas refill/charging" },
+          { "text": "Gas leak fix" },
+          { "text": "Annual maintenance contract (AMC)" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Astrologers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Consultation",
+        "subSubCategories": [
+          { "text": "Phone consultation" },
+          { "text": "Video consultation" },
+          { "text": "In-person consultation" },
+          { "text": "Marriage matching" },
+          { "text": "Career guidance" }
+        ]
+      },
+      {
+        "text": "Horoscopes",
+        "subSubCategories": [
+          { "text": "Kundli making" },
+          { "text": "Kundli matching" },
+          { "text": "Janam patri analysis" },
+          { "text": "Daily/weekly horoscope" },
+          { "text": "Numerology report" }
+        ]
+      },
+      {
+        "text": "Remedies & rituals",
+        "subSubCategories": [
+          { "text": "Puja/havan" },
+          { "text": "Vastu correction" },
+          { "text": "Gemstone recommendation" },
+          { "text": "Yantra/totka guidance" },
+          { "text": "Muhurat selection" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Body Massage Centers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Massage types",
+        "subSubCategories": [
+          { "text": "Swedish massage" },
+          { "text": "Deep tissue massage" },
+          { "text": "Aromatherapy massage" },
+          { "text": "Thai massage" },
+          { "text": "Sports massage" }
+        ]
+      },
+      {
+        "text": "Target areas",
+        "subSubCategories": [
+          { "text": "Full body" },
+          { "text": "Back & shoulder" },
+          { "text": "Neck therapy" },
+          { "text": "Foot reflexology" },
+          { "text": "Head massage" }
+        ]
+      },
+      {
+        "text": "Add-ons",
+        "subSubCategories": [
+          { "text": "Steam bath" },
+          { "text": "Body scrub" },
+          { "text": "Hot stone" },
+          { "text": "Pain relief therapy" },
+          { "text": "Couple massage" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Beauty Spa",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Skin care",
+        "subSubCategories": [
+          { "text": "Cleanup" },
+          { "text": "Facial" },
+          { "text": "De-tan" },
+          { "text": "Anti-aging treatment" },
+          { "text": "Acne treatment" }
+        ]
+      },
+      {
+        "text": "Hair care",
+        "subSubCategories": [
+          { "text": "Hair spa" },
+          { "text": "Haircut" },
+          { "text": "Hair coloring" },
+          { "text": "Keratin/smoothing" },
+          { "text": "Hair treatment" }
+        ]
+      },
+      {
+        "text": "Beauty services",
+        "subSubCategories": [
+          { "text": "Waxing" },
+          { "text": "Threading" },
+          { "text": "Manicure" },
+          { "text": "Pedicure" },
+          { "text": "Party makeup" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Car Hire",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Trip type",
+        "subSubCategories": [
+          { "text": "Local (hourly)" },
+          { "text": "Outstation (one-way)" },
+          { "text": "Outstation (round trip)" },
+          { "text": "Airport transfer" },
+          { "text": "Wedding car" }
+        ]
+      },
+      {
+        "text": "Vehicle type",
+        "subSubCategories": [
+          { "text": "Hatchback" },
+          { "text": "Sedan" },
+          { "text": "SUV" },
+          { "text": "Tempo traveller" },
+          { "text": "Luxury car" }
+        ]
+      },
+      {
+        "text": "Options",
+        "subSubCategories": [
+          { "text": "With driver" },
+          { "text": "Self-drive" },
+          { "text": "AC/Non-AC" },
+          { "text": "Multiple stops" },
+          { "text": "Child seat" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Caterers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Event type",
+        "subSubCategories": [
+          { "text": "Wedding" },
+          { "text": "Birthday" },
+          { "text": "Corporate event" },
+          { "text": "House party" },
+          { "text": "Religious function" }
+        ]
+      },
+      {
+        "text": "Cuisine",
+        "subSubCategories": [
+          { "text": "North Indian" },
+          { "text": "South Indian" },
+          { "text": "Chinese" },
+          { "text": "Continental" },
+          { "text": "Live BBQ" }
+        ]
+      },
+      {
+        "text": "Service style",
+        "subSubCategories": [
+          { "text": "Buffet" },
+          { "text": "Plated service" },
+          { "text": "Live counters" },
+          { "text": "Snacks & tea" },
+          { "text": "Full-day catering" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Chartered Accountant",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Tax",
+        "subSubCategories": [
+          { "text": "Income tax return (ITR)" },
+          { "text": "Tax planning" },
+          { "text": "TDS filing" },
+          { "text": "Tax notice reply" },
+          { "text": "Advance tax" }
+        ]
+      },
+      {
+        "text": "Business compliance",
+        "subSubCategories": [
+          { "text": "GST registration" },
+          { "text": "GST return filing" },
+          { "text": "ROC/MCA filings" },
+          { "text": "Audit" },
+          { "text": "Payroll compliance" }
+        ]
+      },
+      {
+        "text": "Advisory",
+        "subSubCategories": [
+          { "text": "Company incorporation" },
+          { "text": "Bookkeeping" },
+          { "text": "Financial statements" },
+          { "text": "Project report" },
+          { "text": "Business valuation" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Computer Training Institutes",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Programming",
+        "subSubCategories": [
+          { "text": "Web development" },
+          { "text": "Python" },
+          { "text": "Java" },
+          { "text": "Data structures" },
+          { "text": "Mobile app development" }
+        ]
+      },
+      {
+        "text": "IT skills",
+        "subSubCategories": [
+          { "text": "MS Office" },
+          { "text": "Tally" },
+          { "text": "Graphic design" },
+          { "text": "Digital marketing" },
+          { "text": "Cybersecurity basics" }
+        ]
+      },
+      {
+        "text": "Career tracks",
+        "subSubCategories": [
+          { "text": "Full-stack course" },
+          { "text": "Data analytics" },
+          { "text": "Cloud basics" },
+          { "text": "Interview prep" },
+          { "text": "Internship programs" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Courier Services",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Shipment type",
+        "subSubCategories": [
+          { "text": "Documents" },
+          { "text": "Parcels" },
+          { "text": "Bulk shipment" },
+          { "text": "Same-day delivery" },
+          { "text": "International courier" }
+        ]
+      },
+      {
+        "text": "Pickup & delivery",
+        "subSubCategories": [
+          { "text": "Door pickup" },
+          { "text": "Drop-off" },
+          { "text": "Express delivery" },
+          { "text": "Standard delivery" },
+          { "text": "COD delivery" }
+        ]
+      },
+      {
+        "text": "Business services",
+        "subSubCategories": [
+          { "text": "E-commerce shipping" },
+          { "text": "Reverse logistics" },
+          { "text": "Tracking integration" },
+          { "text": "Packaging" },
+          { "text": "Insurance" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Computer & Laptop Repair & Services",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Hardware",
+        "subSubCategories": [
+          { "text": "Screen replacement" },
+          { "text": "Keyboard/trackpad" },
+          { "text": "Battery replacement" },
+          { "text": "Motherboard repair" },
+          { "text": "SSD/RAM upgrade" }
+        ]
+      },
+      {
+        "text": "Software",
+        "subSubCategories": [
+          { "text": "OS installation" },
+          { "text": "Virus removal" },
+          { "text": "Data recovery" },
+          { "text": "Performance tune-up" },
+          { "text": "Driver issues" }
+        ]
+      },
+      {
+        "text": "Networking",
+        "subSubCategories": [
+          { "text": "Wi-Fi setup" },
+          { "text": "Router configuration" },
+          { "text": "LAN wiring" },
+          { "text": "Printer setup" },
+          { "text": "Remote support" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Car Repair & Services",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Periodic maintenance",
+        "subSubCategories": [
+          { "text": "Basic service" },
+          { "text": "Standard service" },
+          { "text": "Comprehensive service" },
+          { "text": "Oil & filter change" },
+          { "text": "General inspection" }
+        ]
+      },
+      {
+        "text": "Repairs",
+        "subSubCategories": [
+          { "text": "Brake repair" },
+          { "text": "Clutch repair" },
+          { "text": "Engine diagnostics" },
+          { "text": "AC repair" },
+          { "text": "Suspension repair" }
+        ]
+      },
+      {
+        "text": "Car care",
+        "subSubCategories": [
+          { "text": "Car wash" },
+          { "text": "Interior cleaning" },
+          { "text": "Ceramic coating" },
+          { "text": "Dent & paint" },
+          { "text": "Wheel alignment" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Dermatologists",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Skin",
+        "subSubCategories": [
+          { "text": "Acne treatment" },
+          { "text": "Eczema/psoriasis" },
+          { "text": "Pigmentation" },
+          { "text": "Allergy/rash" },
+          { "text": "Skin infection" }
+        ]
+      },
+      {
+        "text": "Hair",
+        "subSubCategories": [
+          { "text": "Hair fall" },
+          { "text": "Dandruff" },
+          { "text": "PRP therapy" },
+          { "text": "Alopecia treatment" },
+          { "text": "Scalp conditions" }
+        ]
+      },
+      {
+        "text": "Cosmetic",
+        "subSubCategories": [
+          { "text": "Chemical peel" },
+          { "text": "Laser treatment" },
+          { "text": "Scar reduction" },
+          { "text": "Anti-aging" },
+          { "text": "Mole/wart removal" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Dentists",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "General dentistry",
+        "subSubCategories": [
+          { "text": "Dental check-up" },
+          { "text": "Scaling & polishing" },
+          { "text": "Cavity filling" },
+          { "text": "Tooth extraction" },
+          { "text": "Root canal" }
+        ]
+      },
+      {
+        "text": "Cosmetic dentistry",
+        "subSubCategories": [
+          { "text": "Teeth whitening" },
+          { "text": "Veneers" },
+          { "text": "Smile design" },
+          { "text": "Braces/aligners" },
+          { "text": "Dental bonding" }
+        ]
+      },
+      {
+        "text": "Special care",
+        "subSubCategories": [
+          { "text": "Pediatric dentist" },
+          { "text": "Gum treatment" },
+          { "text": "Implants" },
+          { "text": "Dentures" },
+          { "text": "Emergency dental" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Electricians",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Installations",
+        "subSubCategories": [
+          { "text": "Fan installation" },
+          { "text": "Light fitting" },
+          { "text": "Switchboard repair" },
+          { "text": "MCB/fuse" },
+          { "text": "Inverter wiring" }
+        ]
+      },
+      {
+        "text": "Home repairs",
+        "subSubCategories": [
+          { "text": "Short circuit" },
+          { "text": "Power trip issue" },
+          { "text": "Wiring repair" },
+          { "text": "Socket replacement" },
+          { "text": "Earthing" }
+        ]
+      },
+      {
+        "text": "Smart & safety",
+        "subSubCategories": [
+          { "text": "CCTV wiring" },
+          { "text": "Doorbell setup" },
+          { "text": "Smart switch install" },
+          { "text": "Surge protection" },
+          { "text": "Load balancing" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Event Organizer",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Event types",
+        "subSubCategories": [
+          { "text": "Wedding planning" },
+          { "text": "Birthday party" },
+          { "text": "Corporate event" },
+          { "text": "Concert/show" },
+          { "text": "Exhibition" }
+        ]
+      },
+      {
+        "text": "Decor & setup",
+        "subSubCategories": [
+          { "text": "Stage setup" },
+          { "text": "Sound & DJ" },
+          { "text": "Lighting" },
+          { "text": "Flower decoration" },
+          { "text": "Theme decoration" }
+        ]
+      },
+      {
+        "text": "Services",
+        "subSubCategories": [
+          { "text": "Venue booking" },
+          { "text": "Catering coordination" },
+          { "text": "Photography" },
+          { "text": "Artist management" },
+          { "text": "Logistics" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Real Estate",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Property type",
+        "subSubCategories": [
+          { "text": "Residential buy" },
+          { "text": "Residential rent" },
+          { "text": "Commercial lease" },
+          { "text": "Plots/land" },
+          { "text": "PG/hostel" }
+        ]
+      },
+      {
+        "text": "Services",
+        "subSubCategories": [
+          { "text": "Property valuation" },
+          { "text": "Legal verification" },
+          { "text": "Home loan assistance" },
+          { "text": "Property management" },
+          { "text": "Tenant verification" }
+        ]
+      },
+      {
+        "text": "Projects",
+        "subSubCategories": [
+          { "text": "New launches" },
+          { "text": "Resale" },
+          { "text": "Builder floors" },
+          { "text": "Farmhouse" },
+          { "text": "Industrial sheds" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Fabricators",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Metal works",
+        "subSubCategories": [
+          { "text": "Steel fabrication" },
+          { "text": "Aluminium fabrication" },
+          { "text": "SS railing" },
+          { "text": "Gates & grills" },
+          { "text": "Shed structure" }
+        ]
+      },
+      {
+        "text": "Custom jobs",
+        "subSubCategories": [
+          { "text": "Staircase fabrication" },
+          { "text": "Balcony railing" },
+          { "text": "Canopy" },
+          { "text": "Metal furniture" },
+          { "text": "Partition frames" }
+        ]
+      },
+      {
+        "text": "Finishing",
+        "subSubCategories": [
+          { "text": "Powder coating" },
+          { "text": "Painting" },
+          { "text": "Welding repair" },
+          { "text": "Polishing" },
+          { "text": "Installation" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Furniture Repair Services",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Wood furniture",
+        "subSubCategories": [
+          { "text": "Chair repair" },
+          { "text": "Table repair" },
+          { "text": "Bed repair" },
+          { "text": "Wardrobe repair" },
+          { "text": "Door hinge fix" }
+        ]
+      },
+      {
+        "text": "Upholstery",
+        "subSubCategories": [
+          { "text": "Sofa repair" },
+          { "text": "Cushion replacement" },
+          { "text": "Foam change" },
+          { "text": "Fabric change" },
+          { "text": "Recliner repair" }
+        ]
+      },
+      {
+        "text": "Polish & restoration",
+        "subSubCategories": [
+          { "text": "Wood polishing" },
+          { "text": "Touch-up" },
+          { "text": "Termite damage repair" },
+          { "text": "Refinishing" },
+          { "text": "Antique restoration" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Hospitals",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Departments",
+        "subSubCategories": [
+          { "text": "General medicine" },
+          { "text": "Pediatrics" },
+          { "text": "Gynecology" },
+          { "text": "Orthopedics" },
+          { "text": "ENT" }
+        ]
+      },
+      {
+        "text": "Emergency",
+        "subSubCategories": [
+          { "text": "24x7 emergency" },
+          { "text": "Ambulance" },
+          { "text": "Trauma care" },
+          { "text": "ICU" },
+          { "text": "First aid" }
+        ]
+      },
+      {
+        "text": "Diagnostics",
+        "subSubCategories": [
+          { "text": "Blood tests" },
+          { "text": "X-ray" },
+          { "text": "Ultrasound" },
+          { "text": "CT/MRI" },
+          { "text": "Health packages" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "House keeping Services",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Home cleaning",
+        "subSubCategories": [
+          { "text": "Bathroom cleaning" },
+          { "text": "Kitchen cleaning" },
+          { "text": "Full home cleaning" },
+          { "text": "Sofa cleaning" },
+          { "text": "Carpet cleaning" }
+        ]
+      },
+      {
+        "text": "Commercial",
+        "subSubCategories": [
+          { "text": "Office housekeeping" },
+          { "text": "Society housekeeping" },
+          { "text": "Post-event cleanup" },
+          { "text": "Deep cleaning" },
+          { "text": "Sanitization" }
+        ]
+      },
+      {
+        "text": "Staffing",
+        "subSubCategories": [
+          { "text": "Part-time maid" },
+          { "text": "Full-time maid" },
+          { "text": "Cook" },
+          { "text": "Babysitter" },
+          { "text": "Elder care attendant" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Hobbies",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Arts",
+        "subSubCategories": [
+          { "text": "Drawing" },
+          { "text": "Painting" },
+          { "text": "Crafts" },
+          { "text": "Calligraphy" },
+          { "text": "Pottery" }
+        ]
+      },
+      {
+        "text": "Music",
+        "subSubCategories": [
+          { "text": "Guitar" },
+          { "text": "Keyboard" },
+          { "text": "Singing" },
+          { "text": "Drums" },
+          { "text": "Music production" }
+        ]
+      },
+      {
+        "text": "Fitness & sports",
+        "subSubCategories": [
+          { "text": "Yoga" },
+          { "text": "Dance" },
+          { "text": "Martial arts" },
+          { "text": "Swimming" },
+          { "text": "Football coaching" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Interior Designers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Spaces",
+        "subSubCategories": [
+          { "text": "Living room" },
+          { "text": "Bedroom" },
+          { "text": "Kitchen design" },
+          { "text": "Bathroom design" },
+          { "text": "Office design" }
+        ]
+      },
+      {
+        "text": "Services",
+        "subSubCategories": [
+          { "text": "3D design" },
+          { "text": "Turnkey execution" },
+          { "text": "Modular kitchen" },
+          { "text": "Wardrobes" },
+          { "text": "False ceiling" }
+        ]
+      },
+      {
+        "text": "Execution",
+        "subSubCategories": [
+          { "text": "Civil work" },
+          { "text": "Carpentry" },
+          { "text": "Electrical" },
+          { "text": "Flooring" },
+          { "text": "Wall panels" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Internet Website Designers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Website types",
+        "subSubCategories": [
+          { "text": "Business website" },
+          { "text": "E-commerce" },
+          { "text": "Portfolio" },
+          { "text": "Landing page" },
+          { "text": "Blog/news" }
+        ]
+      },
+      {
+        "text": "Tech stack",
+        "subSubCategories": [
+          { "text": "WordPress" },
+          { "text": "Shopify" },
+          { "text": "Next.js/React" },
+          { "text": "Custom backend" },
+          { "text": "No-code" }
+        ]
+      },
+      {
+        "text": "Add-ons",
+        "subSubCategories": [
+          { "text": "SEO setup" },
+          { "text": "Analytics" },
+          { "text": "Hosting/domain" },
+          { "text": "Maintenance" },
+          { "text": "Payment gateway" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Jewellery Showrooms",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Jewellery type",
+        "subSubCategories": [
+          { "text": "Gold jewellery" },
+          { "text": "Diamond jewellery" },
+          { "text": "Silver jewellery" },
+          { "text": "Platinum" },
+          { "text": "Imitation jewellery" }
+        ]
+      },
+      {
+        "text": "Occasion",
+        "subSubCategories": [
+          { "text": "Bridal sets" },
+          { "text": "Daily wear" },
+          { "text": "Party wear" },
+          { "text": "Kids jewellery" },
+          { "text": "Gifting" }
+        ]
+      },
+      {
+        "text": "Services",
+        "subSubCategories": [
+          { "text": "Buyback/exchange" },
+          { "text": "Jewellery repair" },
+          { "text": "Polishing" },
+          { "text": "Custom design" },
+          { "text": "Certification" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Lawyers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Practice areas",
+        "subSubCategories": [
+          { "text": "Civil" },
+          { "text": "Criminal" },
+          { "text": "Family" },
+          { "text": "Property" },
+          { "text": "Corporate" }
+        ]
+      },
+      {
+        "text": "Documentation",
+        "subSubCategories": [
+          { "text": "Agreement drafting" },
+          { "text": "Legal notice" },
+          { "text": "Affidavit" },
+          { "text": "Will drafting" },
+          { "text": "Contract review" }
+        ]
+      },
+      {
+        "text": "Court & dispute",
+        "subSubCategories": [
+          { "text": "Case filing" },
+          { "text": "Bail matters" },
+          { "text": "Divorce petition" },
+          { "text": "Consumer court" },
+          { "text": "Arbitration" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Transporters",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Transport type",
+        "subSubCategories": [
+          { "text": "Mini truck" },
+          { "text": "Pickup" },
+          { "text": "Tempo" },
+          { "text": "Container" },
+          { "text": "Refrigerated" }
+        ]
+      },
+      {
+        "text": "Use case",
+        "subSubCategories": [
+          { "text": "House shifting" },
+          { "text": "Business delivery" },
+          { "text": "Construction material" },
+          { "text": "Goods movement" },
+          { "text": "Intercity" }
+        ]
+      },
+      {
+        "text": "Services",
+        "subSubCategories": [
+          { "text": "Loading/unloading" },
+          { "text": "Packing material" },
+          { "text": "Insurance" },
+          { "text": "GPS tracking" },
+          { "text": "Labour" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Photographers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Event photography",
+        "subSubCategories": [
+          { "text": "Wedding" },
+          { "text": "Pre-wedding" },
+          { "text": "Birthday" },
+          { "text": "Corporate" },
+          { "text": "Baby shower" }
+        ]
+      },
+      {
+        "text": "Specialized",
+        "subSubCategories": [
+          { "text": "Product photography" },
+          { "text": "Portfolio shoot" },
+          { "text": "Drone shoot" },
+          { "text": "Candid photography" },
+          { "text": "Videography" }
+        ]
+      },
+      {
+        "text": "Deliverables",
+        "subSubCategories": [
+          { "text": "Edited photos" },
+          { "text": "Albums" },
+          { "text": "Short reels" },
+          { "text": "Full video" },
+          { "text": "Live streaming" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Nursing Services",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "At-home nursing",
+        "subSubCategories": [
+          { "text": "Post-operative care" },
+          { "text": "Elderly care" },
+          { "text": "ICU at home" },
+          { "text": "Wound dressing" },
+          { "text": "Injection/IV" }
+        ]
+      },
+      {
+        "text": "Attendants",
+        "subSubCategories": [
+          { "text": "Day attendant" },
+          { "text": "Night attendant" },
+          { "text": "24-hour attendant" },
+          { "text": "Patient sitter" },
+          { "text": "Physio assistant" }
+        ]
+      },
+      {
+        "text": "Medical support",
+        "subSubCategories": [
+          { "text": "Doctor home visit" },
+          { "text": "Lab sample collection" },
+          { "text": "Medical equipment" },
+          { "text": "Medicine delivery" },
+          { "text": "Teleconsultation" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Printing & Publishing Services",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Printing",
+        "subSubCategories": [
+          { "text": "Visiting cards" },
+          { "text": "Brochures" },
+          { "text": "Banners" },
+          { "text": "Stickers/labels" },
+          { "text": "Books printing" }
+        ]
+      },
+      {
+        "text": "Design",
+        "subSubCategories": [
+          { "text": "Logo design" },
+          { "text": "Branding" },
+          { "text": "Layout & typesetting" },
+          { "text": "Packaging design" },
+          { "text": "Invitation design" }
+        ]
+      },
+      {
+        "text": "Publishing",
+        "subSubCategories": [
+          { "text": "ISBN assistance" },
+          { "text": "E-book formatting" },
+          { "text": "Proofreading" },
+          { "text": "Cover design" },
+          { "text": "Distribution support" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Placement Services",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Job type",
+        "subSubCategories": [
+          { "text": "IT jobs" },
+          { "text": "BPO" },
+          { "text": "Sales" },
+          { "text": "Engineering" },
+          { "text": "Part-time" }
+        ]
+      },
+      {
+        "text": "Employer services",
+        "subSubCategories": [
+          { "text": "Recruitment" },
+          { "text": "Bulk hiring" },
+          { "text": "Background verification" },
+          { "text": "Payroll staffing" },
+          { "text": "Campus drives" }
+        ]
+      },
+      {
+        "text": "Candidate services",
+        "subSubCategories": [
+          { "text": "Resume writing" },
+          { "text": "Interview coaching" },
+          { "text": "Job alerts" },
+          { "text": "Profile building" },
+          { "text": "Skill assessment" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Pest Control Services",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Pest type",
+        "subSubCategories": [
+          { "text": "Cockroaches" },
+          { "text": "Termites" },
+          { "text": "Bed bugs" },
+          { "text": "Rats" },
+          { "text": "Mosquitoes" }
+        ]
+      },
+      {
+        "text": "Property type",
+        "subSubCategories": [
+          { "text": "1BHK/2BHK" },
+          { "text": "Villa" },
+          { "text": "Office" },
+          { "text": "Warehouse" },
+          { "text": "Restaurant" }
+        ]
+      },
+      {
+        "text": "Treatment",
+        "subSubCategories": [
+          { "text": "Gel treatment" },
+          { "text": "Spray treatment" },
+          { "text": "Fumigation" },
+          { "text": "Pre-construction" },
+          { "text": "AMC" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Painting Contractors",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Painting",
+        "subSubCategories": [
+          { "text": "Interior painting" },
+          { "text": "Exterior painting" },
+          { "text": "Texture paint" },
+          { "text": "Wall putty" },
+          { "text": "Waterproofing" }
+        ]
+      },
+      {
+        "text": "Services",
+        "subSubCategories": [
+          { "text": "Color consultation" },
+          { "text": "Crack filling" },
+          { "text": "Sanding/priming" },
+          { "text": "Stain removal" },
+          { "text": "Post-paint cleanup" }
+        ]
+      },
+      {
+        "text": "Surfaces",
+        "subSubCategories": [
+          { "text": "Walls" },
+          { "text": "Ceiling" },
+          { "text": "Metal grills" },
+          { "text": "Wood polish" },
+          { "text": "Floor marking" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Packers & Movers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Move type",
+        "subSubCategories": [
+          { "text": "Local shifting" },
+          { "text": "Intercity shifting" },
+          { "text": "Office shifting" },
+          { "text": "Vehicle shifting" },
+          { "text": "Storage/warehouse" }
+        ]
+      },
+      {
+        "text": "Packing",
+        "subSubCategories": [
+          { "text": "Packing only" },
+          { "text": "Packing + moving" },
+          { "text": "Unpacking" },
+          { "text": "Fragile packing" },
+          { "text": "Carton supply" }
+        ]
+      },
+      {
+        "text": "Extras",
+        "subSubCategories": [
+          { "text": "Insurance" },
+          { "text": "Dismantle/assemble" },
+          { "text": "Labour" },
+          { "text": "Lift availability" },
+          { "text": "On-site survey" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Scrap Dealers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Material",
+        "subSubCategories": [
+          { "text": "Iron scrap" },
+          { "text": "Copper scrap" },
+          { "text": "Aluminium scrap" },
+          { "text": "Plastic scrap" },
+          { "text": "Paper scrap" }
+        ]
+      },
+      {
+        "text": "Pickup",
+        "subSubCategories": [
+          { "text": "Door pickup" },
+          { "text": "Bulk pickup" },
+          { "text": "Warehouse pickup" },
+          { "text": "Industrial scrap" },
+          { "text": "Regular contracts" }
+        ]
+      },
+      {
+        "text": "Services",
+        "subSubCategories": [
+          { "text": "Weighing" },
+          { "text": "Rate quotation" },
+          { "text": "Segregation" },
+          { "text": "Demolition scrap" },
+          { "text": "E-waste handling" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Scrap Buyers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Material",
+        "subSubCategories": [
+          { "text": "Iron" },
+          { "text": "Copper" },
+          { "text": "Brass" },
+          { "text": "Aluminium" },
+          { "text": "Lead/Battery" }
+        ]
+      },
+      {
+        "text": "Source",
+        "subSubCategories": [
+          { "text": "Household scrap" },
+          { "text": "Office scrap" },
+          { "text": "Factory scrap" },
+          { "text": "Construction scrap" },
+          { "text": "E-waste" }
+        ]
+      },
+      {
+        "text": "Deals",
+        "subSubCategories": [
+          { "text": "Spot purchase" },
+          { "text": "Monthly contract" },
+          { "text": "On-site pickup" },
+          { "text": "Cash/UPI payment" },
+          { "text": "Rate negotiation" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Registration Consultants",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Business registrations",
+        "subSubCategories": [
+          { "text": "GST registration" },
+          { "text": "Firm registration" },
+          { "text": "Company incorporation" },
+          { "text": "MSME/Udyam" },
+          { "text": "Shop & establishment" }
+        ]
+      },
+      {
+        "text": "Personal docs",
+        "subSubCategories": [
+          { "text": "Passport assistance" },
+          { "text": "PAN services" },
+          { "text": "Aadhaar update" },
+          { "text": "Birth certificate" },
+          { "text": "Marriage registration" }
+        ]
+      },
+      {
+        "text": "Licenses",
+        "subSubCategories": [
+          { "text": "FSSAI" },
+          { "text": "Trade license" },
+          { "text": "Import-export code (IEC)" },
+          { "text": "PF/ESI" },
+          { "text": "Professional tax" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Security System",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Surveillance",
+        "subSubCategories": [
+          { "text": "CCTV installation" },
+          { "text": "DVR/NVR setup" },
+          { "text": "Remote viewing setup" },
+          { "text": "Camera repair" },
+          { "text": "Annual maintenance" }
+        ]
+      },
+      {
+        "text": "Access control",
+        "subSubCategories": [
+          { "text": "Biometric attendance" },
+          { "text": "Door access" },
+          { "text": "Video door phone" },
+          { "text": "Smart locks" },
+          { "text": "Intercom" }
+        ]
+      },
+      {
+        "text": "Safety",
+        "subSubCategories": [
+          { "text": "Alarm system" },
+          { "text": "Fire safety" },
+          { "text": "Motion sensors" },
+          { "text": "Burglar alarm" },
+          { "text": "Wiring & networking" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Coaching",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Academics",
+        "subSubCategories": [
+          { "text": "Home tuition" },
+          { "text": "School subjects" },
+          { "text": "Board exam prep" },
+          { "text": "Competitive exams" },
+          { "text": "Spoken English" }
+        ]
+      },
+      {
+        "text": "Sports",
+        "subSubCategories": [
+          { "text": "Football coaching" },
+          { "text": "Cricket coaching" },
+          { "text": "Badminton" },
+          { "text": "Athletics" },
+          { "text": "Martial arts" }
+        ]
+      },
+      {
+        "text": "Professional",
+        "subSubCategories": [
+          { "text": "Coding coaching" },
+          { "text": "Interview prep" },
+          { "text": "Public speaking" },
+          { "text": "Soft skills" },
+          { "text": "Career counseling" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Vocational training",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Technical",
+        "subSubCategories": [
+          { "text": "Electrician course" },
+          { "text": "Plumbing course" },
+          { "text": "AC technician" },
+          { "text": "Welding" },
+          { "text": "Automobile repair" }
+        ]
+      },
+      {
+        "text": "Beauty & wellness",
+        "subSubCategories": [
+          { "text": "Beautician course" },
+          { "text": "Hair styling" },
+          { "text": "Makeup" },
+          { "text": "Spa therapy" },
+          { "text": "Nail art" }
+        ]
+      },
+      {
+        "text": "Business skills",
+        "subSubCategories": [
+          { "text": "Tally & accounting" },
+          { "text": "Digital marketing" },
+          { "text": "Sales training" },
+          { "text": "Entrepreneurship" },
+          { "text": "Customer service" }
+        ]
+      }
+    ]
+  },
+
+  {
+    "text": "Plumbers",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Repairs",
+        "subSubCategories": [
+          { "text": "Leak fixing" },
+          { "text": "Tap & mixer repair" },
+          { "text": "Flush repair" },
+          { "text": "Blockage removal" },
+          { "text": "Bathroom fittings" }
+        ]
+      },
+      {
+        "text": "Installations",
+        "subSubCategories": [
+          { "text": "New pipeline" },
+          { "text": "Geyser installation" },
+          { "text": "Water tank" },
+          { "text": "RO connection" },
+          { "text": "Kitchen sink" }
+        ]
+      },
+      {
+        "text": "Emergency",
+        "subSubCategories": [
+          { "text": "Burst pipe" },
+          { "text": "Overflow issue" },
+          { "text": "Low pressure" },
+          { "text": "Drainage issue" },
+          { "text": "Inspection visit" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Carpenters",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Furniture",
+        "subSubCategories": [
+          { "text": "New furniture" },
+          { "text": "Furniture repair" },
+          { "text": "Bed assembly" },
+          { "text": "Wardrobe work" },
+          { "text": "Kitchen cabinets" }
+        ]
+      },
+      {
+        "text": "Woodwork",
+        "subSubCategories": [
+          { "text": "Door installation" },
+          { "text": "Window repair" },
+          { "text": "Plywood work" },
+          { "text": "Laminate fixing" },
+          { "text": "Partition" }
+        ]
+      },
+      {
+        "text": "Services",
+        "subSubCategories": [
+          { "text": "Measurement visit" },
+          { "text": "Hardware fitting" },
+          { "text": "Polish work" },
+          { "text": "Custom shelves" },
+          { "text": "Modular fixes" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Appliance Repair",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Kitchen appliances",
+        "subSubCategories": [
+          { "text": "Microwave repair" },
+          { "text": "Chimney & hob" },
+          { "text": "Induction repair" },
+          { "text": "Mixer/grinder" },
+          { "text": "Dishwasher" }
+        ]
+      },
+      {
+        "text": "Home appliances",
+        "subSubCategories": [
+          { "text": "Washing machine" },
+          { "text": "Refrigerator" },
+          { "text": "Geyser" },
+          { "text": "RO service" },
+          { "text": "Air cooler" }
+        ]
+      },
+      {
+        "text": "Service type",
+        "subSubCategories": [
+          { "text": "Installation" },
+          { "text": "Repair" },
+          { "text": "Maintenance" },
+          { "text": "Spare parts" },
+          { "text": "AMC" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Home Cleaning",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Deep cleaning",
+        "subSubCategories": [
+          { "text": "Kitchen deep clean" },
+          { "text": "Bathroom deep clean" },
+          { "text": "Full home deep clean" },
+          { "text": "Move-in cleaning" },
+          { "text": "Move-out cleaning" }
+        ]
+      },
+      {
+        "text": "Special cleaning",
+        "subSubCategories": [
+          { "text": "Sofa cleaning" },
+          { "text": "Carpet cleaning" },
+          { "text": "Mattress cleaning" },
+          { "text": "Water tank cleaning" },
+          { "text": "Kitchen chimney cleaning" }
+        ]
+      },
+      {
+        "text": "Hygiene",
+        "subSubCategories": [
+          { "text": "Disinfection" },
+          { "text": "Bathroom sanitization" },
+          { "text": "Kitchen sanitization" },
+          { "text": "Pest-prep cleaning" },
+          { "text": "Post-illness cleaning" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Salon (Men/Women)",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Women",
+        "subSubCategories": [
+          { "text": "Haircut" },
+          { "text": "Waxing" },
+          { "text": "Threading" },
+          { "text": "Facial" },
+          { "text": "Party makeup" }
+        ]
+      },
+      {
+        "text": "Men",
+        "subSubCategories": [
+          { "text": "Haircut" },
+          { "text": "Beard trim" },
+          { "text": "Cleanup" },
+          { "text": "Head massage" },
+          { "text": "Hair color" }
+        ]
+      },
+      {
+        "text": "Packages",
+        "subSubCategories": [
+          { "text": "Bridal package" },
+          { "text": "Pre-bridal" },
+          { "text": "Groom package" },
+          { "text": "Monthly grooming" },
+          { "text": "Kids grooming" }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Mobile Repair",
+    "iconSrc": null,
+    "subCategories": [
+      {
+        "text": "Hardware",
+        "subSubCategories": [
+          { "text": "Screen replacement" },
+          { "text": "Battery replacement" },
+          { "text": "Charging port" },
+          { "text": "Speaker/mic" },
+          { "text": "Camera repair" }
+        ]
+      },
+      {
+        "text": "Software",
+        "subSubCategories": [
+          { "text": "OS issues" },
+          { "text": "Data backup" },
+          { "text": "Virus removal" },
+          { "text": "Unlock/FRP" },
+          { "text": "Performance" }
+        ]
+      },
+      {
+        "text": "Accessories",
+        "subSubCategories": [
+          { "text": "Tempered glass" },
+          { "text": "Cases" },
+          { "text": "Chargers" },
+          { "text": "Earphones" },
+          { "text": "Power banks" }
+        ]
+      }
+    ]
+  }
+]

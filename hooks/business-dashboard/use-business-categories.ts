@@ -55,16 +55,20 @@ export function useUpdateAmenities(businessId: string) {
   });
 }
 
-// Fetch all available categories
-export function useCategories() {
+// Fetch available categories with search
+export function useCategories(search: string = "") {
   return useQuery<Category[]>({
-    queryKey: ["categories"],
+    queryKey: ["categories", search],
     queryFn: async () => {
-      const response = await fetch("/api/categories");
+      const url = new URL("/api/categories", window.location.origin);
+      if (search) url.searchParams.set("search", search);
+      url.searchParams.set("limit", "20");
+
+      const response = await fetch(url.toString());
       if (!response.ok) throw new Error("Failed to fetch categories");
       return response.json();
     },
-    staleTime: 1000 * 60 * 60, // Cache for 1 hour
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 }
 

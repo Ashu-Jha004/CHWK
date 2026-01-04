@@ -1,7 +1,7 @@
 // app/business/dashboard/_components/categories-amenities-form.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Business,
   BusinessCategory,
@@ -29,6 +29,7 @@ import {
   useAmenities,
 } from "@/hooks/business-dashboard/use-business-categories";
 import { cn } from "@/lib/utils";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface CategoriesAmenitiesFormProps {
   business: Business & {
@@ -47,9 +48,35 @@ export function CategoriesAmenitiesForm({
   const updateCategoriesMutation = useUpdateCategories(business.id);
   const updateAmenitiesMutation = useUpdateAmenities(business.id);
 
-  // Fetch all available categories and amenities
-  const { data: allCategories, isLoading: categoriesLoading } = useCategories();
+  // Fetch available categories and amenities
+  const [categorySearch, setCategorySearch] = useState("");
+  const debouncedCategorySearch = useDebounce(categorySearch, 500);
+
+  const { data: searchResults, isLoading: categoriesLoading } = useCategories(
+    debouncedCategorySearch
+  );
   const { data: allAmenities, isLoading: amenitiesLoading } = useAmenities();
+
+  // Keep track of all categories we've seen (to show names for selected ones not in current search)
+  const [categoryMap, setCategoryMap] = useState<Record<string, Category>>(() => {
+    const initial: Record<string, Category> = {};
+    business.categories?.forEach((bc) => {
+      initial[bc.categoryId] = bc.category;
+    });
+    return initial;
+  });
+
+  useEffect(() => {
+    if (searchResults) {
+      setCategoryMap((prev) => {
+        const next = { ...prev };
+        searchResults.forEach((cat) => {
+          next[cat.id] = cat;
+        });
+        return next;
+      });
+    }
+  }, [searchResults]);
 
   // Local state
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
@@ -61,7 +88,6 @@ export function CategoriesAmenitiesForm({
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>(
     business.amenities?.map((ba) => ba.amenityId) || []
   );
-  const [categorySearch, setCategorySearch] = useState("");
   const [amenitySearch, setAmenitySearch] = useState("");
 
   const handleCategoryToggle = (categoryId: string) => {
@@ -108,9 +134,15 @@ export function CategoriesAmenitiesForm({
     updateAmenitiesMutation.mutate(selectedAmenities);
   };
 
-  const filteredCategories = allCategories?.filter((cat) =>
-    cat.name.toLowerCase().includes(categorySearch.toLowerCase())
-  );
+  // Merge search results with selected categories to ensure they're always visible
+  const filteredCategories = [
+    ...(searchResults || []),
+    ...(selectedCategories
+      .map((id) => categoryMap[id])
+      .filter(
+        (cat) => cat && !searchResults?.some((s) => s.id === cat.id)
+      ) as Category[]),
+  ];
 
   const filteredAmenities = allAmenities?.filter((amenity) =>
     amenity.name.toLowerCase().includes(amenitySearch.toLowerCase())
@@ -249,9 +281,7 @@ export function CategoriesAmenitiesForm({
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                     {selectedCategories.map((categoryId) => {
-                      const category = allCategories?.find(
-                        (c) => c.id === categoryId
-                      );
+                      const category = categoryMap[categoryId];
                       return (
                         <div
                           key={categoryId}

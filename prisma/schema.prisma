@@ -390,7 +390,7 @@ model BusinessHours {
 
 model Category {
   id              String             @id @default(cuid())
-  name            String             @unique
+  name            String
   slug            String             @unique
   description     String?
   icon            String?

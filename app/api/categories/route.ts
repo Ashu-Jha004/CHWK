@@ -2,17 +2,31 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get("search");
+    const limit = parseInt(searchParams.get("limit") || "20");
+
     const categories = await prisma.category.findMany({
       where: {
         isActive: true,
+        ...(search
+          ? {
+              OR: [
+                { name: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } },
+                { searchKeywords: { hasSome: [search.toLowerCase()] } },
+              ],
+            }
+          : {}),
       },
       orderBy: [
         { isFeatured: "desc" },
         { displayOrder: "asc" },
         { name: "asc" },
       ],
+      take: limit,
       select: {
         id: true,
         name: true,
