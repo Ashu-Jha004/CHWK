@@ -31,6 +31,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { UserButton } from "@/components/auth/user-button";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import Image from "next/image";
 
 export function Header() {
@@ -305,25 +306,31 @@ export function Header() {
                   </Button>
                   </Link>
                 ) : (
-                  <UserButton />
+                  <div className="flex items-center gap-2">
+                    <NotificationBell />
+                    <UserButton />
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Mobile Toggle */}
+            {/* Mobile Actions */}
             {isMobile && (
-              <Button
-                variant="ghost"
-                onClick={toggleMobileMenu}
-                className="p-2"
-                aria-expanded={isMobileMenuOpen}
-              >
-                {isMobileMenuOpen ? (
-                  <X className="w-6 h-6" />
-                ) : (
-                  <Menu className="w-6 h-6" />
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                {isSignedIn && <NotificationBell />}
+                <Button
+                  variant="ghost"
+                  onClick={toggleMobileMenu}
+                  className="p-2"
+                  aria-expanded={isMobileMenuOpen}
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="w-6 h-6" />
+                  ) : (
+                    <Menu className="w-6 h-6" />
+                  )}
+                </Button>
+              </div>
             )}
           </div>
 

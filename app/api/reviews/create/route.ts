@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { createReviewSchema } from "@/lib/validations/review/review";
 import { verifyTurnstileToken } from "@/lib/services/turnstile";
 import { Prisma } from "@prisma/client";
+import { createNotification } from "@/lib/notifications";
 
 /**
  * POST /api/reviews/create
@@ -246,6 +247,15 @@ if (business.ownerId) {
     // Log error but don't fail the review creation
     console.error("[Review Create] Failed to send email notification:", error);
   }
+
+  // Trigger In-App Notification for Business Owner
+  await createNotification({
+    userId: business.ownerId,
+    title: "New Review Received",
+    message: `${user.firstName || "A customer"} left a ${data.rating}-star review for ${business.name}.`,
+    type: "REVIEW_RECEIVED",
+    link: `/business/dashboard/reviews`, // Link to business reviews dashboard
+  });
 }
 
 

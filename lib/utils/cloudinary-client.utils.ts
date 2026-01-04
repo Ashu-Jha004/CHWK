@@ -28,7 +28,7 @@ export interface UploadProgress {
  * Upload file to Cloudinary (Client-side)
  */
 export async function uploadToCloudinary(
-  file: File,
+  file: File | Blob,
   folder?: string,
   onProgress?: (progress: UploadProgress) => void
 ): Promise<CloudinaryUploadResponse> {
@@ -109,7 +109,7 @@ export function formatFileSize(bytes: number): string {
 /**
  * Validate file before upload
  */
-export function validateFile(file: File): { valid: boolean; error?: string } {
+export function validateFile(file: File | Blob): { valid: boolean; error?: string } {
   if (!file) {
     return { valid: false, error: "No file provided" };
   }
@@ -142,7 +142,7 @@ export function validateFile(file: File): { valid: boolean; error?: string } {
 /**
  * Validate image file (stricter - images only)
  */
-export function validateImageFile(file: File): {
+export function validateImageFile(file: File | Blob): {
   valid: boolean;
   error?: string;
 } {
@@ -172,7 +172,7 @@ export function validateImageFile(file: File): {
 /**
  * Create image preview URL from file
  */
-export function createImagePreview(file: File): Promise<string> {
+export function createImagePreview(file: File | Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 

@@ -90,7 +90,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
       {coverImage && (
         <div className="relative w-full h-[300px] md:h-[400px] lg:h-[450px] overflow-hidden bg-muted">
           <Image
-            src={coverImage.imageUrl || "/placeholder-business.jpg"}
+            src={business.coverImage||coverImage.imageUrl || "/placeholder-business.jpg"}
             alt={coverImage.altText || `${business.name || "Business"} cover`}
             fill
             className="object-cover"
@@ -101,7 +101,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
           {/* Gradient Overlay for better header visibility */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/60" />
 
-          {/* Optional: Business name overlay on cover */}
+          {/* Business name overlay on cover */}
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 lg:p-12">
             <div className="max-w-7xl mx-auto container-padding">
               <div className="max-w-4xl">
@@ -128,9 +128,6 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
               {/* Business Name & Categories */}
               <div className="space-y-2">
                 <div className="flex items-start gap-3">
-                  <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-                    {business.name}
-                  </h1>
                   {business.isVerified && (
                     <Badge variant="secondary" className="gap-1 mt-1 bg-secondary/10 text-secondary border-secondary/20">
                       <CheckCircle2 className="h-3 w-3" />

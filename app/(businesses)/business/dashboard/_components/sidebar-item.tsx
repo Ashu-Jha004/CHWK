@@ -3,6 +3,7 @@
 
 import { useMemo } from "react";
 import { LucideIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useDashboardStore, DashboardTab } from "@/store/business-dashboard";
 
@@ -27,11 +28,23 @@ export function SidebarItem({
 }: SidebarItemProps) {
   const { activeTab, setActiveTab, sidebarOpen, isMobile } =
     useDashboardStore();
+  const router = useRouter();
 
   const isActive = useMemo(() => activeTab === id, [activeTab, id]);
 
   const handleClick = () => {
     setActiveTab(id);
+
+    // Navigate to the appropriate route
+    if (id === "overview") {
+      router.push("/business/dashboard");
+    } else if (["bookings", "orders", "menu"].includes(id)) {
+      router.push(`/business/dashboard/${id}`);
+    } else {
+      // Default behavior for other tabs that might be handled in DashboardContent
+      router.push("/business/dashboard");
+    }
+
     onClick?.();
   };
 

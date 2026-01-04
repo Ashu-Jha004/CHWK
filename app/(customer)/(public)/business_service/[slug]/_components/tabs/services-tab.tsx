@@ -41,9 +41,10 @@ import { MenuItem } from "@prisma/client";
 
 interface ServicesTabProps {
   business: BusinessDetail;
+  onBookClick?: () => void;
 }
 
-export function ServicesTab({ business }: ServicesTabProps) {
+export function ServicesTab({ business, onBookClick }: ServicesTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { filter, sort } = useServiceFilters();
   const { setServiceFilter, setServiceSort, resetServiceFilters } = useServiceActions();
@@ -217,10 +218,14 @@ export function ServicesTab({ business }: ServicesTabProps) {
                 <Badge variant="secondary">{items.length}</Badge>
               </div>
 
-              {/* Services List */}
-              <div className="space-y-4">
+              {/* Services List/Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {items.map((service) => (
-                  <ServiceCard key={service.id} service={service} />
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    onBookClick={onBookClick}
+                  />
                 ))}
               </div>
             </div>
@@ -232,7 +237,7 @@ export function ServicesTab({ business }: ServicesTabProps) {
 }
 
 // Service Card Component
-function ServiceCard({ service }: { service: MenuItem }) {
+function ServiceCard({ service, onBookClick }: { service: MenuItem; onBookClick?: () => void }) {
   const hasDiscount = service.discountedPrice && service.discountedPrice < service.price;
 
   // Pricing display based on pricing type
@@ -242,171 +247,160 @@ function ServiceCard({ service }: { service: MenuItem }) {
     switch (service.pricingType) {
       case "HOURLY":
         return (
-          <div>
-            <span className="text-2xl font-bold">{formatPrice(service.hourlyRate || price)}</span>
-            <span className="text-sm text-muted-foreground">/hour</span>
+          <div className="flex flex-col items-end">
+            <span className="text-2xl font-black text-primary">{formatPrice(service.hourlyRate || price)}</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Per Hour</span>
           </div>
         );
       case "DAILY":
         return (
-          <div>
-            <span className="text-2xl font-bold">{formatPrice(service.dailyRate || price)}</span>
-            <span className="text-sm text-muted-foreground">/day</span>
+          <div className="flex flex-col items-end">
+            <span className="text-2xl font-black text-primary">{formatPrice(service.dailyRate || price)}</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Per Day</span>
           </div>
         );
       case "FIXED":
       default:
-        return <span className="text-2xl font-bold">{formatPrice(price)}</span>;
+        return (
+          <div className="flex flex-col items-end">
+            <span className="text-2xl font-black text-primary">{formatPrice(price)}</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Fixed Price</span>
+          </div>
+        );
     }
   };
 
   return (
     <Card
       className={cn(
-        "overflow-hidden hover:shadow-lg transition-all duration-300",
-        !service.isAvailable && "opacity-60"
+        "group overflow-hidden border-border/40 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 relative bg-card",
+        !service.isAvailable && "opacity-75 grayscale-[0.3]"
       )}
     >
-      <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-6">
-        {/* Service Image */}
-        <div className="relative aspect-square md:aspect-auto md:h-full rounded-lg overflow-hidden bg-muted">
+      <div className="flex flex-col sm:flex-row h-full">
+        {/* Service Image Section */}
+        <div className="relative w-full sm:w-[200px] aspect-video sm:aspect-square overflow-hidden bg-muted/30 shrink-0">
           {service.image || service.images?.[0] ? (
             <Image
               src={service.image || service.images[0]}
               alt={service.name}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
               sizes="200px"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Wrench className="h-16 w-16 text-muted-foreground" />
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted">
+              <Wrench className="h-10 w-10 text-muted-foreground/40 stroke-[1.5]" />
             </div>
           )}
 
-          {/* Badges */}
-          <div className="absolute top-2 left-2 flex flex-col gap-2">
+          {/* Badges Overlay */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
             {service.isFeatured && (
-              <Badge className="gap-1 bg-primary">
-                <Star className="h-3 w-3 fill-white" />
+              <Badge className="bg-primary/90 text-[10px] py-0 px-2 shadow-lg backdrop-blur-sm">
+                <Star className="h-3 w-3 fill-white mr-1" />
                 Featured
               </Badge>
             )}
             {service.isBestseller && (
-              <Badge className="gap-1 bg-orange-500">
-                <TrendingUp className="h-3 w-3" />
+              <Badge className="bg-orange-500/90 text-[10px] py-0 px-2 shadow-lg backdrop-blur-sm">
+                <TrendingUp className="h-3 w-3 mr-1" />
                 Popular
               </Badge>
             )}
           </div>
 
           {!service.isAvailable && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-              <Badge variant="destructive" className="text-sm px-3 py-1.5">
-                Unavailable
+            <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] flex items-center justify-center z-20">
+              <Badge variant="destructive" className="text-[10px] font-bold uppercase py-0 px-2">
+                Sold Out
               </Badge>
             </div>
           )}
         </div>
 
-        {/* Service Details */}
-        <div className="flex flex-col justify-between gap-4">
-          {/* Header */}
-          <div>
-            <div className="flex items-start justify-between gap-4 mb-2">
-              <div className="flex-1">
-                <h3 className="text-xl font-semibold mb-1">{service.name}</h3>
-                {service.subcategory && (
-                  <p className="text-sm text-muted-foreground">{service.subcategory}</p>
-                )}
-              </div>
-
-              {/* Price */}
-              <div className="text-right">{getPriceDisplay()}</div>
-            </div>
-
-            {/* Description */}
-            {service.description && (
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                {service.description}
-              </p>
-            )}
-
-            {/* Service Details Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {/* Duration */}
-              {service.serviceDuration && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span>{service.serviceDuration} mins</span>
-                </div>
-              )}
-
-              {/* Availability */}
-              {service.availableOnline && (
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>Online</span>
-                </div>
-              )}
-
-              {service.availableOnSite && (
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>On-Site</span>
-                </div>
-              )}
-
-              {/* Booking Required */}
-              {service.requiresBooking && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>Booking Required</span>
-                </div>
-              )}
-
-              {/* Skill Level */}
-              {service.skillLevel && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Award className="h-4 w-4 text-muted-foreground" />
-                  <span>{service.skillLevel}</span>
-                </div>
+        {/* Service Details Section */}
+        <div className="flex flex-col flex-1 p-5 space-y-4">
+          <div className="flex justify-between items-start gap-4">
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold group-hover:text-primary transition-colors line-clamp-1">{service.name}</h3>
+              {service.subcategory && (
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{service.subcategory}</p>
               )}
             </div>
+            {getPriceDisplay()}
           </div>
 
-          {/* Footer */}
-          <div className="flex items-center justify-between pt-3 border-t border-border">
-            <div className="flex items-center gap-4">
-              {/* Rating */}
+          {service.description && (
+            <p className="text-sm text-muted-foreground/80 line-clamp-2 leading-relaxed h-[2.5rem]">
+              {service.description}
+            </p>
+          )}
+
+          {/* Detail Tags */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2">
+            {service.serviceDuration && (
+              <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
+                <div className="p-1 rounded bg-muted/50"><Clock className="h-3 w-3" /></div>
+                <span>{service.serviceDuration} mins</span>
+              </div>
+            )}
+            {service.availableOnline && (
+              <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
+                <div className="p-1 rounded bg-blue-50 text-blue-600"><MapPin className="h-3 w-3" /></div>
+                <span>Remote/Online</span>
+              </div>
+            )}
+            {service.requiresBooking && (
+              <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
+                <div className="p-1 rounded bg-primary/10 text-primary"><Calendar className="h-3 w-3" /></div>
+                <span>Appointment Req.</span>
+              </div>
+            )}
+            {service.skillLevel && (
+              <div className="flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
+                <div className="p-1 rounded bg-orange-50 text-orange-600"><Award className="h-3 w-3" /></div>
+                <span>{service.skillLevel}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Footer Actions */}
+          <div className="pt-4 mt-auto border-t border-border/40 flex items-center justify-between gap-4">
+             <div className="flex items-center gap-3">
               {service.averageRating && service.averageRating > 0 && (
-                <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full">
-                  <Star className="h-3 w-3 fill-primary text-primary" />
-                  <span className="text-sm font-semibold">{service.averageRating.toFixed(1)}</span>
+                <div className="flex items-center gap-1 font-bold text-xs">
+                  <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                  <span>{service.averageRating.toFixed(1)}</span>
                 </div>
               )}
-
-              {/* Order Count */}
               {service.totalOrders > 0 && (
-                <span className="text-sm text-muted-foreground">
-                  {service.totalOrders} bookings
+                <span className="text-[10px] text-muted-foreground font-semibold uppercase">
+                  {service.totalOrders} Booked
                 </span>
               )}
+             </div>
 
-              {/* Available Days */}
-              {service.availableDays && service.availableDays.length > 0 && service.availableDays.length < 7 && (
-                <span className="text-sm text-muted-foreground">
-                  Available {service.availableDays.length} days/week
-                </span>
-              )}
-            </div>
-
-            {/* Discount Badge */}
-            {hasDiscount && (
-              <Badge variant="secondary" className="bg-secondary/10 text-secondary border-secondary/20">
-                Save {formatPrice(service.price - service.discountedPrice!)}
-              </Badge>
-            )}
+             <Button
+                size="sm"
+                className={cn(
+                  "rounded-lg font-bold h-9 px-5 shadow-lg transition-all active:scale-95 group/btn overflow-hidden relative",
+                  service.isAvailable
+                    ? "bg-primary text-white hover:bg-primary/95"
+                    : "bg-muted text-muted-foreground cursor-not-allowed"
+                )}
+                disabled={!service.isAvailable}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onBookClick?.();
+                }}
+             >
+                <div className="flex items-center gap-2 relative z-10">
+                  <Calendar className="h-3.5 w-3.5 transition-transform group-hover/btn:scale-110" />
+                  <span>Book Now</span>
+                </div>
+                <div className="absolute inset-0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+             </Button>
           </div>
         </div>
       </div>

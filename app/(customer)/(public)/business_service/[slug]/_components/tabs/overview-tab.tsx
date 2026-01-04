@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   Star,
   MapPin,
@@ -24,7 +23,6 @@ import {
   TrendingUp,
   Award,
   Shield,
-  Heart,
   Users,
   Package,
   Wrench,
@@ -55,12 +53,16 @@ interface OverviewTabProps {
   business: BusinessDetail;
   stats: BusinessStats;
   relatedBusinessesPromise: Promise<Partial<BusinessDetail>[]>;
+  onBookClick?: () => void;
+  onOrderClick?: () => void;
 }
 
 export function OverviewTab({
   business,
   stats,
   relatedBusinessesPromise,
+  onBookClick,
+  onOrderClick,
 }: OverviewTabProps) {
   const { setActiveTab, setGalleryOpen, setGalleryIndex, setGalleryFilter } = useBusinessDetailStore();
 
@@ -72,11 +74,6 @@ export function OverviewTab({
   const nextOpen = useMemo(
     () => getNextOpeningTime(business.hours),
     [business.hours]
-  );
-
-  const ratingBreakdown = useMemo(
-    () => calculateRatingBreakdown(business.reviews),
-    [business.reviews]
   );
 
   // Get featured images (first 4)
@@ -110,7 +107,7 @@ export function OverviewTab({
         <IntroVideoSection videoUrl={business.introVideoUrl} />
       )}
 
-      {/* NEW: Video Gallery Section */}
+      {/* Video Gallery Section */}
       {business.photos.length > 0 && (
         <LazyRender rootMargin="300px">
           <VideoPreviewGrid
@@ -170,17 +167,17 @@ export function OverviewTab({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Rating Card */}
         {stats?.averageRating > 0 && (
-          <Card className="p-4 space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Star className="h-4 w-4" />
-              <span className="text-sm font-medium">Rating</span>
+          <Card className="group p-5 space-y-3 bg-card hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
+            <div className="flex items-center gap-2 text-primary/70">
+              <Star className="h-4 w-4 fill-current" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Rating</span>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl font-bold text-foreground">
+              <div className="text-4xl font-black text-foreground tracking-tighter">
                 {stats?.averageRating?.toFixed(1)}
               </div>
-              <div className="text-xs text-muted-foreground">
-                {stats?.totalReviews || 0} reviews
+              <div className="text-[10px] font-bold text-muted-foreground uppercase opacity-60">
+                {stats?.totalReviews || 0} customer reviews
               </div>
             </div>
           </Card>
@@ -188,19 +185,19 @@ export function OverviewTab({
 
         {/* Reviews Card */}
         <Card
-          className="p-4 space-y-2 cursor-pointer hover:bg-accent/50 transition-colors"
+          className="group p-5 space-y-3 bg-card hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
           onClick={() => setActiveTab("reviews")}
         >
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex items-center gap-2 text-primary/70">
             <MessageSquare className="h-4 w-4" />
-            <span className="text-sm font-medium">Reviews</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Reviews</span>
           </div>
           <div className="space-y-1">
-            <div className="text-3xl font-bold text-foreground">
+            <div className="text-4xl font-black text-foreground tracking-tighter">
               {stats?.totalReviews || 0}
             </div>
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
-              View all
+            <div className="text-[10px] font-bold text-primary flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+              View all feedback
               <ChevronRight className="h-3 w-3" />
             </div>
           </div>
@@ -208,19 +205,19 @@ export function OverviewTab({
 
         {/* Photos Card */}
         <Card
-          className="p-4 space-y-2 cursor-pointer hover:bg-accent/50 transition-colors"
+          className="group p-5 space-y-3 bg-card hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
           onClick={() => setActiveTab("photos")}
         >
-          <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="flex items-center gap-2 text-primary/70">
             <ImageIcon className="h-4 w-4" />
-            <span className="text-sm font-medium">Photos</span>
+            <span className="text-[10px] font-black uppercase tracking-widest">Photos</span>
           </div>
           <div className="space-y-1">
-            <div className="text-3xl font-bold text-foreground">
+            <div className="text-4xl font-black text-foreground tracking-tighter">
               {stats?.totalPhotos || 0}
             </div>
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
-              View gallery
+            <div className="text-[10px] font-bold text-primary flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+              Explore gallery
               <ChevronRight className="h-3 w-3" />
             </div>
           </div>
@@ -228,28 +225,32 @@ export function OverviewTab({
 
         {/* Products/Services Card */}
         {(stats?.totalProducts > 0 || stats?.totalServices > 0) && (
-          <Card className="p-4 space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
+          <Card
+            className="group p-5 space-y-3 bg-card hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
+            onClick={() => setActiveTab(stats?.totalProducts > 0 ? "products" : "services")}
+          >
+            <div className="flex items-center gap-2 text-primary/70">
               {stats?.totalProducts > 0 ? (
                 <Package className="h-4 w-4" />
               ) : (
                 <Wrench className="h-4 w-4" />
               )}
-              <span className="text-sm font-medium">
-                {stats?.totalProducts > 0 ? "Products" : "Services"}
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                {stats?.totalProducts > 0 ? "Inventory" : "Services"}
               </span>
             </div>
             <div className="space-y-1">
-              <div className="text-3xl font-bold text-foreground">
+              <div className="text-4xl font-black text-foreground tracking-tighter">
                 {stats?.totalProducts > 0 ? stats.totalProducts : stats?.totalServices}
               </div>
-              <div className="text-xs text-muted-foreground">Available</div>
+              <div className="text-[10px] font-bold text-primary flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                Browse catalog
+                <ChevronRight className="h-3 w-3" />
+              </div>
             </div>
           </Card>
         )}
       </div>
-
-
 
       {/* About Section Preview */}
       {business.description && (
@@ -334,43 +335,6 @@ export function OverviewTab({
             </div>
           )}
 
-          {/* Emergency Service */}
-          {business.hasEmergencyService && (
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/20">
-              <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-sm">Emergency Service</p>
-                {business.emergencyContactNumber && (
-                  <p className="text-xs text-muted-foreground">
-                    {formatPhoneNumber(business.emergencyContactNumber)}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Payment Methods */}
-          {(business.acceptsUPI ||
-            business.acceptsCards ||
-            business.acceptsNetBanking) && (
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/50 border border-border">
-              <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-sm">Multiple Payment Options</p>
-                <p className="text-xs text-muted-foreground">
-                  {[
-                    business.acceptsCash && "Cash",
-                    business.acceptsUPI && "UPI",
-                    business.acceptsCards && "Cards",
-                    business.acceptsNetBanking && "Net Banking",
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Staff Count */}
           {stats?.totalStaff > 0 && (
             <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/50 border border-border">
@@ -415,9 +379,9 @@ export function OverviewTab({
               >
                 <div className="flex items-start gap-3">
                   <div className="relative w-10 h-10 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                    {review.user?.avatar || review.photos?.[0]?.url ? (
+                    {review.user?.avatar ? (
                       <Image
-                        src={review.user?.avatar || review.photos?.[0]?.url || ""}
+                        src={review.user?.avatar}
                         alt={`${review.user?.firstName || "User"}'s avatar`}
                         fill
                         className="object-cover"
@@ -440,11 +404,6 @@ export function OverviewTab({
                         <span className="text-sm font-semibold">{review.rating}</span>
                       </div>
                     </div>
-                    {review.title && (
-                      <p className="text-sm font-medium text-foreground mt-1">
-                        {review.title}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -452,25 +411,6 @@ export function OverviewTab({
                   <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                     {review.content}
                   </p>
-                )}
-
-                {review.photos?.length > 0 && (
-                  <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-                    {review.photos.slice(0, 3).map((photo) => (
-                      <div
-                        key={photo.id}
-                        className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0"
-                      >
-                        <Image
-                          src={photo.url}
-                          alt={photo.caption || "Review photo"}
-                          fill
-                          className="object-cover"
-                          sizes="80px"
-                        />
-                      </div>
-                    ))}
-                  </div>
                 )}
               </div>
             ))}
@@ -500,65 +440,13 @@ export function OverviewTab({
             </div>
           </div>
 
-          {/* Email */}
-          {business.email && (
-            <div className="flex items-start gap-3">
-              <Mail className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-muted-foreground">Email</p>
-                <a
-                  href={`mailto:${business.email}`}
-                  className="text-foreground hover:text-primary transition-colors break-all"
-                >
-                  {business.email}
-                </a>
-              </div>
-            </div>
-          )}
-
-          {/* Website */}
-          {business.website && (
-            <div className="flex items-start gap-3">
-              <Globe className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-muted-foreground">Website</p>
-                <a
-                  href={business.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground hover:text-primary transition-colors break-all"
-                >
-                  {business.website}
-                </a>
-              </div>
-            </div>
-          )}
-
           <div className="flex items-start gap-3">
             <MapPin className="h-4 w-4 text-muted-foreground mt-1 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-muted-foreground">Address</p>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <p className="text-foreground truncate cursor-help">
-                      {formatFullAddress(business)}
-                    </p>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs text-center">
-                    {formatFullAddress(business)}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <Button
-                variant="link"
-                size="sm"
-                className="px-0 h-auto mt-1"
-                onClick={() => setActiveTab("contact")}
-              >
-                View on map
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+              <p className="text-foreground truncate">
+                {formatFullAddress(business)}
+              </p>
             </div>
           </div>
         </div>
@@ -616,30 +504,6 @@ function RelatedBusinessesSection({
                 <p className="font-semibold truncate group-hover:text-primary transition-colors">
                   {b.name}
                 </p>
-                <div className="flex items-center gap-1.5 text-sm">
-                  <div className="flex items-center gap-0.5 text-amber-500">
-                    <Star className="h-3.5 w-3.5 fill-current" />
-                    <span className="font-bold">
-                      {b.averageRating?.toFixed(1) || "New"}
-                    </span>
-                  </div>
-                  <span className="text-muted-foreground text-xs">
-                    ({b.totalReviews || 0} reviews)
-                  </span>
-                </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <p className="text-xs text-muted-foreground truncate flex items-center gap-1 cursor-help">
-                        <MapPin className="h-3 w-3" />
-                        {b.area}, {b.city}
-                      </p>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      {b.area}, {b.city}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
               </div>
             </div>
           </Link>
@@ -675,4 +539,3 @@ function IntroVideoSection({ videoUrl }: { videoUrl: string }) {
     </Card>
   );
 }
-

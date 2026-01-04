@@ -39,9 +39,10 @@ import { MenuItem } from "@prisma/client";
 
 interface ProductsTabProps {
   business: BusinessDetail;
+  onOrderClick?: () => void;
 }
 
-export function ProductsTab({ business }: ProductsTabProps) {
+export function ProductsTab({ business, onOrderClick }: ProductsTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { filter, sort } = useMenuFilters();
   const { setMenuFilter, setMenuSort, resetMenuFilters } = useMenuActions();
@@ -216,9 +217,13 @@ export function ProductsTab({ business }: ProductsTabProps) {
               </div>
 
               {/* Products Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                 {items.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onOrderClick={onOrderClick}
+                  />
                 ))}
               </div>
             </div>
@@ -230,7 +235,7 @@ export function ProductsTab({ business }: ProductsTabProps) {
 }
 
 // Product Card Component
-function ProductCard({ product }: { product: MenuItem }) {
+function ProductCard({ product, onOrderClick }: { product: MenuItem; onOrderClick?: () => void }) {
   const hasDiscount = product.discountedPrice && product.discountedPrice < product.price;
   const finalPrice = product.discountedPrice || product.price;
   const discountPercent = hasDiscount
@@ -240,145 +245,153 @@ function ProductCard({ product }: { product: MenuItem }) {
   return (
     <Card
       className={cn(
-        "overflow-hidden hover:shadow-lg transition-all duration-300 group",
-        !product.isAvailable && "opacity-60"
+        "flex flex-col h-full overflow-hidden border-border/50 bg-card hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 group relative",
+        !product.isAvailable && "opacity-75 grayscale-[0.5]"
       )}
     >
-      {/* Product Image */}
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      {/* Product Image Section */}
+      <div className="relative aspect-[4/5] sm:aspect-square overflow-hidden bg-muted/30">
         {product.image || product.images?.[0] ? (
           <Image
             src={product.image || product.images[0]}
             alt={product.name}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-110"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Package className="h-16 w-16 text-muted-foreground" />
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted">
+            <Package className="h-16 w-16 text-muted-foreground/40 stroke-[1.5]" />
           </div>
         )}
 
-        {/* Badges Overlay */}
-        <div className="absolute top-2 left-2 flex flex-col gap-2">
+        {/* Premium Badges Overlay */}
+        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
           {product.isFeatured && (
-            <Badge className="gap-1 bg-primary">
-              <Star className="h-3 w-3 fill-white" />
+            <Badge className="bg-primary hover:bg-primary text-white border-none shadow-lg shadow-primary/20 backdrop-blur-md px-2.5 py-1">
+              <Star className="h-3.5 w-3.5 fill-white mr-1.5" />
               Featured
             </Badge>
           )}
           {product.isBestseller && (
-            <Badge className="gap-1 bg-orange-500">
-              <TrendingUp className="h-3 w-3" />
+            <Badge className="bg-orange-500 hover:bg-orange-500 text-white border-none shadow-lg shadow-orange-500/20 px-2.5 py-1">
+              <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
               Bestseller
-            </Badge>
-          )}
-          {hasDiscount && (
-            <Badge className="gap-1 bg-secondary text-secondary-foreground border-none">
-              <Tag className="h-3 w-3" />
-              {discountPercent}% OFF
             </Badge>
           )}
         </div>
 
+        {/* Discount Tag */}
+        {hasDiscount && (
+          <div className="absolute top-3 right-0 bg-secondary text-secondary-foreground font-bold px-3 py-1.5 rounded-l-full shadow-lg transform translate-x-1 group-hover:translate-x-0 transition-transform duration-300 z-10 text-sm">
+            {discountPercent}% OFF
+          </div>
+        )}
+
+        {/* Availability Overlay */}
         {!product.isAvailable && (
-          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-            <Badge variant="destructive" className="text-base px-4 py-2">
-              Out of Stock
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-[2px] flex items-center justify-center z-20">
+            <Badge variant="destructive" className="text-sm font-bold px-6 py-2 border-none shadow-2xl">
+              Currently Unavailable
             </Badge>
           </div>
         )}
       </div>
 
-      {/* Product Info */}
-      <div className="p-4 space-y-3">
-        {/* Name & Category */}
-        <div>
-          <h4 className="font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors">
-            {product.name}
-          </h4>
-          {product.subcategory && (
-            <p className="text-xs text-muted-foreground">{product.subcategory}</p>
+      {/* Product Info Section */}
+      <div className="flex flex-col flex-1 p-5 space-y-4">
+        <div className="space-y-2">
+          <div className="flex justify-between items-start gap-3">
+            <h4 className="font-bold text-xl leading-tight group-hover:text-primary transition-colors duration-300">
+              {product.name}
+            </h4>
+            {product.averageRating && product.averageRating > 0 && (
+              <div className="flex items-center gap-1.5 bg-yellow-500/10 text-yellow-700 dark:text-yellow-500 px-2 py-1 rounded-lg self-start shrink-0">
+                <Star className="h-4 w-4 fill-current" />
+                <span className="text-sm font-bold">{product.averageRating.toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+
+          {product.category && (
+            <Badge variant="outline" className="text-[10px] uppercase tracking-widest font-bold py-0.5 px-2 border-primary/20 bg-primary/5 text-primary">
+              {product.category}
+            </Badge>
           )}
         </div>
 
-        {/* Description */}
         {product.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+          <p className="text-sm text-muted-foreground/80 line-clamp-2 leading-relaxed h-[2.8rem]">
             {product.description}
           </p>
         )}
 
-        {/* Dietary Badges */}
-        {(product.isVegetarian || product.isVegan || product.isGlutenFree || product.isJain) && (
-          <div className="flex flex-wrap gap-1.5">
-            {product.isVegetarian && (
-              <Badge variant="outline" className="text-xs bg-secondary/5 text-secondary border-secondary/20">
-                Veg
-              </Badge>
-            )}
-            {product.isVegan && (
-              <Badge variant="outline" className="text-xs bg-secondary/10 text-secondary border-secondary/30">
-                Vegan
-              </Badge>
-            )}
-            {product.isGlutenFree && (
-              <Badge variant="outline" className="text-xs">
-                Gluten-Free
-              </Badge>
-            )}
-            {product.isJain && (
-              <Badge variant="outline" className="text-xs">
-                Jain
-              </Badge>
-            )}
-          </div>
-        )}
+        {/* Dietary & Highlights */}
+        <div className="flex flex-wrap gap-2">
+          {product.isVegetarian && (
+            <Badge variant="outline" className="h-6 w-6 p-0 border-green-500 flex items-center justify-center rounded-sm bg-green-50/50" title="Vegetarian">
+              <div className="h-2 w-2 rounded-full bg-green-600" />
+            </Badge>
+          )}
+          {product.isVegan && (
+            <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">Vegan</Badge>
+          )}
+          {product.isGlutenFree && (
+            <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200">GF</Badge>
+          )}
+        </div>
 
-        {/* Price & Rating */}
-        <div className="flex items-center justify-between pt-2 border-t border-border">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-foreground flex items-center">
-              <IndianRupee className="h-4 w-4" />
-              {finalPrice}
-            </span>
-            {hasDiscount && (
-              <span className="text-sm text-muted-foreground line-through">
-                ₹{product.price}
+        {/* Price & Action Section - Pushed to bottom */}
+        <div className="mt-auto pt-4 border-t border-border/40 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-black text-foreground tracking-tight">
+                  <IndianRupee className="h-4 w-4 inline mr-0.5" />
+                  {finalPrice}
+                </span>
+                {hasDiscount && (
+                  <span className="text-sm text-muted-foreground line-through decoration-muted-foreground/50">
+                    ₹{product.price}
+                  </span>
+                )}
+              </div>
+              {product.servingSize && (
+                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
+                  Per {product.servingSize}
+                </span>
+              )}
+            </div>
+
+            {product.totalOrders > 0 && (
+              <span className="text-[10px] font-bold text-muted-foreground uppercase bg-muted/50 px-2 py-1 rounded">
+                {product.totalOrders}+ Ordered
               </span>
             )}
           </div>
 
-          {product.averageRating && product.averageRating > 0 && (
-            <div className="flex items-center gap-1 bg-primary/10 px-2 py-1 rounded-full">
-              <Star className="h-3 w-3 fill-primary text-primary" />
-              <span className="text-sm font-semibold">{product.averageRating.toFixed(1)}</span>
+          <Button
+            className={cn(
+               "w-full h-12 rounded-xl font-bold text-base shadow-xl transition-all duration-300 active:scale-95 group/btn overflow-hidden relative",
+               product.isAvailable
+                 ? "bg-primary text-white hover:bg-primary/95 hover:shadow-primary/25"
+                 : "bg-muted text-muted-foreground cursor-not-allowed"
+            )}
+            disabled={!product.isAvailable}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOrderClick?.();
+            }}
+          >
+            <div className="flex items-center justify-center gap-2">
+               <ShoppingBag className="w-5 h-5 transition-transform duration-300 group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1" />
+               <span>{product.isAvailable ? "Order Now" : "Out of Stock"}</span>
             </div>
-          )}
+
+            {/* Glossy shine effect on hover */}
+            <div className="absolute inset-0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          </Button>
         </div>
-
-        {/* Additional Info */}
-        {(product.servingSize || product.calories) && (
-          <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-2">
-            {product.servingSize && <span>Serving: {product.servingSize}</span>}
-            {product.calories && <span>Calories: {product.calories}</span>}
-          </div>
-        )}
-
-        {/* Stock Indicator */}
-        {product.hasLimitedStock && product.stockQuantity !== null && product.isAvailable && (
-          <Badge variant="outline" className="w-full justify-center text-xs border-orange-300 text-orange-700">
-            Only {product.stockQuantity} left in stock
-          </Badge>
-        )}
-
-        {/* Order Count */}
-        {product.totalOrders > 0 && (
-          <p className="text-xs text-muted-foreground text-center">
-            {product.totalOrders} orders placed
-          </p>
-        )}
       </div>
     </Card>
   );

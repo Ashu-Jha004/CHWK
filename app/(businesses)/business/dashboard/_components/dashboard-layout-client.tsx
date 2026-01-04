@@ -59,7 +59,7 @@ export function DashboardLayoutClient({
 
         {/* Page Content - Scrollable */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto">
-          <div className="h-full">{children}</div>
+          <div className="h-full p-6 lg:p-8">{children}</div>
         </main>
       </div>
     </div>

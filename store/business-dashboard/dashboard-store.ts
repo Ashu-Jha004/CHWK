@@ -5,6 +5,9 @@ import { persist, createJSONStorage } from "zustand/middleware";
 export type DashboardTab =
   | "overview"
   | "profile"
+  | "bookings"
+  | "menu"
+  | "orders"
   | "reviews"
   | "staff"
   | "complaints";

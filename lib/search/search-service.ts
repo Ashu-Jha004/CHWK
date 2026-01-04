@@ -82,34 +82,45 @@ export async function searchWithDistance(
     id: { in: businessIds },
   };
 
-  // Get total count
-  const totalCount = await prisma.business.count({ where: finalWhere });
-
-  // Get businesses with categories
-  const businesses = await prisma.business.findMany({
-    where: finalWhere,
-    include: {
-      categories: {
-        include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
+  // Get total count AND businesses in parallel
+  const [totalCount, businesses] = await Promise.all([
+    prisma.business.count({ where: finalWhere }),
+    prisma.business.findMany({
+      where: finalWhere,
+      select: {
+          id: true,
+          slug: true,
+          name: true,
+          shortDescription: true,
+          logo: true,
+          coverImage: true,
+          city: true,
+          area: true,
+          pincode: true,
+          latitude: true,
+          longitude: true,
+          averageRating: true,
+          totalReviews: true,
+          priceRange: true,
+          isVerified: true,
+          categories: {
+              select: {
+                  isPrimary: true,
+                  category: {
+                      select: {
+                          id: true,
+                          name: true,
+                          slug: true,
+                      }
+                  }
+              }
           },
-        },
-        where: {
-          category: {
-            isActive: true,
-          },
-        },
+          hours: true,
       },
-      hours: true,
-    },
-    skip: offset,
-    take: limit,
-  });
+      skip: offset,
+      take: limit,
+    })
+  ]);
 
   // Helper to calculate Open Status
   const businessesWithStatus = businesses.map(business => {
@@ -171,35 +182,46 @@ export async function searchRegular(
     ];
   }
 
-  // Get total count
-  const totalCount = await prisma.business.count({ where });
-
-  // Get businesses
-  const businesses = await prisma.business.findMany({
-    where,
-    include: {
-      categories: {
-        include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
+  // Get total count AND businesses in parallel
+  const [totalCount, businesses] = await Promise.all([
+    prisma.business.count({ where: where }),
+    prisma.business.findMany({
+      where,
+      select: {
+          id: true,
+          slug: true,
+          name: true,
+          shortDescription: true,
+          logo: true,
+          coverImage: true,
+          city: true,
+          area: true,
+          pincode: true,
+          latitude: true,
+          longitude: true,
+          averageRating: true,
+          totalReviews: true,
+          priceRange: true,
+          isVerified: true,
+          categories: {
+              select: {
+                  isPrimary: true,
+                  category: {
+                      select: {
+                          id: true,
+                          name: true,
+                          slug: true,
+                      }
+                  }
+              }
           },
-        },
-        where: {
-          category: {
-            isActive: true,
-          },
-        },
+          hours: true,
       },
-      hours: true,
-    },
-    orderBy,
-    skip: offset,
-    take: limit,
-  });
+      orderBy,
+      skip: offset,
+      take: limit,
+    })
+  ]);
 
   // Helper to calculate Open Status
   const businessesWithStatus = businesses.map(b => ({

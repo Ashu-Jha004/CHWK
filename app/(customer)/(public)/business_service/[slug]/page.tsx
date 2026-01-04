@@ -27,7 +27,7 @@ export async function generateMetadata(
   { params }: PageProps
 ): Promise<Metadata> {
   const { slug } = await params;
-  const business = await fetchSEOData(slug); // Use lightweight fetch for metadata
+  const business = await fetchBusinessData(slug);
 
   if (!business) {
     return {
@@ -129,48 +129,8 @@ export async function generateStaticParams() {
    DATA FETCHING (SPLIT FOR PERFORMANCE)
 ===================================================== */
 
-// 1. Lightweight fetch for SEO only (Fast)
-const fetchSEOData = cache(async (slug: string) => {
-  try {
-    return await prisma.business.findUnique({
-      where: { slug, deletedAt: null },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        shortDescription: true,
-        description: true,
-        logo: true,
-        coverImage: true,
-        city: true,
-        area: true,
-        state: true,
-        latitude: true,
-        longitude: true,
-        totalReviews: true,
-        averageRating: true,
-        metadataKeywords: true,
-        metaTitle: true,
-        metaDescription: true,
-        categories: {
-          take: 1,
-          include: { category: true }
-        },
-        images: {
-            where: { isApproved: true },
-            take: 1,
-            select: { imageUrl: true }
-        }
-      }
-    });
-  } catch (error) {
-    console.error("Fetch SEO Error:", error);
-    return null;
-  }
-});
-
-// 2. Heavy fetch for Page Content (Streamed)
-const fetchBusinessBySlug = cache(async (slug: string): Promise<BusinessDetail | null> => {
+// 1. Consolidated fetcher (Deduplicated by React cache)
+const fetchBusinessData = cache(async (slug: string): Promise<BusinessDetail | null> => {
   try {
     const business = await prisma.business.findUnique({
       where: { slug, deletedAt: null },
@@ -221,7 +181,7 @@ const fetchBusinessBySlug = cache(async (slug: string): Promise<BusinessDetail |
 
     return business as BusinessDetail;
   } catch (error) {
-    console.error("Fetch Business Error:", error);
+    console.error("Fetch Business Data Error:", error);
     return null;
   }
 });
@@ -291,7 +251,7 @@ export default async function BusinessDetailPage({ params }: PageProps) {
 }
 
 async function BusinessPageContent({ slug }: { slug: string }) {
-  const business = await fetchBusinessBySlug(slug);
+  const business = await fetchBusinessData(slug);
 
   if (!business) notFound();
 

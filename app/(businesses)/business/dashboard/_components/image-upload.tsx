@@ -12,6 +12,7 @@ import {
   createImagePreview,
   UploadProgress,
 } from "@/lib/utils/cloudinary-client.utils";
+import { ImageCropper } from "@/components/shared/image-cropper";
 
 interface ImageUploadProps {
   value?: string;
@@ -42,6 +43,7 @@ export function ImageUpload({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
+  const [croppingImage, setCroppingImage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const aspectRatioClasses = {
@@ -51,20 +53,22 @@ export function ImageUpload({
   };
 
   const handleUpload = useCallback(
-    async (file: File) => {
+    async (file: File | Blob) => {
       try {
         setUploading(true);
         setProgress(0);
 
-        // Validate file
-        const validation = validateImageFile(file);
-        if (!validation.valid) {
-          alert(validation.error);
-          return;
+        // If it's a File, validate it
+        if (file instanceof File) {
+          const validation = validateImageFile(file);
+          if (!validation.valid) {
+            alert(validation.error);
+            return;
+          }
         }
 
         // Create preview
-        const previewUrl = await createImagePreview(file);
+        const previewUrl = URL.createObjectURL(file);
         setPreview(previewUrl);
 
         // Upload to Cloudinary
@@ -91,6 +95,18 @@ export function ImageUpload({
     [folder, onChange]
   );
 
+  const onFileSelect = useCallback(
+    async (file: File) => {
+      if (aspectRatio !== "auto") {
+        const previewUrl = await createImagePreview(file);
+        setCroppingImage(previewUrl);
+      } else {
+        handleUpload(file);
+      }
+    },
+    [aspectRatio, handleUpload]
+  );
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -100,10 +116,10 @@ export function ImageUpload({
 
       const file = e.dataTransfer.files[0];
       if (file) {
-        handleUpload(file);
+        onFileSelect(file);
       }
     },
-    [disabled, uploading, handleUpload]
+    [disabled, uploading, onFileSelect]
   );
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -121,7 +137,7 @@ export function ImageUpload({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      handleUpload(file);
+      onFileSelect(file);
     }
   };
 
@@ -228,6 +244,19 @@ export function ImageUpload({
 
       {description && (
         <p className="text-xs text-muted-foreground">{description}</p>
+      )}
+
+      {croppingImage && (
+        <ImageCropper
+          image={croppingImage}
+          open={!!croppingImage}
+          aspectRatio={aspectRatio === "square" ? 1 : 16 / 9}
+          onClose={() => setCroppingImage(null)}
+          onCropComplete={(croppedBlob) => {
+            handleUpload(croppedBlob);
+            setCroppingImage(null);
+          }}
+        />
       )}
     </div>
   );

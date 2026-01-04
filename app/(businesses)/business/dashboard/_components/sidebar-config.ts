@@ -6,6 +6,9 @@ import {
   Users,
   MessageSquareWarning,
   Settings,
+  Calendar,
+  Package,
+  ShoppingCart,
   LucideIcon,
 } from "lucide-react";
 import { DashboardTab } from "@/store/business-dashboard";
@@ -30,6 +33,25 @@ export const sidebarItems: SidebarItem[] = [
     label: "Business Profile",
     icon: Building2,
     description: "Manage your business details",
+  },
+  {
+    id: "bookings",
+    label: "Bookings",
+    icon: Calendar,
+    description: "Manage appointments",
+  },
+  {
+    id: "menu",
+    label: "Menu & Services",
+    icon: Package,
+    description: "Manage your offerings",
+  },
+  {
+    id: "orders",
+    label: "Orders",
+    icon: ShoppingCart,
+    description: "Handle custom orders",
+    badge: true,
   },
   {
     id: "reviews",

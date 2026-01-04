@@ -12,6 +12,8 @@ import { SpellCorrectionBanner } from "./spell-correction-banner";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useBusinessSearch } from "@/hooks/search/use-business-search";
+import { useState } from "react";
+import { SearchMap } from "./search-map";
 
 interface SearchResultsClientProps {
   initialData: SearchResponse;
@@ -23,6 +25,7 @@ export function SearchResultsClient({
   searchParams,
 }: SearchResultsClientProps) {
   const router = useRouter();
+  const [view, setView] = useState<"list" | "map">("list");
 
   // 1. INTEGRATE SMART SEARCH HOOK
   // We use the hook to handle all subsequent data fetching/caching
@@ -113,6 +116,8 @@ export function SearchResultsClient({
   location={searchParams.location}
   sortBy={searchParams.sort || "relevance"}
   onSortChange={handleSortChange}
+  view={view}
+  onViewChange={setView}
 />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -138,8 +143,20 @@ export function SearchResultsClient({
             {/* Show loader only during hard refresh or initial fetch */}
             {isLoading && !isPlaceholderData ? (
                <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>
-            ) : (
+            ) : view === "list" ? (
               <BusinessGrid businesses={currentData.results} />
+            ) : (
+              <SearchMap
+                businesses={currentData.results}
+                userLocation={
+                  searchParams.lat && searchParams.lon
+                    ? {
+                        latitude: parseFloat(searchParams.lat),
+                        longitude: parseFloat(searchParams.lon),
+                      }
+                    : undefined
+                }
+              />
             )}
 
             {currentData.pagination.hasMore && (

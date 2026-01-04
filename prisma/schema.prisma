@@ -197,6 +197,8 @@ model Business {
   @@index([state])
   @@index([latitude, longitude])
   @@index([averageRating])
+  @@index([priceRange])
+  @@index([isVerified])
   @@index([createdAt])
   @@index([deletedAt])
   @@index([ownerId])

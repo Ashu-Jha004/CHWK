@@ -21,21 +21,14 @@ export async function performSearch(params: GlobalSearchParams): Promise<SearchR
   // Use the shared parser
   const parsedQuery = parseSearchQuery(params.query || "");
 
-  // Match categories
-  const matchedCategories = await matchCategories(parsedQuery.cleanQuery, 3);
+  // 1. Parallelize category matching and potential fallback searches
+  const [matchedCategories, spellingSuggestion, fuzzyResults] = await Promise.all([
+    matchCategories(parsedQuery.cleanQuery, 3),
+    parsedQuery.cleanQuery ? getSpellingSuggestion(parsedQuery.cleanQuery) : Promise.resolve(null),
+    parsedQuery.cleanQuery ? fuzzySearchBusinesses(parsedQuery.cleanQuery, 5) : Promise.resolve([])
+  ]);
+
   const categoryIds = matchedCategories.map(c => c.id);
-
-  // Check for spelling suggestions if no categories matched
-  let spellingSuggestion: string | null = null;
-  let fuzzyResults: any[] = [];
-
-  if (parsedQuery.cleanQuery && matchedCategories.length === 0) {
-    // Try to find spelling correction
-    spellingSuggestion = await getSpellingSuggestion(parsedQuery.cleanQuery);
-
-    // Also get fuzzy search results as fallback
-    fuzzyResults = await fuzzySearchBusinesses(parsedQuery.cleanQuery, 5);
-  }
 
   const page = Math.max(1, params.page || 1);
   const limit = Math.min(50, Math.max(1, params.limit || 12));

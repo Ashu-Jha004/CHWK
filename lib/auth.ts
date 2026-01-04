@@ -233,6 +233,14 @@ export async function getCurrentBusiness() {
       user,
     };
   } catch (error) {
+    // START: Fix for NEXT_REDIRECT
+    // In Next.js (App Router), redirect() throws an error to signal redirection.
+    // We must catch and re-throw it so Next.js handles it.
+    if ((error as Error).message === "NEXT_REDIRECT" || (error as any)?.digest?.includes("NEXT_REDIRECT")) {
+        throw error;
+    }
+    // END: Fix for NEXT_REDIRECT
+
     console.error("[ERROR] getCurrentBusiness - Exception:", error);
     return {
       success: false,
