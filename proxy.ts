@@ -18,12 +18,13 @@ const isPublicRoute = createRouteMatcher([
   // Auth pages
   "/sign-in(.*)",
   "/sign-up(.*)",
-
   // Public APIs
   "/api/businesses/nearby",
   "/api/location/(.*)",
   "/api/search(.*)",
   "/api/reviews/list(.*)",
+  "/api/categories(.*)",
+  "/api/category(.*)",
   "/api/reviews/vote(.*)",
 
   // SEO and PWA files

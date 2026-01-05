@@ -27,7 +27,7 @@ export async function generateMetadata(
   { params }: PageProps
 ): Promise<Metadata> {
   const { slug } = await params;
-  const business = await fetchBusinessData(slug);
+  const business = await fetchBusinessMetadata(slug);
 
   if (!business) {
     return {
@@ -129,21 +129,38 @@ export async function generateStaticParams() {
    DATA FETCHING (SPLIT FOR PERFORMANCE)
 ===================================================== */
 
-// 1. Consolidated fetcher (Deduplicated by React cache)
+// 1. Lightweight Metadata Fetcher (For fast TTFB)
+const fetchBusinessMetadata = cache(async (slug: string) => {
+  try {
+    return await prisma.business.findUnique({
+      where: { slug, deletedAt: null },
+      include: {
+        images: { where: { deletedAt: null, isApproved: true }, take: 1 },
+        categories: { include: { category: true } },
+      },
+    });
+  } catch (error) {
+    console.error("Fetch Business Metadata Error:", error);
+    return null;
+  }
+});
+
+// 2. Full Consolidated fetcher (Deduplicated by React cache)
 const fetchBusinessData = cache(async (slug: string): Promise<BusinessDetail | null> => {
   try {
     const business = await prisma.business.findUnique({
       where: { slug, deletedAt: null },
       include: {
-        images: { where: { deletedAt: null, isApproved: true }, take: 8 },
-        documents: { where: { status: "VERIFIED" }, take: 2 },
+        // Optimized: Reduced limits for initial page load
+        images: { where: { deletedAt: null, isApproved: true }, take: 4 }, // Carousel usually needs just a few or loads more
+        documents: { where: { status: "VERIFIED" }, take: 1 }, // Just need existence check mostly
         categories: { include: { category: true } },
         amenities: { include: { amenity: true } },
-        serviceAreas: { where: { isActive: true }, take: 5 },
-        serviceArea: { where: { isActive: true }, take: 5 },
+        serviceAreas: { where: { isActive: true }, take: 3 }, // reduced
+        serviceArea: { where: { isActive: true }, take: 3 }, // reduced
         staff: {
           where: { deletedAt: null, isActive: true },
-          take: 8,
+          take: 4, // Top staff only
           include: {
             workingHours: {
               orderBy: { dayOfWeek: "asc" },
@@ -151,7 +168,7 @@ const fetchBusinessData = cache(async (slug: string): Promise<BusinessDetail | n
           },
         },
         hours: { orderBy: { dayOfWeek: "asc" } },
-        menuItems: { where: { deletedAt: null }, take: 12 },
+        menuItems: { where: { deletedAt: null }, take: 50 }, // Needed for BookingWizard selection
         reviews: {
           where: {
             deletedAt: null,
@@ -162,13 +179,13 @@ const fetchBusinessData = cache(async (slug: string): Promise<BusinessDetail | n
           orderBy: { createdAt: "desc" },
           include: {
             user: { select: { id: true, firstName: true, lastName: true, avatar: true } },
-            photos: { where: { deletedAt: null, isApproved: true }, take: 2 }
+            photos: { where: { deletedAt: null, isApproved: true }, take: 1 } // Just 1 thumbnail per review
           }
         },
         photos: {
           where: { deletedAt: null, isApproved: true },
           orderBy: { createdAt: "desc" },
-          take: 20
+          take: 8 // Reduced from 20
         },
         chain: true,
         _count: { select: { reviews: true, photos: true, menuItems: true, staff: true } },
