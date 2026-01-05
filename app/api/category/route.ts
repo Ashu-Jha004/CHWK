@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma'; // Adjust path to your Prisma client
 
 /**
- * GET /api/categories
+ * GET /api/category
  * Fetches all active categories for the category listing page
  * Caches for 1 hour, revalidates every 3600 seconds
  */

@@ -105,14 +105,19 @@ function CategoriesLoading() {
  * Main Categories Page Component
  * Now fetches directly from database (no API call)
  */
+// Enable dynamic rendering for debugging and realtime data
+export const dynamic = 'force-dynamic';
+// export const revalidate = 3600;
+
 export default async function CategoriesPage() {
   // Fetch directly from database - single query
   const categories = await getCategories();
 
+  console.log('[CategoriesPage] Rendered with count:', categories.length);
+
   return (
     <main className="min-h-screen bg-background">
-
-      {/* Hero Section */}
+      {/* ... previous content ... */}
       <section className="border-b border-border/50 bg-gradient-to-br from-primary/5 via-background to-accent/5">
       <Header />
         <div className="container-padding section-spacing-tight mx-auto max-w-7xl">
@@ -152,7 +157,3 @@ export default async function CategoriesPage() {
     </main>
   );
 }
-
-// Enable static generation with revalidation
-export const revalidate = 3600; // Revalidate every 1 hour
-export const dynamic = 'force-static'; // Generate at build time
