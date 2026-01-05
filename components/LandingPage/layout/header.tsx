@@ -216,7 +216,13 @@ export function Header() {
             {/* Desktop Navigation */}
             {!isMobile && (
               <nav className="hidden md:flex items-center space-x-8">
-                {["categories", "how-it-works", "testimonials"].map((id) => (
+                <Link
+                  href="/categories"
+                  className="text-sm font-medium text-gray-700 transition-colors hover:text-primary capitalize"
+                >
+                  Categories
+                </Link>
+                {["how-it-works", "testimonials"].map((id) => (
                   <button
                     key={id}
                     onClick={() => scrollToElement(id)}

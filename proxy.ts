@@ -8,24 +8,28 @@ import { NextResponse } from "next/server";
 // Public (SEO + unauthenticated) routes
 const isPublicRoute = createRouteMatcher([
   "/",                         // Home
-  "/search",
-  "/businesses(.*)",
-  "/business_service(.*)",     // SEO business pages
-  "/categories(.*)",
-  "/business(.*)",
-  "/about",
+  "/search(.*)",               // Search page
+  "/businesses(.*)",           // Business directory
+  "/business_service(.*)",     // Public business details
+  "/categories(.*)",           // Categories page
+  "/about",                    // Static pages
+  "/how-it-works",
+  "/testimonials",
+  "/contact",
 
   // Auth pages
   "/sign-in(.*)",
   "/sign-up(.*)",
+
   // Public APIs
   "/api/businesses/nearby",
-  "/api/location/(.*)",
+  "/api/location(.*)",
   "/api/search(.*)",
   "/api/reviews/list(.*)",
   "/api/categories(.*)",
   "/api/category(.*)",
   "/api/reviews/vote(.*)",
+  "/api/webhooks(.*)", // Webhooks often need to be public/bypassed
 
   // SEO and PWA files
   "/sitemap.xml",
@@ -39,7 +43,6 @@ const isWebhookRoute = createRouteMatcher([
   "/api/webhooks(.*)",
 ]);
 
-// Onboarding flow
 const isOnboardingRoute = createRouteMatcher([
   "/onboarding",
 ]);
@@ -49,16 +52,18 @@ const isOnboardingRoute = createRouteMatcher([
 ==================================================== */
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId, sessionClaims, isAuthenticated, redirectToSignIn } =
-    await auth();
-
+  const { userId, sessionClaims, redirectToSignIn } = await auth();
   const { pathname } = req.nextUrl;
 
   /* =====================================================
      1️⃣ ABSOLUTE BYPASS (SEO CRITICAL)
-     robots.txt & sitemap.xml must NEVER redirect
   ===================================================== */
-  if (pathname === "/robots.txt" || pathname === "/sitemap.xml" || pathname === "/site.webmanifest" || pathname === "/sw.js") {
+  if (
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/site.webmanifest" ||
+    pathname === "/sw.js"
+  ) {
     return NextResponse.next();
   }
 
@@ -72,60 +77,51 @@ export default clerkMiddleware(async (auth, req) => {
   /* =====================================================
      3️⃣ PUBLIC ROUTES (NO AUTH REQUIRED)
   ===================================================== */
-  if (isPublicRoute(req)) {
+  // Ensure business dashboard is NOT treated as public just because of a wildcard overlap
+  const isDashboardRoute = pathname.startsWith("/business/dashboard") || pathname.startsWith("/business/onboarding");
+
+  if (isPublicRoute(req) && !isDashboardRoute) {
     return NextResponse.next();
   }
 
   /* =====================================================
      4️⃣ PRIVATE ROUTES → REQUIRE AUTH
   ===================================================== */
-  if (!isAuthenticated) {
-    return redirectToSignIn({
-      returnBackUrl: req.url,
-    });
+  if (!userId) {
+    return redirectToSignIn({ returnBackUrl: req.url });
   }
 
   /* =====================================================
-     5️⃣ ONBOARDING ENFORCEMENT (PRIVATE ONLY)
+     5️⃣ ONBOARDING ENFORCEMENT
   ===================================================== */
-  const onboardingComplete =
-    (sessionClaims?.metadata as { onboardingComplete?: boolean })
-      ?.onboardingComplete;
+  const onboardingComplete = (sessionClaims?.metadata as { onboardingComplete?: boolean })?.onboardingComplete;
 
-  if (
-    isAuthenticated &&
-    !onboardingComplete &&
-    !isOnboardingRoute(req)
-  ) {
-    return NextResponse.redirect(new URL("/onboarding", req.url));
+  // If business owner and onboarding incomplete, force to onboarding
+  // We can check role or just if they are trying to access dashboard
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const isBusinessOwner = role === "BUSINESS_OWNER";
+
+  if (isBusinessOwner && !onboardingComplete && !pathname.startsWith("/business/onboarding") && !pathname.startsWith("/api")) {
+     return NextResponse.redirect(new URL("/business/onboarding", req.url));
   }
 
   /* =====================================================
      6️⃣ ROLE-BASED ACCESS CONTROL (RBAC)
   ===================================================== */
-  if (userId) {
-    const role =
-      (sessionClaims?.metadata as { role?: string })?.role ?? "USER";
-
-    // Business owner routes (exclude public business_service pages)
-    if (
-      pathname.startsWith("/business/") &&
-      !pathname.startsWith("/business_service") &&
-      role !== "BUSINESS_OWNER" &&
-      role !== "ADMIN"
-    ) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-
-    // Admin-only routes
-    if (pathname.startsWith("/admin") && role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+  // Protect Business Dashboard
+  if (pathname.startsWith("/business/dashboard")) {
+    if (role !== "BUSINESS_OWNER" && role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/", req.url));
     }
   }
 
-  /* =====================================================
-     7️⃣ ALLOW REQUEST
-  ===================================================== */
+  // Protect Admin Dashboard
+  if (pathname.startsWith("/admin")) {
+    if (role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+  }
+
   return NextResponse.next();
 });
 
@@ -135,16 +131,9 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // All routes except static assets
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|js|webmanifest)$).*)",
-
-    // APIs
-    "/(api|trpc)(.*)",
-
-    // SEO and PWA files
-    "/sitemap.xml",
-    "/robots.txt",
-    "/site.webmanifest",
-    "/sw.js",
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 };

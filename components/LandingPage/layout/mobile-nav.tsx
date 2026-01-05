@@ -193,13 +193,13 @@ export function MobileNav({
               <span className="font-medium">Home</span>
             </button>
 
-            <button
-              onClick={() => handleNavClick("categories")}
+            <Link
+              href="/categories"
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-colors focus-visible-ring"
             >
               <Grid className="w-5 h-5 text-gray-600" />
               <span className="font-medium">Categories</span>
-            </button>
+            </Link>
 
             <button
               onClick={() => handleNavClick("how-it-works")}

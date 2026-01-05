@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { prisma } from '@/lib/prisma';
 import CategoryGrid from '@/components/categories/category-grid';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Header } from '@/components/LandingPage/layout/header';
 
 /**
  * Generate metadata for SEO
@@ -110,8 +111,10 @@ export default async function CategoriesPage() {
 
   return (
     <main className="min-h-screen bg-background">
+
       {/* Hero Section */}
       <section className="border-b border-border/50 bg-gradient-to-br from-primary/5 via-background to-accent/5">
+      <Header />
         <div className="container-padding section-spacing-tight mx-auto max-w-7xl">
           <div className="text-center">
             <h1 className="text-responsive-2xl font-bold tracking-tight text-foreground">

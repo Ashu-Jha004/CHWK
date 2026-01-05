@@ -28,10 +28,9 @@ export async function searchWithDistance(
   limit: number,
   sortBy: string
 ) {
-  const offset = (page - 1) * limit;
-
-  // Calculate Bounding Box to use Indexes
+  // 1. Calculate Bounding Box to use Geospatial Indexes (fast first pass)
   const latDelta = radiusKm / 111.32; // 1 degree lat is ~111.32km
+  // Handle pole edge cases broadly or ignore for local service app; simple cosine adjustment:
   const lonDelta = radiusKm / (111.32 * Math.cos(userLat * (Math.PI / 180)));
 
   const minLat = userLat - latDelta;
@@ -39,7 +38,7 @@ export async function searchWithDistance(
   const minLon = userLon - lonDelta;
   const maxLon = userLon + lonDelta;
 
-  // Build SQL for distance calculation
+  // 2. Haversine Formula for precise distance
   const distanceFormula = `
     (6371 * acos(
       cos(radians(${userLat})) *
@@ -50,8 +49,8 @@ export async function searchWithDistance(
     ))
   `;
 
-  // Get business IDs within radius using raw SQL
-  // Added Bounding Box Check: latitude BETWEEN ${minLat} AND ${maxLat} ...
+  // 3. Get all candidate IDs within radius (Limit 100 for performance safety)
+  // We fetch up to 100 closest raw matches first.
   const businessIdsInRadius: any[] = await prisma.$queryRaw`
     SELECT
       id,
@@ -64,95 +63,87 @@ export async function searchWithDistance(
       AND status IN ('ACTIVE', 'CLAIMED')
       AND "deletedAt" IS NULL
     ORDER BY distance ASC
-    LIMIT 100 -- Limit potential intermediate matches
+    LIMIT 200 -- Increased to allow for filtering downstream
   `;
 
-  const businessIds = businessIdsInRadius.map((b) => b.id);
-
-  if (businessIds.length === 0) {
+  if (businessIdsInRadius.length === 0) {
     return { businesses: [], totalCount: 0 };
   }
 
-  // Add ID filter to where clause
-  // IMPORTANT: We must merge this with the existing where clause carefully
-  // But wait, 'where' argument is Prisma.BusinessWhereInput.
-  // We should create a new object.
+  const businessIds = businessIdsInRadius.map((b) => b.id);
+
+  // 4. Construct final filter
   const finalWhere: Prisma.BusinessWhereInput = {
     ...where,
     id: { in: businessIds },
   };
 
-  // Get total count AND businesses in parallel
-  const [totalCount, businesses] = await Promise.all([
-    prisma.business.count({ where: finalWhere }),
-    prisma.business.findMany({
-      where: finalWhere,
-      select: {
-          id: true,
-          slug: true,
-          name: true,
-          shortDescription: true,
-          logo: true,
-          coverImage: true,
-          city: true,
-          area: true,
-          pincode: true,
-          latitude: true,
-          longitude: true,
-          averageRating: true,
-          totalReviews: true,
-          priceRange: true,
-          isVerified: true,
-          categories: {
-              select: {
-                  isPrimary: true,
-                  category: {
-                      select: {
-                          id: true,
-                          name: true,
-                          slug: true,
-                      }
-                  }
-              }
+  // 5. Fetch Full Business Data
+  // Note: We do NOT skip/take here because we need to sort the filtered results
+  // by distance (or other metrics) effectively in memory since we severed
+  // the DB sort order by using "WHERE id IN (...)".
+  const businesses = await prisma.business.findMany({
+    where: finalWhere,
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      shortDescription: true,
+      logo: true,
+      coverImage: true,
+      city: true,
+      area: true,
+      pincode: true,
+      latitude: true,
+      longitude: true,
+      averageRating: true,
+      totalReviews: true,
+      priceRange: true,
+      isVerified: true,
+      categories: {
+        select: {
+          isPrimary: true,
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
           },
-          hours: true,
+        },
       },
-      skip: offset,
-      take: limit,
-    })
-  ]);
-
-  // Helper to calculate Open Status
-  const businessesWithStatus = businesses.map(business => {
-     return {
-       ...business,
-       isOpen: isOpenNow(business.hours)
-     };
+      hours: true,
+    },
   });
 
-  // Add distance to each business
-  const businessesWithDistance = businessesWithStatus.map((business) => {
+  // 6. Merge Distance & Open Status
+  const businessesWithMeta = businesses.map((business) => {
     const distanceData = businessIdsInRadius.find((b) => b.id === business.id);
     return {
       ...business,
-      distance: distanceData ? Number(distanceData.distance.toFixed(1)) : null,
+      isOpen: isOpenNow(business.hours),
+      distance: distanceData ? Number(Number(distanceData.distance).toFixed(1)) : null,
     };
   });
 
-  // Sort based on sortBy parameter
+  // 7. Sort in Memory
   if (sortBy === "distance") {
-    businessesWithDistance.sort(
-      (a, b) => (a.distance || 999) - (b.distance || 999)
-    );
+    businessesWithMeta.sort((a, b) => (a.distance || 9999) - (b.distance || 9999));
   } else if (sortBy === "rating") {
-    businessesWithDistance.sort(
-      (a, b) => (b.averageRating || 0) - (a.averageRating || 0)
-    );
+    businessesWithMeta.sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0));
   } else if (sortBy === "reviews") {
-    businessesWithDistance.sort((a, b) => b.totalReviews - a.totalReviews);
+    businessesWithMeta.sort((a, b) => b.totalReviews - a.totalReviews);
+  } else {
+    // Default: Sort by distance if searchWithDistance is called
+    businessesWithMeta.sort((a, b) => (a.distance || 9999) - (b.distance || 9999));
   }
 
-  return { businesses: businessesWithDistance, totalCount };
+  // 8. Paginate across the sorted result text
+  const totalCount = businessesWithMeta.length;
+  const startIndex = (page - 1) * limit;
+  const slicedBusinesses = businessesWithMeta.slice(startIndex, startIndex + limit);
+
+  return { businesses: slicedBusinesses, totalCount };
 }
 
 /**
@@ -174,7 +165,7 @@ export async function searchRegular(
   } else if (sortBy === "reviews") {
     orderBy = [{ totalReviews: "desc" }, { averageRating: "desc" }];
   } else {
-    // Relevance: prioritize verified, then rating
+    // Relevance default
     orderBy = [
       { isVerified: "desc" },
       { averageRating: "desc" },
@@ -182,51 +173,54 @@ export async function searchRegular(
     ];
   }
 
-  // Get total count AND businesses in parallel
+  // Optimized Fields Selection
+  // Only select what's needed for the card
+  const selectFields = {
+    id: true,
+    slug: true,
+    name: true,
+    shortDescription: true,
+    logo: true,
+    coverImage: true,
+    city: true,
+    area: true,
+    pincode: true,
+    latitude: true,
+    longitude: true,
+    averageRating: true,
+    totalReviews: true,
+    priceRange: true,
+    isVerified: true,
+    categories: {
+      select: {
+        isPrimary: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    },
+    hours: true,
+  };
+
   const [totalCount, businesses] = await Promise.all([
-    prisma.business.count({ where: where }),
+    prisma.business.count({ where }),
     prisma.business.findMany({
       where,
-      select: {
-          id: true,
-          slug: true,
-          name: true,
-          shortDescription: true,
-          logo: true,
-          coverImage: true,
-          city: true,
-          area: true,
-          pincode: true,
-          latitude: true,
-          longitude: true,
-          averageRating: true,
-          totalReviews: true,
-          priceRange: true,
-          isVerified: true,
-          categories: {
-              select: {
-                  isPrimary: true,
-                  category: {
-                      select: {
-                          id: true,
-                          name: true,
-                          slug: true,
-                      }
-                  }
-              }
-          },
-          hours: true,
-      },
+      select: selectFields,
       orderBy,
       skip: offset,
       take: limit,
-    })
+    }),
   ]);
 
   // Helper to calculate Open Status
-  const businessesWithStatus = businesses.map(b => ({
+  const businessesWithStatus = businesses.map((b) => ({
     ...b,
-    isOpen: isOpenNow(b.hours)
+    isOpen: isOpenNow(b.hours),
   }));
 
   return { businesses: businessesWithStatus, totalCount };
