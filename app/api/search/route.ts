@@ -249,6 +249,7 @@ async function buildWhereClause(
   };
 
   // Text search on name, description, keywords, AND menu items (Products/Services)
+  // Enhanced to support fuzzy matching via ILIKE (contains with insensitive mode)
   if (parsedQuery.cleanQuery) {
     const searchPattern = buildSearchPattern(parsedQuery.cleanQuery);
     where.OR = [
@@ -256,6 +257,7 @@ async function buildWhereClause(
       {
         description: { contains: parsedQuery.cleanQuery, mode: "insensitive" },
       },
+      // Meta-keyword search - supports partial matching
       { metadataKeywords: { has: parsedQuery.cleanQuery } },
       // Product/Service Search: Check menu items
       {

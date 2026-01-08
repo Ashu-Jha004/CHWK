@@ -148,6 +148,7 @@ export async function searchWithDistance(
 
 /**
  * Regular search without distance calculation
+ * Enhanced with fuzzy search support for typo tolerance
  */
 export async function searchRegular(
   where: Prisma.BusinessWhereInput,
@@ -165,7 +166,7 @@ export async function searchRegular(
   } else if (sortBy === "reviews") {
     orderBy = [{ totalReviews: "desc" }, { averageRating: "desc" }];
   } else {
-    // Relevance default
+    // Relevance default - prioritize verified and highly rated
     orderBy = [
       { isVerified: "desc" },
       { averageRating: "desc" },

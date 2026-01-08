@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sheet";
 import { UserButton } from "@/components/auth/user-button";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { SearchBarWithSuggestions } from "@/components/search/search-bar-with-suggestions";
 import Image from "next/image";
 
 export function Header() {
@@ -340,24 +341,15 @@ export function Header() {
             )}
           </div>
 
-          {/* Scrolled Search Bar */}
+          {/* Scrolled Search Bar - Enhanced with Suggestions */}
           {!isMobile && isScrolled && (
             <div className="px-4 md:px-6 pb-4 animate-in fade-in slide-in-from-top-2">
-              <form
-                onSubmit={handleSearch}
-                className="max-w-2xl mx-auto flex gap-2"
-              >
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    placeholder="Search services..."
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Button type="submit">Search</Button>
-              </form>
+              <div className="max-w-2xl mx-auto">
+                <SearchBarWithSuggestions
+                  initialQuery={query}
+                  placeholder="Search for businesses, services, or categories..."
+                />
+              </div>
             </div>
           )}
 
