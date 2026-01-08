@@ -1,5 +1,5 @@
 // components/business-onboarding/steps/step2-location.tsx
-// Step 2: Location with auto-detection and reverse geocoding
+// Step 2: Location with auto-detection and premium orange theme
 
 "use client";
 
@@ -13,6 +13,7 @@ import {
   AlertCircle,
   CheckCircle2,
   MapPinned,
+  Compass,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,8 @@ import {
 import { StepWrapper } from "../step-wrapper";
 import { NavigationControls } from "../navigation-controls";
 import { FormField, FormGrid, FormSection } from "../form-fields";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type LocationStatus = "idle" | "detecting" | "success" | "error";
 
@@ -87,21 +90,12 @@ export function Step2Location() {
     return () => subscription.unsubscribe();
   }, [watch, updateLocation]);
 
-  // Detect location on mount if not already detected
-  useEffect(() => {
-    if (!location.isLocationDetected) {
-      handleDetectLocation();
-    } else {
-      setLocationStatus("success");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Handle location detection
   const handleDetectLocation = useCallback(async () => {
     try {
       setLocationStatus("detecting");
       setLocationError("");
+      const toastId = toast.loading("Accessing GPS...");
 
       console.log("[Location] 🎯 Detecting location...");
 
@@ -112,6 +106,7 @@ export function Step2Location() {
 
       // Validate coordinates are within India
       if (!isWithinIndiaBounds(coords.latitude, coords.longitude)) {
+        toast.dismiss(toastId);
         throw new Error(
           "Location detected outside India. Please enter your address manually."
         );
@@ -124,6 +119,7 @@ export function Step2Location() {
 
       // Start reverse geocoding
       setIsReverseGeocoding(true);
+      toast.loading("Resolving address...", { id: toastId });
       console.log("[Location] 🔄 Reverse geocoding...");
 
       const address = await reverseGeocode(coords.latitude, coords.longitude);
@@ -140,6 +136,7 @@ export function Step2Location() {
 
       setLocationStatus("success");
       setIsReverseGeocoding(false);
+      toast.success("Location pinpointed!", { id: toastId });
     } catch (error) {
       console.error("[Location] ❌ Error:", error);
 
@@ -151,6 +148,7 @@ export function Step2Location() {
       setLocationError(errorMessage);
       setLocationStatus("error");
       setIsReverseGeocoding(false);
+      toast.error(errorMessage);
 
       setValue("isLocationDetected", false);
       setValue("locationError", errorMessage);
@@ -159,129 +157,130 @@ export function Step2Location() {
 
   const onSubmit: SubmitHandler<LocationFormData> = async (data) => {
     try {
-      console.log("[Step 2] Location data:", data);
-
       // Validate required fields
       if (!data.latitude || !data.longitude) {
-        setLocationError(
-          "Please detect your location or enter coordinates manually"
-        );
+        toast.error("GPS coordinates missing. Please detect location.");
         return;
       }
 
-      // Save to store
       updateLocation(data);
       markStepComplete(2);
 
-      // Move to next step
+      toast.success("Location saved! Choose your business type.");
       nextStep();
     } catch (error) {
       console.error("[Step 2] Error:", error);
-      setLocationError("Failed to save location. Please try again.");
+      toast.error("Failed to save location details.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <StepWrapper
-        title="Business Location"
-        description="Help customers find you easily with accurate location information"
+        title="Physical Location"
+        description="Help customers find your doorstep with precision coordinates and address."
         step={2}
       >
         {/* Location Detection */}
-        <FormSection title="Detect Your Location">
-          <div className="space-y-4">
-            {/* Detection Button */}
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between p-4 bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg">
-              <div className="flex items-start gap-3">
-                <MapPinned className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
+        <FormSection title="Geographic Intelligence">
+          <div className="space-y-6">
+            {/* Detection Button Card */}
+            <div className="flex flex-col md:flex-row gap-6 items-center justify-between p-8 bg-gradient-to-br from-primary/5 via-primary/[0.02] to-amber-500/5 border-2 border-primary/20 rounded-3xl shadow-xl shadow-primary/5 relative overflow-hidden group">
+              {/* Decorative background icon */}
+              <Compass className="absolute -right-8 -bottom-8 w-32 h-32 text-primary/5 group-hover:rotate-45 transition-transform duration-1000" />
+
+              <div className="flex items-start gap-4 flex-1">
+                <div className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+                   <MapPinned className="w-6 h-6" />
+                </div>
                 <div>
-                  <h4 className="font-semibold text-foreground">
-                    Auto-detect location
+                  <h4 className="font-black text-lg text-foreground tracking-tight">
+                    Smart GPS Detection
                   </h4>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    We&apos;ll automatically fill in your address using your
-                    current location
+                  <p className="text-sm text-muted-foreground font-medium leading-relaxed max-w-sm">
+                    Leverage your device's GPS to automatically pin your business on the map for maximum accuracy.
                   </p>
                 </div>
               </div>
+
               <Button
                 type="button"
                 onClick={handleDetectLocation}
                 disabled={locationStatus === "detecting" || isReverseGeocoding}
-                variant="default"
                 size="lg"
-                className="w-full sm:w-auto flex-shrink-0"
+                className="w-full md:w-auto h-14 px-8 rounded-2xl bg-gradient-to-r from-primary to-orange-600 font-bold shadow-xl hover:shadow-primary/30 active:scale-95 transition-all gap-3 shrink-0"
               >
                 {locationStatus === "detecting" || isReverseGeocoding ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {isReverseGeocoding ? "Getting address..." : "Detecting..."}
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    {isReverseGeocoding ? "Resolving..." : "Locating..."}
                   </>
                 ) : (
                   <>
-                    <Navigation className="w-4 h-4 mr-2" />
-                    Detect Location
+                    <Navigation className="w-5 h-5" />
+                    Auto-detect Location
                   </>
                 )}
               </Button>
             </div>
 
-            {/* Status Messages */}
+            {/* Status Feedback */}
             {locationStatus === "success" && (
-              <Alert className="bg-green-50 border-green-200">
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  Location detected successfully! Please verify and update the
-                  address details if needed.
-                </AlertDescription>
-              </Alert>
+              <div className="p-4 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex items-center gap-3 animate-in zoom-in-95 duration-300">
+                <CheckCircle2 className="h-6 w-6 text-emerald-600 shrink-0" />
+                <p className="text-sm font-bold text-emerald-800">
+                  Location verified! We've pre-filled the address details below.
+                </p>
+              </div>
             )}
 
             {locationStatus === "error" && locationError && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="rounded-2xl border-2">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{locationError}</AlertDescription>
+                <AlertDescription className="font-bold">{locationError}</AlertDescription>
               </Alert>
             )}
 
             {/* Coordinates Display */}
             {watch("latitude") !== 0 && watch("longitude") !== 0 && (
-              <div className="p-3 bg-muted/50 rounded-lg border border-border">
-                <div className="flex items-center gap-2 text-sm">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Coordinates:</span>
-                  <code className="text-foreground font-mono text-xs bg-background px-2 py-1 rounded">
-                    {formatCoordinates(watch("latitude"), watch("longitude"))}
-                  </code>
+              <div className="flex items-center justify-center gap-4 py-3 px-6 bg-muted/30 rounded-full border-2 border-dashed border-border/50 max-w-fit mx-auto">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Coordinates Locked</span>
                 </div>
+                <div className="h-4 w-px bg-border" />
+                <code className="text-xs font-black text-primary tracking-tighter">
+                  {formatCoordinates(watch("latitude"), watch("longitude"))}
+                </code>
               </div>
             )}
           </div>
         </FormSection>
 
         {/* Address Details */}
-        <FormSection title="Address Details">
+        <FormSection title="Street Address">
           <FormField
             label="Address Line 1"
             required
             error={errors.addressLine1?.message}
-            hint="Building number, street name"
+            hint="Plot, Building, Floor and Street"
           >
             <Input
               {...register("addressLine1")}
-              placeholder="e.g., 123, MG Road"
+              placeholder="e.g., Suite 204, Global Heights, MG Road"
+              className="h-12 border-2 rounded-xl focus:border-primary focus:ring-primary/10 transition-all font-bold"
             />
           </FormField>
 
           <FormField
-            label="Address Line 2"
+            label="Address Line 2 (Optional)"
             error={errors.addressLine2?.message}
-            hint="Additional address details (optional)"
+            hint="Floor, Wing, or more details"
           >
             <Input
               {...register("addressLine2")}
-              placeholder="e.g., Near City Mall"
+              placeholder="e.g., Near City Center"
+              className="h-12 border-2 rounded-xl focus:border-primary focus:ring-primary/10 transition-all font-medium"
             />
           </FormField>
 
@@ -289,60 +288,73 @@ export function Step2Location() {
             <FormField
               label="Landmark"
               error={errors.landmark?.message}
-              hint="Nearby landmark for easy identification"
+              hint="Prominent nearby place"
             >
               <Input
                 {...register("landmark")}
-                placeholder="e.g., Opposite Metro Station"
+                placeholder="e.g., Opposite Central Bank"
+                className="h-12 border-2 rounded-xl focus:border-primary focus:ring-primary/10 transition-all font-medium"
               />
             </FormField>
 
             <FormField
               label="Area/Locality"
               error={errors.area?.message}
-              hint="Neighborhood or locality name"
+              hint="The general neighborhood name"
             >
               <Input
                 {...register("area")}
-                placeholder="e.g., Connaught Place"
+                placeholder="e.g., Downtown Metro"
+                className="h-12 border-2 rounded-xl focus:border-primary focus:ring-primary/10 transition-all font-medium"
               />
             </FormField>
           </FormGrid>
         </FormSection>
 
         {/* City, State, PIN */}
-        <FormSection title="City & State">
+        <FormSection title="City & Region">
           <FormGrid columns={3}>
             <FormField label="City" required error={errors.city?.message}>
-              <Input {...register("city")} placeholder="e.g., New Delhi" />
+              <Input
+                {...register("city")}
+                placeholder="New Delhi"
+                className="h-12 border-2 rounded-xl font-bold"
+              />
             </FormField>
 
             <FormField label="District" error={errors.district?.message}>
               <Input
                 {...register("district")}
-                placeholder="e.g., Central Delhi"
+                placeholder="Central Delhi"
+                className="h-12 border-2 rounded-xl"
               />
             </FormField>
 
             <FormField label="State" required error={errors.state?.message}>
-              <Input {...register("state")} placeholder="e.g., Delhi" />
+              <Input
+                {...register("state")}
+                placeholder="Delhi"
+                className="h-12 border-2 rounded-xl font-bold"
+              />
             </FormField>
           </FormGrid>
 
-          <FormField
-            label="PIN Code"
-            required
-            error={errors.pincode?.message}
-            hint="6-digit Indian postal code"
-          >
-            <Input
-              {...register("pincode")}
-              type="text"
-              placeholder="110001"
-              maxLength={6}
-              className="max-w-xs"
-            />
-          </FormField>
+          <div className="max-w-xs pt-4">
+            <FormField
+              label="PIN Code"
+              required
+              error={errors.pincode?.message}
+              hint="6-digit postal code"
+            >
+              <Input
+                {...register("pincode")}
+                type="text"
+                placeholder="110001"
+                maxLength={6}
+                className="h-14 border-2 rounded-xl text-xl font-black tracking-widest text-primary focus:bg-primary/5 transition-all text-center"
+              />
+            </FormField>
+          </div>
         </FormSection>
 
         {/* Hidden Fields */}

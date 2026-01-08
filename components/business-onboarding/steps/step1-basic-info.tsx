@@ -1,13 +1,13 @@
 /* eslint-disable react-hooks/incompatible-library */
 // components/business-onboarding/steps/step1-basic-info.tsx
-// Step 1: Basic business information collection (Final Fixed Version)
+// Step 1: Basic business information collection (Premium Orange Version)
 
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, Mail, Phone, Globe, MessageSquare } from "lucide-react";
+import { Building2, Mail, Phone, Globe, MessageSquare, Info, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -22,6 +22,8 @@ import {
 import { StepWrapper } from "../step-wrapper";
 import { NavigationControls } from "../navigation-controls";
 import { FormField, FormGrid, FormSection } from "../form-fields";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function Step1BasicInfo() {
   const basicInfo = useBasicInfo();
@@ -65,11 +67,8 @@ export function Step1BasicInfo() {
   } = form;
 
   // Watch form changes and auto-save to store
-  /* trunk-ignore(eslint) */
-
   useEffect(() => {
     const subscription = watch((value, { name, type }) => {
-      // ✅ FIXED: Only save on user interaction
       if (type === "change") {
         updateBasicInfo(value as Partial<BasicInfoFormData>);
       }
@@ -90,201 +89,219 @@ export function Step1BasicInfo() {
       updateBasicInfo(data);
       markStepComplete(1);
 
+      toast.success("Identity verified! Let's pin your location.");
+
       // Move to next step
       nextStep();
     } catch (error) {
       console.error("[Step 1] Error:", error);
+      toast.error("Something went wrong. Please check your inputs.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <StepWrapper
-        title="Basic Information"
-        description="Let's start with the essential details about your business"
+        title="Identity & Branding"
+        description="First, let's establish your business identity and how customers can reach you."
         step={1}
       >
         {/* Business Name */}
-        <FormSection title="Business Details">
+        <FormSection title="Business Presence">
           <FormField
             label="Business Name"
             required
             error={errors.name?.message}
-            hint="Enter the official name of your business as it appears on documents"
+            hint="Input the name customers know you by"
           >
-            <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="relative group">
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 {...register("name")}
-                placeholder="e.g., Sharma Restaurant"
-                className="pl-10"
+                placeholder="e.g., Golden Crust Bakery"
+                className="pl-11 h-12 border-2 focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
               />
             </div>
           </FormField>
 
           <FormField
-            label="Short Description"
+            label="Tagline / Short Description"
             error={errors.shortDescription?.message}
-            hint="A brief one-line description (max 255 characters)"
+            hint="A catchy one-liner (max 255 characters)"
           >
-            <Input
-              {...register("shortDescription")}
-              placeholder="e.g., Authentic North Indian cuisine"
-              maxLength={255}
-            />
+             <div className="relative group">
+              <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Input
+                {...register("shortDescription")}
+                placeholder="e.g., Authentic sourdough & artisan coffee"
+                maxLength={255}
+                className="pl-11 h-12 border-2 focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
+              />
+            </div>
           </FormField>
 
           <FormField
-            label="Detailed Description"
+            label="Business Story"
             error={errors.description?.message}
-            hint="Describe your business, services, specialties, and what makes you unique"
+            hint="Describe your legacy, specialties, and why customers choose you"
           >
             <textarea
               {...register("description")}
-              placeholder="Tell customers about your business..."
-              className="w-full min-h-30 px-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              placeholder="Tell your story here..."
+              className="w-full min-h-32 px-4 py-3 text-sm border-2 border-border rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary resize-none transition-all"
               maxLength={2000}
             />
           </FormField>
         </FormSection>
 
         {/* Contact Information */}
-        <FormSection title="Contact Information">
+        <FormSection title="Communication Channels">
           <FormGrid columns={2}>
             <FormField
-              label="Email Address"
+              label="Business Email"
               required
               error={errors.email?.message}
-              hint="Primary email for customer communication"
+              hint="Where you'll receive leads"
             >
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative group">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   {...register("email")}
                   type="email"
-                  placeholder="business@example.com"
-                  className="pl-10"
+                  placeholder="hello@bakery.com"
+                  className="pl-11 h-12 border-2 focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
                 />
               </div>
             </FormField>
 
             <FormField
-              label="Phone Number"
+              label="Primary Contact"
               required
               error={errors.phone?.message}
-              hint="10-digit mobile number"
+              hint="Main number for customers"
             >
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative group">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   {...register("phone")}
                   type="tel"
                   placeholder="9876543210"
                   maxLength={10}
-                  className="pl-10"
+                  className="pl-11 h-12 border-2 focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
                 />
               </div>
             </FormField>
 
             <FormField
-              label="Alternate Phone"
+              label="Secondary Contact"
               error={errors.alternatePhone?.message}
               hint="Optional backup number"
             >
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative group">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   {...register("alternatePhone")}
                   type="tel"
                   placeholder="9876543210"
                   maxLength={10}
-                  className="pl-10"
+                  className="pl-11 h-12 border-2 focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
                 />
               </div>
             </FormField>
 
             <FormField
-              label="WhatsApp Number"
+              label="WhatsApp Business"
               error={errors.whatsappNumber?.message}
-              hint="For quick customer communication"
+              hint="For direct customer chats"
             >
-              <div className="relative">
-                <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative group">
+                <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   {...register("whatsappNumber")}
                   type="tel"
                   placeholder="9876543210"
                   maxLength={10}
-                  className="pl-10"
+                  className="pl-11 h-12 border-2 focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
                 />
               </div>
             </FormField>
           </FormGrid>
 
           <FormField
-            label="Website"
+            label="Digital Presence"
             error={errors.website?.message}
-            hint="Your business website URL (optional)"
+            hint="Your official website or store URL"
           >
-            <div className="relative">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="relative group">
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 {...register("website")}
                 type="url"
-                placeholder="https://www.yourbusiness.com"
-                className="pl-10"
+                placeholder="https://www.goldencrust.in"
+                className="pl-11 h-12 border-2 focus:border-primary focus:ring-primary/20 transition-all rounded-xl"
               />
             </div>
           </FormField>
         </FormSection>
 
         {/* Business Chain Information */}
-        <FormSection title="Chain Information (Optional)">
-          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
-            <div className="space-y-0.5">
-              <Label className="text-base font-medium">
-                Is your business part of a chain?
+        <FormSection title="Expansion & Chain Info">
+          <div className={cn(
+             "flex items-center justify-between p-6 rounded-2xl border-2 transition-all",
+             isPartOfChain ? "border-primary bg-primary/5 shadow-md shadow-primary/5" : "bg-muted/30 border-border"
+          )}>
+            <div className="space-y-1">
+              <Label className="text-lg font-bold">
+                Part of a Multi-outlet Chain?
               </Label>
-              <p className="text-sm text-muted-foreground">
-                Enable this if you have multiple branches or outlets
+              <p className="text-sm text-muted-foreground font-medium">
+                Manage multiple branches from a single identifier
               </p>
             </div>
             <Switch
               checked={isPartOfChain}
-              onCheckedChange={setIsPartOfChain}
+              onCheckedChange={(checked) => {
+                setIsPartOfChain(checked);
+                toast.info(checked ? "Chain mode enabled" : "Single outlet mode enabled");
+              }}
+              className="data-[state=checked]:bg-primary"
             />
           </div>
 
           {isPartOfChain && (
-            <div className="space-y-4 animate-fade-in-up">
-              <FormField
-                label="Chain Name"
-                required
-                error={errors.chainName?.message}
-                hint="Enter the name of your business chain"
-              >
-                <Input
-                  {...register("chainName")}
-                  placeholder="e.g., Sharma Restaurant Chain"
-                />
-              </FormField>
+            <div className="space-y-6 pt-6 animate-in fade-in slide-in-from-top-4 duration-500">
+               <FormGrid columns={2}>
+                <FormField
+                  label="Chain Name"
+                  required
+                  error={errors.chainName?.message}
+                  hint="The umbrella brand name"
+                >
+                  <Input
+                    {...register("chainName")}
+                    placeholder="e.g., Golden Crust Group"
+                    className="h-12 border-2 rounded-xl"
+                  />
+                </FormField>
 
-              <FormField
-                label="Branch Name"
-                error={errors.branchName?.message}
-                hint="Specific location/branch identifier (e.g., 'Connaught Place', 'Sector 18')"
-              >
-                <Input
-                  {...register("branchName")}
-                  placeholder="e.g., Connaught Place"
-                />
-              </FormField>
+                <FormField
+                  label="Branch Identity"
+                  error={errors.branchName?.message}
+                  hint="Which outlet is this?"
+                >
+                  <Input
+                    {...register("branchName")}
+                    placeholder="e.g., South Ex Branch"
+                    className="h-12 border-2 rounded-xl"
+                  />
+                </FormField>
+              </FormGrid>
 
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-800">
-                  <strong>Note:</strong> Chain management will help customers
-                  find all your branches. You can add more branches later from
-                  your dashboard.
+              <div className="p-4 bg-primary/5 border border-primary/20 rounded-2xl flex gap-3">
+                <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <p className="text-xs text-foreground/80 leading-relaxed font-medium">
+                  <strong>Network Advantage:</strong> Chain management links all your outlets together,
+                  allowing customers to discover your entire presence across different locations.
                 </p>
               </div>
             </div>

@@ -105,9 +105,8 @@ function CategoriesLoading() {
  * Main Categories Page Component
  * Now fetches directly from database (no API call)
  */
-// Enable dynamic rendering for debugging and realtime data
-export const dynamic = 'force-dynamic';
-// export const revalidate = 3600;
+// Enable ISR with short revalidation for production
+export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function CategoriesPage() {
   // Fetch directly from database - single query

@@ -1,14 +1,14 @@
 /* eslint-disable react-hooks/incompatible-library */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // components/business-onboarding/steps/step4-business-hours.tsx
-// Step 4: Business operating hours with split shift support (Fixed)
+// Step 4: Business operating hours with premium orange theme
 
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Clock, Sun, Moon, AlertCircle } from "lucide-react";
+import { Clock, Sun, Moon, AlertCircle, Copy, CheckCircle2, CalendarDays } from "lucide-react";
 import { DayOfWeek } from "@prisma/client";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -27,6 +27,7 @@ import { StepWrapper } from "../step-wrapper";
 import { NavigationControls } from "../navigation-controls";
 import { FormField, FormSection } from "../form-fields";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface DayHours {
   dayOfWeek: DayOfWeek;
@@ -85,7 +86,6 @@ export function Step4BusinessHours() {
         splitReopenTime: h.splitReopenTime || "",
       }));
     }
-    // Start with all days closed
     return DAYS_OF_WEEK.map((day) => ({
       ...DEFAULT_HOURS,
       dayOfWeek: day.value,
@@ -120,7 +120,6 @@ export function Step4BusinessHours() {
   useEffect(() => {
     setValue("is24x7", is24x7);
 
-    // Clean hours data
     const cleanedHours = hours.map((hour) => ({
       dayOfWeek: hour.dayOfWeek,
       isClosed: hour.isClosed,
@@ -163,14 +162,15 @@ export function Step4BusinessHours() {
       }))
     );
     setHasModified(true);
+    toast.success(`Schedule copied to all days!`);
   };
 
   const handle24x7Toggle = (checked: boolean) => {
     setIs24x7(checked);
     setHasModified(true);
+    toast.info(checked ? "24/7 Mode Active" : "Custom Schedule Mode active");
   };
 
-  // Check if can proceed
   const hasValidHours = hours.some(
     (h) => !h.isClosed && h.openTime && h.closeTime
   );
@@ -178,7 +178,6 @@ export function Step4BusinessHours() {
 
   const onSubmit: SubmitHandler<BusinessHoursFormData> = async (data) => {
     try {
-      // Clean the data before submission
       const cleanedData = {
         is24x7: data.is24x7,
         hours: data.hours.map((hour) => ({
@@ -198,109 +197,113 @@ export function Step4BusinessHours() {
         })),
       };
 
-      console.log("[Step 4] Submitting business hours:", cleanedData);
-
-      // Validate
       const validation = businessHoursSchema.safeParse(cleanedData);
       if (!validation.success) {
-        console.error("[Step 4] Validation failed:", validation.error);
+        toast.error("Please fix opening/closing time errors.");
         return;
       }
 
       updateBusinessHours(cleanedData);
       markStepComplete(4);
+      toast.success("Schedule saved! Now let's refine your offerings.");
       nextStep();
     } catch (error) {
       console.error("[Step 4] Error:", error);
+      toast.error("Failed to save schedule.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <StepWrapper
-        title="Business Hours"
-        description="Set your operating hours to let customers know when you're available"
+        title="Operating Schedule"
+        description="Customers need to know when they can visit or contact you. Set your rhythm here."
         step={4}
       >
         {/* 24x7 Toggle */}
-        <FormSection title="Operating Schedule">
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-lg">
-            <div className="space-y-0.5">
-              <Label className="text-base font-medium flex items-center gap-2">
-                <Clock className="w-5 h-5 text-primary" />
-                Open 24 Hours, 7 Days a Week
+        <FormSection title="Full-Time Availability">
+          <div className={cn(
+             "flex items-center justify-between p-6 rounded-3xl border-2 transition-all duration-500",
+             is24x7 ? "border-primary bg-primary/5 shadow-xl shadow-primary/5" : "bg-muted/30 border-border"
+          )}>
+            <div className="space-y-1">
+              <Label className="text-xl font-black flex items-center gap-3">
+                <div className={cn(
+                  "p-2 rounded-xl transition-colors",
+                  is24x7 ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                )}>
+                  <Clock className="w-6 h-6" />
+                </div>
+                Always Open (24/7)
               </Label>
-              <p className="text-sm text-muted-foreground">
-                Your business is always open (e.g., hospitals, petrol pumps)
+              <p className="text-sm text-muted-foreground font-medium pl-11">
+                Enable for hospitals, gas stations, or emergency services.
               </p>
             </div>
-            <Switch checked={is24x7} onCheckedChange={handle24x7Toggle} />
+            <Switch
+              checked={is24x7}
+              onCheckedChange={handle24x7Toggle}
+              className="data-[state=checked]:bg-primary scale-125"
+            />
           </div>
 
-          {/* Show error if not valid */}
           {!canProceed && hasModified && !is24x7 && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Please set business hours for at least one day
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {errors.hours && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{errors.hours.message}</AlertDescription>
-            </Alert>
+            <div className="mt-6 p-4 bg-destructive/5 border-2 border-destructive/20 rounded-2xl flex items-center gap-3 animate-in fade-in duration-300">
+               <AlertCircle className="h-5 w-5 text-destructive" />
+               <p className="text-sm font-bold text-destructive">Please set hours for at least one operating day.</p>
+            </div>
           )}
         </FormSection>
 
         {/* Daily Hours (hidden if 24x7) */}
         {!is24x7 && (
-          <FormSection title="Set Hours for Each Day">
+          <FormSection title="Custom Weekly Rhythm">
             <div className="space-y-4">
               {hours.map((dayHour, index) => {
                 const dayInfo = DAYS_OF_WEEK[index];
+                const isOpen = !dayHour.isClosed;
+
                 return (
                   <div
                     key={dayHour.dayOfWeek}
                     className={cn(
-                      "p-4 rounded-lg border transition-all",
-                      dayHour.isClosed
-                        ? "bg-muted/30 border-muted"
-                        : "bg-background border-border"
+                      "p-6 rounded-3xl border-2 transition-all duration-300",
+                      !isOpen
+                        ? "bg-muted/20 border-border/50 grayscale opacity-60"
+                        : "bg-background border-primary/20 shadow-lg shadow-primary/5"
                     )}
                   >
                     {/* Day Header */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                      <div className="flex items-center gap-3">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
+                      <div className="flex items-center gap-4">
                         <div
                           className={cn(
-                            "flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm",
-                            dayHour.isClosed
+                            "flex items-center justify-center w-12 h-12 rounded-2xl font-black text-xs uppercase tracking-tighter transition-all duration-500",
+                            !isOpen
                               ? "bg-muted text-muted-foreground"
-                              : "bg-primary/10 text-primary"
+                              : "bg-gradient-to-br from-primary to-orange-600 text-white shadow-lg shadow-primary/20"
                           )}
                         >
                           {dayInfo.short}
                         </div>
                         <div>
-                          <h4 className="font-semibold text-foreground">
+                          <h4 className="font-black text-xl text-foreground tracking-tight">
                             {dayInfo.label}
                           </h4>
-                          {dayHour.isClosed && (
-                            <p className="text-xs text-muted-foreground">
-                              Closed
-                            </p>
-                          )}
+                          <p className={cn(
+                            "text-xs font-bold",
+                            !isOpen ? "text-muted-foreground" : "text-primary"
+                          )}>
+                            {isOpen ? "Operating Today" : "Closed / Holiday"}
+                          </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-4 bg-muted/30 p-2 rounded-2xl">
+                        <div className="flex items-center gap-3 px-3">
                           <Label
                             htmlFor={`closed-${dayHour.dayOfWeek}`}
-                            className="text-sm"
+                            className="text-xs font-black uppercase tracking-widest text-muted-foreground"
                           >
                             Closed
                           </Label>
@@ -310,31 +313,34 @@ export function Step4BusinessHours() {
                             onCheckedChange={(checked) =>
                               updateDayHours(index, { isClosed: checked })
                             }
+                            className="data-[state=checked]:bg-muted-foreground"
                           />
                         </div>
 
-                        {!dayHour.isClosed && (
+                        {isOpen && (
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={() => copyToAllDays(index)}
-                            className="text-xs"
+                            className="h-8 gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-primary/10 hover:text-primary transition-all"
                           >
-                            Copy to all
+                            <Copy className="w-3 h-3" />
+                            Apply Everywhere
                           </Button>
                         )}
                       </div>
                     </div>
 
                     {/* Time Inputs */}
-                    {!dayHour.isClosed && (
-                      <div className="space-y-4">
+                    {isOpen && (
+                      <div className="space-y-6 animate-in slide-in-from-top-2 duration-500">
                         {/* Regular Hours */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <FormField label="Opening Time">
-                            <div className="relative">
-                              <Sun className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                           <div className="space-y-2">
+                             <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Opening Time</Label>
+                             <div className="relative group">
+                              <Sun className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-amber-500 group-focus-within:animate-spin-slow" />
                               <Input
                                 type="time"
                                 value={dayHour.openTime}
@@ -343,14 +349,15 @@ export function Step4BusinessHours() {
                                     openTime: e.target.value,
                                   })
                                 }
-                                className="pl-10"
+                                className="pl-12 h-14 border-2 rounded-2xl font-black text-lg focus:border-primary focus:ring-primary/10 transition-all"
                               />
-                            </div>
-                          </FormField>
+                             </div>
+                           </div>
 
-                          <FormField label="Closing Time">
-                            <div className="relative">
-                              <Moon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                           <div className="space-y-2">
+                             <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Closing Time</Label>
+                             <div className="relative group">
+                              <Moon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-indigo-500" />
                               <Input
                                 type="time"
                                 value={dayHour.closeTime}
@@ -359,14 +366,14 @@ export function Step4BusinessHours() {
                                     closeTime: e.target.value,
                                   })
                                 }
-                                className="pl-10"
+                                className="pl-12 h-14 border-2 rounded-2xl font-black text-lg focus:border-primary focus:ring-primary/10 transition-all"
                               />
-                            </div>
-                          </FormField>
+                             </div>
+                           </div>
                         </div>
 
                         {/* Split Shift Toggle */}
-                        <div className="flex items-center gap-2 text-sm">
+                        <div className="flex items-center gap-3 p-4 bg-muted/20 rounded-2xl border-2 border-dashed">
                           <Switch
                             id={`split-${dayHour.dayOfWeek}`}
                             checked={dayHour.hasSplitShift}
@@ -374,39 +381,41 @@ export function Step4BusinessHours() {
                               updateDayHours(index, { hasSplitShift: checked })
                             }
                           />
-                          <Label htmlFor={`split-${dayHour.dayOfWeek}`}>
-                            Has lunch break / split shift
+                          <Label htmlFor={`split-${dayHour.dayOfWeek}`} className="text-sm font-bold cursor-pointer">
+                            Enable Afternoon Break / Split Shift
                           </Label>
                         </div>
 
                         {/* Split Shift Times */}
                         {dayHour.hasSplitShift && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-4 border-l-2 border-primary/20 animate-fade-in-up">
-                            <FormField label="Break Start">
-                              <Input
-                                type="time"
-                                value={dayHour.splitCloseTime}
-                                onChange={(e) =>
-                                  updateDayHours(index, {
-                                    splitCloseTime: e.target.value,
-                                  })
-                                }
-                                placeholder="13:00"
-                              />
-                            </FormField>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 bg-primary/5 rounded-3xl border-2 border-primary/10 animate-in zoom-in-95 duration-500">
+                             <div className="space-y-2">
+                               <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Break Starts</Label>
+                               <Input
+                                  type="time"
+                                  value={dayHour.splitCloseTime}
+                                  onChange={(e) =>
+                                    updateDayHours(index, {
+                                      splitCloseTime: e.target.value,
+                                    })
+                                  }
+                                  className="h-12 border-2 rounded-xl font-bold focus:border-primary transition-all text-center"
+                                />
+                             </div>
 
-                            <FormField label="Break End">
-                              <Input
-                                type="time"
-                                value={dayHour.splitReopenTime}
-                                onChange={(e) =>
-                                  updateDayHours(index, {
-                                    splitReopenTime: e.target.value,
-                                  })
-                                }
-                                placeholder="14:00"
-                              />
-                            </FormField>
+                             <div className="space-y-2">
+                               <Label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Resume Operations</Label>
+                               <Input
+                                  type="time"
+                                  value={dayHour.splitReopenTime}
+                                  onChange={(e) =>
+                                    updateDayHours(index, {
+                                      splitReopenTime: e.target.value,
+                                    })
+                                  }
+                                  className="h-12 border-2 rounded-xl font-bold focus:border-primary transition-all text-center"
+                                />
+                             </div>
                           </div>
                         )}
                       </div>
@@ -416,13 +425,18 @@ export function Step4BusinessHours() {
               })}
             </div>
 
-            {/* Helper Text */}
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-xs text-blue-800">
-                <strong>Tip:</strong> Use the &quot;Copy to all&quot; button to
-                quickly set the same hours for all days, then adjust individual
-                days as needed.
-              </p>
+            {/* Helper Callout */}
+            <div className="mt-8 p-6 bg-gradient-to-br from-primary/10 to-amber-500/10 border-2 border-primary/20 rounded-3xl flex items-start gap-4">
+               <div className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+                  <CalendarDays className="w-6 h-6" />
+               </div>
+               <div>
+                 <h4 className="font-black text-primary tracking-tight mb-1">Expert Tip</h4>
+                 <p className="text-sm text-foreground/80 font-medium leading-relaxed">
+                   Set your hours accurately to avoid customer disappointment. Use <strong>Apply Everywhere</strong> to
+                   instantly populate your busiest days, then tweak your weekends separately!
+                 </p>
+               </div>
             </div>
           </FormSection>
         )}

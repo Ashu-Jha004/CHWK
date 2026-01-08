@@ -1,5 +1,5 @@
 // components/business-onboarding/steps/step6-documentation.tsx
-// Step 6: Document upload with Cloudinary
+// Step 6: Document upload with premium orange theme and Cloudinary integration
 
 "use client";
 
@@ -14,6 +14,8 @@ import {
   Loader2,
   AlertCircle,
   Info,
+  ShieldCheck,
+  FileCheck,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -35,6 +37,8 @@ import {
 import { StepWrapper } from "../step-wrapper";
 import { NavigationControls } from "../navigation-controls";
 import { FormField, FormSection } from "../form-fields";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface UploadedDocument {
   type: string;
@@ -80,7 +84,6 @@ export function Step6Documentation() {
   const [uploadStates, setUploadStates] = useState<
     Map<string, FileUploadState>
   >(new Map());
-  const [uploadError, setUploadError] = useState<string>("");
 
   const form = useForm<DocumentationFormData>({
     resolver: zodResolver(documentationSchema),
@@ -108,16 +111,15 @@ export function Step6Documentation() {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      setUploadError("");
-
       // Validate file
       const validation = validateFile(file);
       if (!validation.valid) {
-        setUploadError(validation.error || "Invalid file");
+        toast.error(validation.error || "Invalid file selected");
         return;
       }
 
       const uploadId = `${documentType}-${Date.now()}`;
+      const uploadToast = toast.loading(`Uploading ${documentType}...`);
 
       // Initialize upload state
       setUploadStates((prev) =>
@@ -147,8 +149,6 @@ export function Step6Documentation() {
           }
         );
 
-        console.log("[Upload] Success:", result);
-
         // Update upload state to success
         setUploadStates((prev) => {
           const newMap = new Map(prev);
@@ -174,6 +174,7 @@ export function Step6Documentation() {
 
         // Update store
         updateDocumentation({ documents: updatedDocuments });
+        toast.success(`${documentType} uploaded!`, { id: uploadToast });
 
         // Clear upload state after 2 seconds
         setTimeout(() => {
@@ -184,11 +185,9 @@ export function Step6Documentation() {
           });
         }, 2000);
       } catch (error) {
-        console.error("[Upload] Error:", error);
-
         const errorMessage =
           error instanceof Error ? error.message : "Upload failed";
-        setUploadError(errorMessage);
+        toast.error(errorMessage, { id: uploadToast });
 
         // Update upload state to error
         setUploadStates((prev) => {
@@ -210,209 +209,223 @@ export function Step6Documentation() {
   );
 
   const removeDocument = (index: number) => {
+    const docToRemove = documents[index];
     const updatedDocuments = documents.filter((_, i) => i !== index);
     setDocuments(updatedDocuments);
     setValue("documents", updatedDocuments);
     updateDocumentation({ documents: updatedDocuments });
+    toast.info(`${docToRemove.type} removed`);
   };
 
   const onSubmit: SubmitHandler<DocumentationFormData> = async (data) => {
     try {
-      console.log("[Step 6] Documentation data:", data);
-
       updateDocumentation(data);
       markStepComplete(6);
+      toast.success("Documents verified! Almost there.");
       nextStep();
     } catch (error) {
-      console.error("[Step 6] Error:", error);
+       console.error("[Step 6] Error:", error);
+       toast.error("Failed to save documentation.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <StepWrapper
-        title="Business Documentation"
-        description="Upload required documents to verify your business"
+        title="Verification & Trust"
+        description="Securely upload your business credentials to unlock merchant features."
         step={6}
       >
-        {/* Info Alert */}
-        <Alert className="bg-blue-50 border-blue-200">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
-            <strong>Required:</strong> At least one identity document
-            (Aadhaar/PAN/License). Upload clear, readable documents. Max file
-            size: 10MB per file.
-          </AlertDescription>
-        </Alert>
+        {/* Compliance Guard Alert */}
+        <div className="p-6 bg-gradient-to-br from-indigo-50 to-blue-50 border-2 border-indigo-100 rounded-3xl flex gap-4 items-start shadow-xl shadow-indigo-500/5">
+           <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
+             <ShieldCheck className="w-6 h-6" />
+           </div>
+           <div>
+             <h4 className="text-lg font-black text-indigo-900 tracking-tight mb-1">KYC Compliance</h4>
+             <p className="text-sm text-indigo-700/80 font-medium leading-relaxed">
+               For security, we require at least one government ID. All documents are stored using
+               enterprise-grade encryption and only used for verification purposes.
+             </p>
+           </div>
+        </div>
 
         {/* GST & PAN */}
-        <FormSection title="Tax Information (Optional)">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormSection title="Tax Identifiers">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               label="GST Number"
               error={errors.gstNumber?.message}
-              hint="15-digit GSTIN (optional)"
+              hint="15-digit GSTIN (optional but recommended)"
             >
-              <Input
-                {...register("gstNumber")}
-                placeholder="22AAAAA0000A1Z5"
-                maxLength={15}
-                className="uppercase"
-              />
+              <div className="relative group">
+                <Input
+                  {...register("gstNumber")}
+                  placeholder="22AAAAA0000A1Z5"
+                  maxLength={15}
+                  className="h-12 border-2 rounded-xl focus:border-primary focus:ring-primary/10 transition-all font-black uppercase tracking-wider"
+                />
+              </div>
             </FormField>
 
             <FormField
               label="PAN Number"
               error={errors.panNumber?.message}
-              hint="10-character PAN (optional)"
+              hint="10-character business or personal PAN"
             >
-              <Input
-                {...register("panNumber")}
-                placeholder="AAAAA0000A"
-                maxLength={10}
-                className="uppercase"
-              />
+              <div className="relative group">
+                <Input
+                  {...register("panNumber")}
+                  placeholder="AAAAA0000A"
+                  maxLength={10}
+                  className="h-12 border-2 rounded-xl focus:border-primary focus:ring-primary/10 transition-all font-black uppercase tracking-wider"
+                />
+              </div>
             </FormField>
           </div>
         </FormSection>
 
         {/* Document Uploads */}
-        <FormSection title="Upload Documents">
+        <FormSection title="Verifiable Credentials">
           {errors.documents && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{errors.documents.message}</AlertDescription>
-            </Alert>
+            <div className="mb-6 p-4 bg-destructive/10 border-2 border-destructive/20 rounded-2xl flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              <p className="text-sm font-bold text-destructive">{errors.documents.message}</p>
+            </div>
           )}
 
-          {uploadError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{uploadError}</AlertDescription>
-            </Alert>
-          )}
+          <div className="grid grid-cols-1 gap-4">
+            {DOCUMENT_TYPES.map((docType) => {
+              const uploadedDocs = documents.filter((doc) => doc.type === docType.value);
+              const isUploaded = uploadedDocs.length > 0;
 
-          <div className="space-y-4">
-            {DOCUMENT_TYPES.map((docType) => (
-              <div key={docType.value} className="p-4 border rounded-lg">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-primary" />
-                    <div>
-                      <h4 className="font-medium text-foreground">
-                        {docType.label}
-                        {docType.required && (
-                          <span className="text-destructive ml-1">*</span>
-                        )}
-                      </h4>
-                      <p className="text-xs text-muted-foreground">
-                        JPG, PNG, WEBP, or PDF • Max 10MB
-                      </p>
+              return (
+                <div
+                  key={docType.value}
+                  className={cn(
+                    "p-6 rounded-3xl border-2 transition-all duration-300",
+                    isUploaded
+                      ? "bg-emerald-50 border-emerald-100 shadow-md shadow-emerald-500/5"
+                      : "bg-background border-border hover:border-primary/20 hover:bg-muted/10"
+                  )}
+                >
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors",
+                        isUploaded ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
+                      )}>
+                        {isUploaded ? <FileCheck className="w-6 h-6" /> : <FileText className="w-6 h-6" />}
+                      </div>
+                      <div>
+                        <h4 className="font-black text-lg text-foreground tracking-tight flex items-center gap-2">
+                          {docType.label}
+                          {docType.required && !isUploaded && (
+                            <Badge variant="destructive" className="h-5 px-1.5 text-[8px] uppercase tracking-tighter">Required</Badge>
+                          )}
+                        </h4>
+                        <p className="text-xs text-muted-foreground font-medium">
+                          Accepts PDF, JPG, PNG • Up to 10MB
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <label htmlFor={`upload-${docType.value}`} className="cursor-pointer">
+                        <input
+                          id={`upload-${docType.value}`}
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
+                          onChange={(e) => handleFileSelect(e, docType.value)}
+                          className="hidden"
+                        />
+                        <Button
+                          type="button"
+                          variant={isUploaded ? "outline" : "default"}
+                          size="lg"
+                          onClick={() =>
+                            document
+                              .getElementById(`upload-${docType.value}`)
+                              ?.click()
+                          }
+                          className={cn(
+                            "rounded-2xl h-12 px-6 font-bold transition-all",
+                            !isUploaded && "bg-gradient-to-r from-primary to-orange-600 shadow-lg shadow-primary/20"
+                          )}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {isUploaded ? "Replace" : "Upload Document"}
+                        </Button>
+                      </label>
                     </div>
                   </div>
 
-                  <label htmlFor={`upload-${docType.value}`}>
-                    <input
-                      id={`upload-${docType.value}`}
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp,application/pdf"
-                      onChange={(e) => handleFileSelect(e, docType.value)}
-                      className="hidden"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        document
-                          .getElementById(`upload-${docType.value}`)
-                          ?.click()
-                      }
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload
-                    </Button>
-                  </label>
-                </div>
+                  {/* Upload Progress Individual */}
+                  {Array.from(uploadStates.entries()).map(([id, state]) => {
+                    if (!id.startsWith(docType.value)) return null;
 
-                {/* Upload Progress */}
-                {Array.from(uploadStates.entries()).map(([id, state]) => {
-                  if (!id.startsWith(docType.value)) return null;
-
-                  return (
-                    <div key={id} className="mt-2 p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium truncate flex-1">
-                          {state.file.name}
-                        </span>
+                    return (
+                      <div key={id} className="mt-4 p-4 bg-muted/50 rounded-2xl border-2 border-dashed border-primary/20">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-bold truncate max-w-[200px]">
+                            {state.file.name}
+                          </span>
+                          {state.status === "uploading" && (
+                            <div className="flex items-center gap-2">
+                               <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                               <span className="text-[10px] font-black">{Math.round(state.progress)}%</span>
+                            </div>
+                          )}
+                        </div>
                         {state.status === "uploading" && (
-                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                        )}
-                        {state.status === "success" && (
-                          <Check className="w-4 h-4 text-green-600" />
-                        )}
-                        {state.status === "error" && (
-                          <AlertCircle className="w-4 h-4 text-destructive" />
+                          <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                            <div
+                              className="bg-primary h-full rounded-full transition-all duration-300"
+                              style={{ width: `${state.progress}%` }}
+                            />
+                          </div>
                         )}
                       </div>
+                    );
+                  })}
 
-                      {state.status === "uploading" && (
-                        <div className="w-full bg-muted rounded-full h-2">
-                          <div
-                            className="bg-primary h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${state.progress}%` }}
-                          />
-                        </div>
-                      )}
-
-                      {state.status === "error" && state.error && (
-                        <p className="text-xs text-destructive mt-1">
-                          {state.error}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-
-                {/* Uploaded Documents */}
-                {documents
-                  .filter((doc) => doc.type === docType.value)
-                  .map((doc, index) => (
+                  {/* Uploaded List For This Type */}
+                  {uploadedDocs.map((doc, idx) => (
                     <div
-                      key={index}
-                      className="mt-2 flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
+                      key={idx}
+                      className="mt-4 flex items-center justify-between p-4 bg-white border-2 border-emerald-100 rounded-2xl shadow-sm"
                     >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <Check className="w-4 h-4 text-green-600 shrink-0" />
-                        <span className="text-sm font-medium text-green-800 truncate">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="p-2 bg-emerald-100 rounded-xl">
+                           <Check className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <span className="text-sm font-black text-emerald-950 truncate">
                           {doc.fileName}
                         </span>
-                        <Badge variant="secondary" className="shrink-0 text-xs">
-                          Uploaded
-                        </Badge>
                       </div>
                       <Button
                         type="button"
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => removeDocument(documents.indexOf(doc))}
-                        className="shrink-0 ml-2"
+                        className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
                       >
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
                   ))}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
 
-          {/* Summary */}
+          {/* Verification Progress Badge */}
           {documents.length > 0 && (
-            <div className="p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm font-medium text-foreground">
-                {documents.length} document{documents.length !== 1 ? "s" : ""}{" "}
-                uploaded
-              </p>
+            <div className="mt-8 p-4 bg-primary/5 rounded-2xl border-2 border-dashed border-primary/20 flex items-center justify-center gap-2">
+               <ShieldCheck className="w-5 h-5 text-primary" />
+               <span className="text-xs font-black uppercase tracking-widest text-primary">
+                 {documents.length} of {DOCUMENT_TYPES.length} document hooks established
+               </span>
             </div>
           )}
         </FormSection>

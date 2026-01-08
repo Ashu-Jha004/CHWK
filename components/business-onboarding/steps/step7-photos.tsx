@@ -1,5 +1,5 @@
 // components/business-onboarding/steps/step7-photos.tsx
-// Step 7: Business photos and media upload (Fixed)
+// Step 7: Business photos and media upload with premium orange gallery UI
 
 "use client";
 
@@ -13,11 +13,13 @@ import {
   Check,
   Loader2,
   AlertCircle,
-  Info,
   Star,
+  Camera,
+  Layers,
+  Sparkles,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
   photosSchema,
@@ -35,6 +37,8 @@ import {
 import { StepWrapper } from "../step-wrapper";
 import { NavigationControls } from "../navigation-controls";
 import { FormSection } from "../form-fields";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface PhotoUploadState {
   file: File;
@@ -66,7 +70,6 @@ export function Step7Photos() {
   const [uploadStates, setUploadStates] = useState<
     Map<string, PhotoUploadState>
   >(new Map());
-  const [uploadError, setUploadError] = useState<string>("");
 
   const form = useForm<PhotosFormData>({
     resolver: zodResolver(photosSchema),
@@ -92,27 +95,21 @@ export function Step7Photos() {
       const file = event.target.files?.[0];
       if (!file) return;
 
-      setUploadError("");
-
-      // Validate file
       const validation = validateFile(file);
       if (!validation.valid) {
-        setUploadError(validation.error || "Invalid file");
+        toast.error(validation.error || "File validation failed");
         return;
       }
 
-      // Check if it's an image
       if (!file.type.startsWith("image/")) {
-        setUploadError("Only image files are allowed");
+        toast.error("Please upload an image file");
         return;
       }
 
       const uploadId = `${type}-${Date.now()}`;
-
-      // Create preview
       const preview = URL.createObjectURL(file);
+      const toastId = toast.loading(`Uploading ${type}...`);
 
-      // Initialize upload state
       setUploadStates((prev) =>
         new Map(prev).set(uploadId, {
           file,
@@ -123,7 +120,6 @@ export function Step7Photos() {
       );
 
       try {
-        // Upload to Cloudinary
         const result = await uploadToCloudinary(
           file,
           (progress: UploadProgress) => {
@@ -141,9 +137,6 @@ export function Step7Photos() {
           }
         );
 
-        console.log("[Photo Upload] Success:", result);
-
-        // Update upload state to success
         setUploadStates((prev) => {
           const newMap = new Map(prev);
           newMap.set(uploadId, {
@@ -156,7 +149,6 @@ export function Step7Photos() {
           return newMap;
         });
 
-        // Update respective state based on type
         if (type === "logo") {
           setLogoUrl(result.secure_url);
           setValue("logoUrl", result.secure_url);
@@ -169,7 +161,6 @@ export function Step7Photos() {
           setValue("photoUrls", updatedPhotos);
         }
 
-        // Update store
         updatePhotos({
           logoUrl: type === "logo" ? result.secure_url : logoUrl,
           coverImageUrl: type === "cover" ? result.secure_url : coverImageUrl,
@@ -177,7 +168,8 @@ export function Step7Photos() {
             type === "gallery" ? [...photoUrls, result.secure_url] : photoUrls,
         });
 
-        // Clear upload state after 2 seconds
+        toast.success(`${type} updated successfully!`, { id: toastId });
+
         setTimeout(() => {
           setUploadStates((prev) => {
             const newMap = new Map(prev);
@@ -187,11 +179,8 @@ export function Step7Photos() {
           URL.revokeObjectURL(preview);
         }, 2000);
       } catch (error) {
-        console.error("[Photo Upload] Error:", error);
-
-        const errorMessage =
-          error instanceof Error ? error.message : "Upload failed";
-        setUploadError(errorMessage);
+        const errorMessage = error instanceof Error ? error.message : "Upload failed";
+        toast.error(errorMessage, { id: toastId });
 
         setUploadStates((prev) => {
           const newMap = new Map(prev);
@@ -204,11 +193,8 @@ export function Step7Photos() {
           });
           return newMap;
         });
-
         URL.revokeObjectURL(preview);
       }
-
-      // Reset input
       event.target.value = "";
     },
     [logoUrl, coverImageUrl, photoUrls, setValue, updatePhotos]
@@ -219,321 +205,298 @@ export function Step7Photos() {
     setPhotoUrls(updatedPhotos);
     setValue("photoUrls", updatedPhotos);
     updatePhotos({ photoUrls: updatedPhotos });
+    toast.info("Gallery photo removed");
   };
 
   const onSubmit: SubmitHandler<PhotosFormData> = async (data) => {
     try {
-      console.log("[Step 7] Photos data:", data);
-
       updatePhotos(data);
       markStepComplete(7);
+      toast.success("Visuals captured! Ready for final review.");
       nextStep();
     } catch (error) {
-      console.error("[Step 7] Error:", error);
+      toast.error("Failed to save photos.");
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <StepWrapper
-        title="Photos & Media"
-        description="Add photos to showcase your business and attract customers"
+        title="Visual Identity"
+        description="First impressions matter. Showcase your workspace, products, and brand logo."
         step={7}
       >
-        {/* Info Alert */}
-        <Alert className="bg-blue-50 border-blue-200">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
-            <strong>Tip:</strong> High-quality photos increase customer
-            engagement by up to 60%. Upload clear, well-lit images. Recommended:
-            Logo (square), Cover (landscape), Gallery (min 3 photos).
-          </AlertDescription>
-        </Alert>
-
-        {uploadError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{uploadError}</AlertDescription>
-          </Alert>
-        )}
+        {/* Photography Tip */}
+        <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-orange-100 rounded-3xl flex gap-4 items-start shadow-xl shadow-orange-500/5">
+           <div className="w-12 h-12 bg-orange-600 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0">
+             <Camera className="w-6 h-6" />
+           </div>
+           <div>
+             <h4 className="text-lg font-black text-orange-900 tracking-tight mb-1">Professional Touch</h4>
+             <p className="text-sm text-orange-700/80 font-medium leading-relaxed">
+               Businesses with high-quality photos receive 3x more customer inquiries.
+               Use natural lighting and capture your storefront from the exterior.
+             </p>
+           </div>
+        </div>
 
         {/* Logo Upload */}
-        <FormSection title="Business Logo">
-          {errors.logoUrl && (
-            <p className="text-sm text-destructive mb-2">
-              {errors.logoUrl.message}
-            </p>
-          )}
-
-          <div className="flex flex-col md:flex-row gap-4 items-start">
-            {logoUrl ? (
-              <div className="relative w-32 h-32 rounded-lg border-2 border-primary overflow-hidden group">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={logoUrl}
-                  alt="Business Logo"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => {
-                      setLogoUrl("");
-                      setValue("logoUrl", "");
-                      updatePhotos({ logoUrl: "" });
-                    }}
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    Remove
-                  </Button>
+        <FormSection title="Brand Signature">
+          <div className="flex flex-col md:flex-row gap-8 items-center bg-muted/20 p-8 rounded-3xl border-2 border-dashed border-border/50">
+            <div className="relative group">
+               {logoUrl ? (
+                <div className="w-40 h-40 rounded-3xl border-4 border-primary overflow-hidden shadow-2xl relative">
+                  <img
+                    src={logoUrl}
+                    alt="Logo"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-black/60 backdrop-blur-sm p-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setLogoUrl("");
+                        setValue("logoUrl", "");
+                        updatePhotos({ logoUrl: "" });
+                        toast.info("Logo removed");
+                      }}
+                      className="h-8 gap-1 text-[10px] font-black uppercase tracking-widest"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Discard
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <label
-                htmlFor="logo-upload"
-                className="w-32 h-32 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
-              >
-                <input
-                  id="logo-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e, "logo")}
-                  className="hidden"
-                />
-                <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
-                <span className="text-xs text-muted-foreground text-center">
-                  Upload Logo
-                </span>
-              </label>
-            )}
-
-            <div className="flex-1">
-              <p className="text-sm text-foreground font-medium mb-2">
-                Logo Guidelines
-              </p>
-              <ul className="text-xs text-muted-foreground space-y-1">
-                <li>• Square format recommended (1:1 ratio)</li>
-                <li>• Minimum 200x200px, ideal 512x512px</li>
-                <li>• Clear background preferred</li>
-                <li>• JPG, PNG, or WEBP format</li>
-              </ul>
-
-              {/* Upload Progress for Logo */}
+              ) : (
+                <label
+                  htmlFor="logo-upload"
+                  className="w-40 h-40 border-4 border-dashed border-border rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group shadow-inner"
+                >
+                  <input
+                    id="logo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, "logo")}
+                    className="hidden"
+                  />
+                  <div className="p-4 bg-muted rounded-2xl group-hover:bg-primary/10 transition-colors">
+                     <ImageIcon className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest mt-4 text-muted-foreground group-hover:text-primary">
+                    Upload Logo
+                  </span>
+                </label>
+              )}
+              {/* Logo Progress Circle (if any) */}
               {Array.from(uploadStates.entries()).map(([id, state]) => {
-                if (!id.startsWith("logo")) return null;
+                if (!id.startsWith("logo") || state.status !== "uploading") return null;
                 return (
-                  <div key={id} className="mt-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium truncate">
-                        {state.file.name}
-                      </span>
-                      {state.status === "uploading" && (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      )}
-                      {state.status === "success" && (
-                        <Check className="w-4 h-4 text-green-600" />
-                      )}
-                    </div>
-                    {state.status === "uploading" && (
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${state.progress}%` }}
-                        />
-                      </div>
-                    )}
+                  <div key={id} className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center rounded-3xl z-10">
+                     <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                     <span className="text-xs font-black">{Math.round(state.progress)}%</span>
                   </div>
                 );
               })}
+            </div>
+
+            <div className="flex-1 space-y-4">
+               <div>
+                  <h4 className="font-black text-xl tracking-tight mb-1">Primary Logo</h4>
+                  <p className="text-sm text-muted-foreground font-medium">This represents your business across search rankings and notifications.</p>
+               </div>
+               <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 py-1.5 px-3 rounded-full border border-emerald-100">
+                    <Check className="w-3 h-3" /> Square Ratio
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 py-1.5 px-3 rounded-full border border-emerald-100">
+                    <Check className="w-3 h-3" /> Transparent PNG
+                  </div>
+               </div>
+               {errors.logoUrl && <p className="text-xs font-bold text-destructive flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.logoUrl.message}</p>}
             </div>
           </div>
         </FormSection>
 
         {/* Cover Image Upload */}
-        <FormSection title="Cover Image">
+        <FormSection title="Hero Spotlight">
           <div className="space-y-4">
-            {coverImageUrl ? (
-              <div className="relative w-full h-64 rounded-lg border-2 border-primary overflow-hidden group">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={coverImageUrl}
-                  alt="Cover"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() => {
-                      setCoverImageUrl("");
-                      setValue("coverImageUrl", "");
-                      updatePhotos({ coverImageUrl: "" });
-                    }}
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Remove Cover
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <label
-                htmlFor="cover-upload"
-                className="w-full h-64 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
-              >
-                <input
-                  id="cover-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload(e, "cover")}
-                  className="hidden"
-                />
-                <ImageIcon className="w-12 h-12 text-muted-foreground mb-3" />
-                <span className="text-sm font-medium text-foreground mb-1">
-                  Upload Cover Image
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  Landscape format • 1200x400px recommended
-                </span>
-              </label>
-            )}
+            <div className="flex items-center justify-between mb-2">
+               <div>
+                 <h4 className="font-black text-xl tracking-tight">Cover Image</h4>
+                 <p className="text-sm text-muted-foreground font-medium">The main splash image that appears at the top of your profile.</p>
+               </div>
+               {coverImageUrl && <Badge className="bg-primary shadow-lg shadow-primary/20 gap-1.5 px-3 py-1 text-[10px] font-black uppercase tracking-widest">Active Spotlight</Badge>}
+            </div>
 
-            {/* Upload Progress for Cover */}
-            {Array.from(uploadStates.entries()).map(([id, state]) => {
-              if (!id.startsWith("cover")) return null;
-              return (
-                <div key={id} className="p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium truncate">
-                      {state.file.name}
-                    </span>
-                    {state.status === "uploading" && (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    )}
-                    {state.status === "success" && (
-                      <Check className="w-4 h-4 text-green-600" />
-                    )}
-                  </div>
-                  {state.status === "uploading" && (
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div
-                        className="bg-primary h-2 rounded-full transition-all"
-                        style={{ width: `${state.progress}%` }}
-                      />
+            <div className="relative group">
+              {coverImageUrl ? (
+                <div className="w-full h-80 rounded-[2.5rem] border-4 border-primary overflow-hidden shadow-2xl">
+                  <img
+                    src={coverImageUrl}
+                    alt="Cover"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end justify-between p-8 translate-y-4 group-hover:translate-y-0 transition-all opacity-0 group-hover:opacity-100">
+                    <div className="flex items-center gap-2 text-white">
+                       <ImageIcon className="w-5 h-5" />
+                       <span className="font-black text-sm uppercase tracking-widest">Spotlight Image</span>
                     </div>
-                  )}
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        setCoverImageUrl("");
+                        setValue("coverImageUrl", "");
+                        updatePhotos({ coverImageUrl: "" });
+                        toast.info("Cover removed");
+                      }}
+                      className="rounded-xl h-10 px-6 font-black uppercase tracking-widest gap-2 bg-red-600/90 backdrop-blur-md"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Discard
+                    </Button>
+                  </div>
                 </div>
-              );
-            })}
+              ) : (
+                <label
+                  htmlFor="cover-upload"
+                  className="w-full h-80 border-4 border-dashed border-border rounded-[2.5rem] flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group overflow-hidden bg-muted/10"
+                >
+                  <input
+                    id="cover-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, "cover")}
+                    className="hidden"
+                  />
+                  <div className="p-6 bg-white rounded-3xl shadow-xl group-hover:scale-110 transition-transform duration-500">
+                     <ImageIcon className="w-12 h-12 text-primary" />
+                  </div>
+                  <h5 className="mt-6 font-black text-foreground tracking-tight">Choose a Cinematic Banner</h5>
+                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-2">1200 x 400px Recommended • Landscape</p>
+                </label>
+              )}
+
+              {/* Cover Upload Progress Overlay */}
+              {Array.from(uploadStates.entries()).map(([id, state]) => {
+                if (!id.startsWith("cover") || state.status !== "uploading") return null;
+                return (
+                  <div key={id} className="absolute inset-0 bg-background/90 flex flex-col items-center justify-center rounded-[2.5rem] z-20 backdrop-blur-sm">
+                     <div className="w-full max-w-xs space-y-4 text-center">
+                        <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
+                        <h4 className="font-black text-xl tracking-tight">Developing Imagery...</h4>
+                        <div className="w-full h-2 bg-muted rounded-full overflow-hidden border">
+                           <div className="h-full bg-primary transition-all duration-300" style={{ width: `${state.progress}%` }} />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary">{Math.round(state.progress)}% COMPLETED</span>
+                     </div>
+                  </div>
+                );
+              })}
+            </div>
+            {errors.coverImageUrl && <p className="text-xs font-bold text-destructive py-2 px-4 bg-red-50 rounded-xl border border-red-100 mt-2">{errors.coverImageUrl.message}</p>}
           </div>
         </FormSection>
 
         {/* Gallery Upload */}
-        <FormSection title="Photo Gallery">
-          {errors.photoUrls && (
-            <p className="text-sm text-destructive mb-2">
-              {errors.photoUrls.message}
-            </p>
-          )}
+        <FormSection title="Curated Gallery">
+          <div className="flex items-center justify-between mb-6">
+             <div>
+               <h4 className="font-black text-xl tracking-tight">Business Portfolio</h4>
+               <p className="text-sm text-muted-foreground font-medium">Upload up to 20 high-resolution images of your storefront, interiors, and products.</p>
+             </div>
+             <Badge variant="outline" className="border-2 font-black text-[10px] px-3 py-1 uppercase tracking-widest">
+               {photoUrls.length} / 20 SLOTS
+             </Badge>
+          </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {/* Existing Photos */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {/* Existing Gallery Photos */}
             {photoUrls.map((url, index) => (
               <div
                 key={index}
-                className="relative aspect-square rounded-lg overflow-hidden border-2 border-border group"
+                className="relative aspect-square rounded-[1.5rem] overflow-hidden border-4 border-white shadow-xl group animate-in zoom-in-90 duration-500"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={url}
                   alt={`Gallery ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => removePhoto(index)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+                   <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => removePhoto(index)}
+                      className="h-10 w-10 rounded-xl shadow-lg border-2 border-white/20"
+                    >
+                      <X className="w-5 h-5" />
+                    </Button>
                 </div>
                 {index === 0 && (
-                  <Badge className="absolute bottom-2 left-2 bg-yellow-500">
-                    <Star className="w-3 h-3 mr-1" />
-                    Featured
+                  <Badge className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg border-none gap-1 py-1 px-2.5">
+                    <Star className="w-3 h-3 fill-white" />
+                    <span className="text-[8px] font-black uppercase tracking-tighter">Featured</span>
                   </Badge>
                 )}
               </div>
             ))}
 
-            {/* Upload Button */}
+            {/* Gallery Upload Slot */}
             {photoUrls.length < 20 && (
               <label
                 htmlFor="gallery-upload"
-                className="aspect-square border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                className="aspect-square border-4 border-dashed border-border rounded-[2.5rem] flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all group bg-muted/5 shadow-inner p-4"
               >
                 <input
                   id="gallery-upload"
                   type="file"
+                  multiple
                   accept="image/*"
                   onChange={(e) => handleImageUpload(e, "gallery")}
                   className="hidden"
                 />
-                <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                <span className="text-xs text-muted-foreground text-center px-2">
-                  Add Photo
+                <div className="p-4 bg-white rounded-2xl shadow-lg group-hover:rotate-12 transition-all duration-300">
+                   <Upload className="w-8 h-8 text-primary" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-4 group-hover:text-primary">
+                  Append Media
                 </span>
               </label>
             )}
           </div>
 
-          {/* Upload Progress for Gallery */}
+          {/* Active Gallery Progress */}
           {Array.from(uploadStates.entries()).map(([id, state]) => {
-            if (!id.startsWith("gallery")) return null;
+            if (!id.startsWith("gallery") || state.status !== "uploading") return null;
             return (
-              <div key={id} className="mt-4 p-3 bg-muted/50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  {state.preview && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={state.preview}
-                      alt="Preview"
-                      className="w-12 h-12 rounded object-cover"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium truncate">
-                        {state.file.name}
-                      </span>
-                      {state.status === "uploading" && (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      )}
-                      {state.status === "success" && (
-                        <Check className="w-4 h-4 text-green-600" />
-                      )}
-                    </div>
-                    {state.status === "uploading" && (
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${state.progress}%` }}
-                        />
-                      </div>
-                    )}
+              <div key={id} className="mt-8 p-6 bg-white border-2 border-primary/10 rounded-3xl shadow-xl flex items-center gap-6 animate-in slide-in-from-left-4">
+                <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg border-4 border-white shrink-0">
+                  <img src={state.preview} alt="Preview" className="w-full h-full object-cover blur-sm" />
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center justify-between">
+                     <h5 className="text-sm font-black uppercase tracking-widest text-foreground">Syncing to Cloud</h5>
+                     <span className="text-xs font-black text-primary">{Math.round(state.progress)}%</span>
+                  </div>
+                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                     <div className="h-full bg-primary" style={{ width: `${state.progress}%` }} />
                   </div>
                 </div>
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             );
           })}
 
-          <p className="text-xs text-muted-foreground mt-4">
-            {photoUrls.length}/20 photos uploaded • First photo will be featured
-          </p>
+          <div className="mt-8 flex items-center gap-3 py-4 px-6 bg-muted/30 rounded-2xl border-2 border-dashed border-border/50">
+             <Layers className="w-5 h-5 text-muted-foreground" />
+             <p className="text-xs font-bold text-muted-foreground">
+               Currently utilizing <span className="text-foreground font-black">{photoUrls.length} positions</span> of your 20-image digital asset allowance.
+             </p>
+          </div>
         </FormSection>
       </StepWrapper>
 

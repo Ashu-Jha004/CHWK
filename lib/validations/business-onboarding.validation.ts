@@ -228,9 +228,7 @@ const businessHourSchema = z
 export const businessHoursSchema = z
   .object({
     is24x7: z.boolean(),
-    hours: z
-      .array(businessHourSchema)
-      .min(1, "Please add at least one business hour"),
+    hours: z.array(businessHourSchema),
   })
   .refine(
     (data) => {
@@ -492,6 +490,17 @@ export const optionalDataSchema = z.object({
 
 export type OptionalFormData = z.infer<typeof optionalDataSchema>;
 
+export const photosSchema = z.object({
+  logoUrl: z.string().min(1, "Business logo is required"),
+  coverImageUrl: z.string().optional(),
+  photoUrls: z
+    .array(z.string())
+    .min(3, "Please upload at least 3 photos of your business")
+    .max(20, "Maximum 20 photos allowed"),
+});
+
+export type PhotosFormData = z.infer<typeof photosSchema>;
+
 // ==================== COMPLETE FORM VALIDATION ====================
 
 export const completeOnboardingSchema = z.object({
@@ -501,16 +510,8 @@ export const completeOnboardingSchema = z.object({
   businessHours: businessHoursSchema,
   businessDetails: businessDetailsSchema,
   documentation: documentationSchema,
-  optional: optionalDataSchema,
+  photos: photosSchema,
+  optional: optionalDataSchema.optional(),
 });
 
 export type CompleteOnboardingData = z.infer<typeof completeOnboardingSchema>;
-export const photosSchema = z.object({
-  logoUrl: z.string().min(1, "Business logo is required"),
-  coverImageUrl: z.string().optional(),
-  photoUrls: z
-    .array(z.string())
-    .min(3, "Please upload at least 3 photos of your business")
-    .max(20, "Maximum 20 photos allowed"),
-});
-export type PhotosFormData = z.infer<typeof photosSchema>;
