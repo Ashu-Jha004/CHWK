@@ -126,7 +126,15 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
             {/* Left: Business Info */}
             <div className="space-y-4">
               {/* Business Name & Categories */}
+              {/* Business Name & Categories */}
               <div className="space-y-2">
+                {/* Fallback H1 for SEO when no cover image exists */}
+                {!coverImage && (
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight mb-1">
+                    {business.name}
+                  </h1>
+                )}
+
                 <div className="flex items-start gap-3">
                   {business.isVerified && (
                     <Badge variant="secondary" className="gap-1 mt-1 bg-secondary/10 text-secondary border-secondary/20">
@@ -137,13 +145,13 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                 </div>
 
                 {/* Categories */}
-                <div className="flex flex-wrap gap-2">
+                <nav aria-label="Breadcrumb status" className="flex flex-wrap gap-2">
                   {business.categories && Array.isArray(business.categories) && business.categories.slice(0, 3).map((cat) => (
-                    <Badge key={cat?.categoryId || Math.random()} variant="outline">
+                    <Badge key={cat?.categoryId || Math.random()} variant="outline" className="hover:bg-muted transition-colors">
                       {cat?.category?.name || "Category"}
                     </Badge>
                   ))}
-                </div>
+                </nav>
               </div>
 
               {/* Rating & Reviews */}

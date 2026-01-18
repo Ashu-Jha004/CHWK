@@ -62,37 +62,45 @@ export async function generateMetadata(
     alternates: {
       canonical: `${baseUrl}/business_service/${business.slug}`,
     },
-    openGraph: {
+     openGraph: {
       type: "website",
       title,
       description,
       url: `${baseUrl}/business_service/${business.slug}`,
       siteName: "CHWK",
       locale: "en_IN",
-      images: business.logo
-        ? [
-            {
-              url: business.logo,
-              width: 1200,
-              height: 630,
-              alt: business.name,
-            },
-            ...(business.images?.[0]?.imageUrl
-                ? [{
-                    url: business.images[0].imageUrl,
-                    width: 1200,
-                    height: 630,
-                    alt: business.name,
-                  }]
-                : [])
-          ]
-        : [],
+      images: [
+        ...(business.images?.[0]?.imageUrl
+          ? [
+              {
+                url: business.images[0].imageUrl,
+                width: 1200,
+                height: 630,
+                alt: business.name,
+              },
+            ]
+          : []),
+        ...(business.logo
+          ? [
+              {
+                url: business.logo,
+                width: 1200,
+                height: 630,
+                alt: `${business.name} Logo`,
+              },
+            ]
+          : []),
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: business.logo ? [business.logo] : [],
+      images: business.images?.[0]?.imageUrl
+        ? [business.images[0].imageUrl]
+        : business.logo
+        ? [business.logo]
+        : [],
     },
     other: {
       "geo.region": `IN-${getStateCode(business.state)}`,
@@ -283,31 +291,22 @@ async function BusinessPageContent({ slug }: { slug: string }) {
 
   return (
     <>
-      {/* JSON-LD */}
+      {/* JSON-LD Structured Data */}
       {schemas.map((schema, i) => (
         <script
           key={i}
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(schema),
+             __html: JSON.stringify(schema),
           }}
         />
       ))}
 
-      {/* SERVER-RENDERED SEO CONTENT */}
-      <section className="sr-only">
-        <h1>
-          {business.categories?.[0]?.category?.name} in{" "}
-          {business.area}, {business.city}
-        </h1>
-        <p>
-          {business.name} is a trusted service provider offering{" "}
-          {business.categories?.[0]?.category?.name} in{" "}
-          {business.area}, {business.city}, {business.state}. Rated{" "}
-          {business.averageRating} stars by{" "}
-          {business.totalReviews}+ customers.
-        </p>
-      </section>
+      {/*
+        Semantic content is handled by BusinessPageClient.
+        We avoid using 'sr-only' for main content to prevent "hidden text" penalties.
+        The BusinessPageClient renders a proper H1 and descriptive content.
+      */}
 
       <Suspense fallback={<BusinessPageSkeleton />}>
         <BusinessPageClient

@@ -189,6 +189,7 @@ model Business {
   savedBy                   SavedBusiness[]
   serviceAreas              ServiceArea[]
   views                     BusinessView[]
+  chatSessions              ChatSession[]
 
   @@index([slug])
   @@index([status])
@@ -1358,4 +1359,27 @@ enum NotificationType {
   ORDER_UPDATE
   BOOKING_UPDATE
   SYSTEM_ALERT
+}
+
+// AI Chatbot Session Model
+model ChatSession {
+  id           String   @id @default(cuid())
+  sessionId    String   @unique // Nanoid for client-side tracking
+  businessId   String
+  userId       String?  // Optional if user is authenticated
+
+  messages     Json     // Array of {role: "user"|"assistant", content: string, timestamp: DateTime}[]
+  context      Json?    // Business context snapshot for this session
+
+  startedAt    DateTime @default(now())
+  lastActiveAt DateTime @updatedAt
+  expiresAt    DateTime // Auto-cleanup after 24 hours
+
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([sessionId])
+  @@index([expiresAt])
+  @@index([userId])
+  @@map("chat_sessions")
 }

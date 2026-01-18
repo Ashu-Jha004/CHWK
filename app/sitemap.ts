@@ -49,7 +49,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // City pages
   const cityPages: MetadataRoute.Sitemap = TIER_1_CITIES.map((city) => ({
-    url: `${baseUrl}/city/${city.toLowerCase()}`,
+    url: `${baseUrl}/city/${city.toLowerCase().replace(/\s+/g, '-')}`,
     lastModified: new Date(),
     changeFrequency: "weekly",
     priority: 0.7,
@@ -62,7 +62,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: {
         status: "ACTIVE",
         deletedAt: null,
-        isVerified: true, // Only include verified businesses
+         // We remove the strict 'isVerified' filter for sitemap to ensure ALL active businesses are crawled
+         // as long as they are not deleted or banned.
       },
       select: {
         slug: true,
@@ -71,7 +72,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       orderBy: {
         averageRating: "desc", // Prioritize high-rated businesses
       },
-      take: 10000, // Limit to prevent sitemap from becoming too large
+      take: 20000, // Increased limit
     });
 
     businessPages = businesses.map((business) => ({

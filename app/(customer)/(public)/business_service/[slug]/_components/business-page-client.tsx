@@ -14,6 +14,7 @@ import { ReportModal } from "./modals/report-modal";
 import { FileComplaintModal } from "./modals/file-complaint-modal";
 import { BookingWizard } from "@/components/booking/booking-wizard";
 import { CustomOrderModal } from "@/components/commerce/custom-order-modal";
+import { ChatbotWidget } from "@/components/ai-chatbot/chatbot-widget";
 import { cn } from "@/lib/utils";
 import { calculateBusinessStats } from "@/lib/utils/business-detail-utils";
 import { useMediaQuery } from "@/hooks/customer/business_service/use-media-query";
@@ -200,6 +201,12 @@ export function BusinessPageClient({
           onOpenChange={setIsOrderOpen}
         />
       )}
+
+      {/* AI Chatbot Widget */}
+      <ChatbotWidget
+        businessId={business.id}
+        businessName={business.name}
+      />
     </>
   );
 }
