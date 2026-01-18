@@ -8,7 +8,10 @@ import {
 import {
   parseSearchQuery,
   isOpenNow,
-  isValidCoordinates
+  isValidCoordinates,
+  isNearMeIntent,
+  isSpecificLocationIntent,
+  normalizeLocationName,
 } from "@/lib/search/utils";
 import { matchCategories } from "@/lib/search/category-matcher";
 import { searchWithDistance, searchRegular } from "@/lib/search/search-service";
@@ -20,6 +23,12 @@ export async function performSearch(params: GlobalSearchParams): Promise<SearchR
 
   // Use the shared parser
   const parsedQuery = parseSearchQuery(params.query || "");
+
+  // Smart Location Handling: Use extracted location from query if found
+  let effectiveLocation = params.location;
+  if (parsedQuery.extractedLocation && !params.location) {
+    effectiveLocation = parsedQuery.extractedLocation;
+  }
 
   // 1. Parallelize category matching and potential fallback searches
   const [matchedCategories, spellingSuggestion, fuzzyResults] = await Promise.all([
@@ -80,42 +89,46 @@ export async function performSearch(params: GlobalSearchParams): Promise<SearchR
     where.categories = { some: { category: { slug: params.categorySlug } } };
   }
 
-  // Check if location is just "Near me" or similar phrases (don't use as city filter)
-  const isNearMePhrase = params.location &&
-    /(near\s+me|nearby|close\s+to\s+me|around\s+me)/i.test(params.location);
+  // Determine search strategy based on location intent
+  const hasSpecificLocation = isSpecificLocationIntent(effectiveLocation);
+  const hasNearMeIntent = isNearMeIntent(effectiveLocation) || parsedQuery.locationIntent.type === "nearme";
+  const hasValidGPS = isValidCoordinates(params.latitude, params.longitude);
 
-  // Location Filter (City/Area/Pincode) - Only if NOT "near me" / GPS
-  const isLocationSearch =
-    isValidCoordinates(params.latitude, params.longitude) &&
-    (parsedQuery.locationIntent.type === "nearme" || isNearMePhrase || !params.location);
+  // Use GPS search only when appropriate
+  const useGPSSearch = hasValidGPS && (hasNearMeIntent || (!effectiveLocation && !hasSpecificLocation));
+  const shouldFilterByLocationText = hasSpecificLocation;
 
-  if (params.location && !isLocationSearch && !isNearMePhrase) {
-     // Location must be added as AND with the existing OR conditions
-     // We need to wrap it properly
-     const existingOR = where.OR;
+  // ALWAYS apply location text filter when user specifies a location
+  // This ensures "restaurant in Bangalore" ONLY shows Bangalore results
+  const locationToFilter = effectiveLocation || params.location;
 
-     if (existingOR) {
-       // If we already have OR conditions, we need to combine them
-       // The logic is: (existing OR conditions) AND (location matches)
-       where.AND = [
-         { OR: existingOR },
-         {
-           OR: [
-             { city: { contains: params.location, mode: "insensitive" as const } },
-             { area: { contains: params.location, mode: "insensitive" as const } },
-             { pincode: { contains: params.location } },
-           ]
-         }
-       ];
-       delete where.OR;
-     } else {
-       // No existing OR, just add location filter
-       where.OR = [
-         { city: { contains: params.location, mode: "insensitive" as const } },
-         { area: { contains: params.location, mode: "insensitive" as const } },
-         { pincode: { contains: params.location } },
-       ];
-     }
+  if (shouldFilterByLocationText && locationToFilter) {
+    const normalizedLocation = normalizeLocationName(locationToFilter);
+    const existingOR = where.OR;
+
+    if (existingOR) {
+      // Combine with existing OR using AND to ensure BOTH conditions are met
+      where.AND = [
+        { OR: existingOR },
+        {
+          OR: [
+            { city: { contains: locationToFilter, mode: "insensitive" as const } },
+            { area: { contains: locationToFilter, mode: "insensitive" as const } },
+            { pincode: { equals: locationToFilter } },
+            // Also check normalized variations (bangalore = bengaluru)
+            { city: { contains: normalizedLocation, mode: "insensitive" as const } },
+          ]
+        }
+      ];
+      delete where.OR;
+    } else {
+      where.OR = [
+        { city: { contains: locationToFilter, mode: "insensitive" as const } },
+        { area: { contains: locationToFilter, mode: "insensitive" as const } },
+        { pincode: { equals: locationToFilter } },
+        { city: { contains: normalizedLocation, mode: "insensitive" as const } },
+      ];
+    }
   }
 
   // Filters
@@ -126,7 +139,7 @@ export async function performSearch(params: GlobalSearchParams): Promise<SearchR
   try {
     let result: { businesses: any[], totalCount: number };
 
-    if (isLocationSearch && params.latitude && params.longitude) {
+    if (useGPSSearch && params.latitude && params.longitude) {
        result = await searchWithDistance(
          where,
          params.latitude,

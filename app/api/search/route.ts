@@ -11,6 +11,9 @@ import {
   shouldSuggestExpandRadius,
   buildSearchPattern,
   isOpenNow,
+  isNearMeIntent,
+  isSpecificLocationIntent,
+  normalizeLocationName,
 } from "@/lib/search/utils";
 import { matchCategories } from "@/lib/search/category-matcher";
 import { searchWithDistance, searchRegular } from "@/lib/search/search-service";
@@ -32,41 +35,49 @@ export async function GET(request: NextRequest) {
     // 1. Extract and validate search parameters
     const searchParams = extractSearchParams(request);
 
-
-    // 2. Parse search query to extract intent
+    // 2. Parse search query to extract intent and location
     const parsedQuery = parseSearchQuery(searchParams.query);
 
+    // 3. Smart Location Handling: Use extracted location from query if found
+    // This handles queries like "restaurant in Bangalore"
+    let effectiveLocation = searchParams.location;
+    if (parsedQuery.extractedLocation && !searchParams.location) {
+      effectiveLocation = parsedQuery.extractedLocation;
+    }
 
-    // 3. Match categories based on query
+    // 4. Match categories based on query
     const matchedCategories = await matchCategories(parsedQuery.cleanQuery, 3);
 
-
-    // 4. Build Prisma where clause
+    // 5. Build Prisma where clause
     const whereClause = await buildWhereClause(
       searchParams,
       parsedQuery,
-      matchedCategories.map((c) => c.id)
+      matchedCategories.map((c) => c.id),
+      effectiveLocation
     );
 
-    // 5. Determine if location-based search
-    // Only use GPS if: user said "near me" OR no location text provided
-    // DO NOT use GPS if user typed "Hyderabad" even if browser sends coordinates
-    const isNearMePhrase = searchParams.location &&
-      /(near\s+me|nearby|close\s+to\s+me|around\s+me)/i.test(searchParams.location as string);
+    // 6. Determine search strategy based on location intent
+    // Priority: Specific location text > GPS "near me" > No filter
+    const hasSpecificLocation = isSpecificLocationIntent(effectiveLocation);
+    const hasNearMeIntent = isNearMeIntent(effectiveLocation) || parsedQuery.locationIntent.type === "nearme";
+    const hasValidGPS = isValidCoordinates(searchParams.latitude, searchParams.longitude);
 
-    const isLocationSearch =
-      isValidCoordinates(searchParams.latitude, searchParams.longitude) &&
-      (parsedQuery.locationIntent.type === "nearme" ||
-       isNearMePhrase ||
-       !searchParams.location);
+    // Decision tree:
+    // 1. User typed specific location (e.g., "Bangalore") → Use text filter, ignore GPS
+    // 2. User said "near me" + has GPS → Use GPS-based search
+    // 3. No location specified + has GPS → Use GPS-based search
+    // 4. No location and no GPS → Regular search
+    const useGPSSearch = hasValidGPS && (hasNearMeIntent || (!effectiveLocation && !hasSpecificLocation));
+    const applyLocationTextFilter = hasSpecificLocation;
 
-    let businesses: BusinessSearchResult[] = []; // Changed type to BusinessSearchResult[]
+    let businesses: BusinessSearchResult[] = [];
     let totalCount = 0;
     let expandedRadius = false;
 
     // Helper to execute search
     const executeSearch = async (radiusOverride?: number) => {
-      if (isLocationSearch && searchParams.latitude && searchParams.longitude) {
+      // GPS-based search: Only when "near me" or no location specified
+      if (useGPSSearch && searchParams.latitude && searchParams.longitude) {
         return await searchWithDistance(
           whereClause,
           searchParams.latitude,
@@ -76,7 +87,9 @@ export async function GET(request: NextRequest) {
           searchParams.limit || 12,
           searchParams.sortBy || "distance"
         );
-      } else {
+      }
+      // Text-based search: When specific location is typed or no GPS
+      else {
         return await searchRegular(
           whereClause,
           searchParams.page || 1,
@@ -99,12 +112,11 @@ export async function GET(request: NextRequest) {
     })) as unknown as BusinessSearchResult[];
     totalCount = result.totalCount;
 
-    // SAFETY NET: Zero-Result Fallback
-    if (totalCount === 0 && isLocationSearch) {
+    // SAFETY NET: Zero-Result Fallback (only for GPS searches)
+    if (totalCount === 0 && useGPSSearch) {
        const currentRadius = searchParams.radius || 10;
        if (currentRadius < 50) { // Max limit
          const newRadius = currentRadius * 2;
-
 
          // Retry with expanded radius
          result = await executeSearch(newRadius);
@@ -241,7 +253,8 @@ function extractSearchParams(request: NextRequest): SearchParams {
 async function buildWhereClause(
   params: SearchParams,
   parsedQuery: any,
-  categoryIds: string[]
+  categoryIds: string[],
+  effectiveLocation?: string
 ): Promise<Prisma.BusinessWhereInput> {
   const where: Prisma.BusinessWhereInput = {
     status: { in: ["ACTIVE", "CLAIMED"] },
@@ -291,31 +304,39 @@ async function buildWhereClause(
     };
   }
 
-  // Location filter (city/pincode) - only if NOT using GPS
-  const isNearMePhrase = params.location &&
-    /(near\s+me|nearby|close\s+to\s+me|around\s+me)/i.test(params.location);
+  // Location filter (city/pincode/area) - ALWAYS apply when user specifies a location
+  // This ensures "restaurant in Bangalore" ONLY shows Bangalore results
+  // Priority: effectiveLocation (from query extraction) > params.location
+  const locationToFilter = effectiveLocation || params.location;
 
-  if (params.location && !isValidCoordinates(params.latitude, params.longitude) && !isNearMePhrase) {
+  // Only skip location filter if it's a "near me" phrase (handled by GPS instead)
+  const shouldFilterByLocationText = locationToFilter && !isNearMeIntent(locationToFilter);
+
+  if (shouldFilterByLocationText) {
+    const normalizedLocation = normalizeLocationName(locationToFilter);
     const existingOR = where.OR;
 
+    // Combine with existing OR using AND to ensure BOTH conditions are met
     if (existingOR) {
-      // Combine with existing OR using AND
       where.AND = [
         { OR: existingOR },
         {
           OR: [
-            { city: { contains: params.location, mode: "insensitive" as const } },
-            { area: { contains: params.location, mode: "insensitive" as const } },
-            { pincode: { equals: params.location } },
+            { city: { contains: locationToFilter, mode: "insensitive" as const } },
+            { area: { contains: locationToFilter, mode: "insensitive" as const } },
+            { pincode: { equals: locationToFilter } },
+            // Also check normalized variations (bangalore = bengaluru)
+            { city: { contains: normalizedLocation, mode: "insensitive" as const } },
           ]
         }
       ];
       delete where.OR;
     } else {
       where.OR = [
-        { city: { contains: params.location, mode: "insensitive" as const } },
-        { area: { contains: params.location, mode: "insensitive" as const } },
-        { pincode: { equals: params.location } },
+        { city: { contains: locationToFilter, mode: "insensitive" as const } },
+        { area: { contains: locationToFilter, mode: "insensitive" as const } },
+        { pincode: { equals: locationToFilter } },
+        { city: { contains: normalizedLocation, mode: "insensitive" as const } },
       ];
     }
   }

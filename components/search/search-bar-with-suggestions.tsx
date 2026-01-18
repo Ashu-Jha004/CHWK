@@ -104,7 +104,7 @@ export function SearchBarWithSuggestions({
     if (suggestion.type === "category" && suggestion.slug) {
       router.push(`/categories/${suggestion.slug}`);
     } else if (suggestion.type === "business" && suggestion.slug) {
-      router.push(`/business/${suggestion.slug}`);
+      router.push(`/business_service/${suggestion.slug}`);
     } else {
       // For keywords, perform a search
       setQuery(suggestion.value);

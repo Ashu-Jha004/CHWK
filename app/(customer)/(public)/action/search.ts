@@ -111,7 +111,7 @@ export async function searchBusinessesAction(params: any): Promise<SearchActionR
     const results = await Promise.race([
       searchCircuitBreaker.execute(() => performSearch({
         query: validated.data.query,
-        location: validated.data.location,
+        location: validated.data.city || validated.data.location,  // Use city (from hook) or location (from URL)
         latitude: validated.data.latitude,
         longitude: validated.data.longitude,
         radius: validated.data.radius,
