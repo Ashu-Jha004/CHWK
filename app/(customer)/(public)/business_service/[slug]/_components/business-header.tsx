@@ -77,21 +77,23 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
     address: formatShortAddress(business),
   });
 
-  // Get cover image (first featured or first business image)
-  const coverImage = useMemo(() => {
+  // Get cover image source (prefer root coverImage, then featured image, then first image)
+  const coverImageObject = useMemo(() => {
     if (!business.images || !Array.isArray(business.images)) return null;
-    const featuredImage = business.images.find(img => img?.isFeatured && img?.isApproved && !img?.deletedAt);
-    return featuredImage || business.images.find(img => img?.isApproved && !img?.deletedAt) || null;
+    const featuredImage = business.images.find(img => img?.isFeatured && img?.isApproved);
+    return featuredImage || business.images.find(img => img?.isApproved) || null;
   }, [business.images]);
+
+  const displayCoverImage = business.coverImage || coverImageObject?.imageUrl;
 
   return (
     <>
       {/* Cover Image Banner */}
-      {coverImage && (
+      {displayCoverImage && (
         <div className="relative w-full h-[300px] md:h-[400px] lg:h-[450px] overflow-hidden bg-muted">
           <Image
-            src={business.coverImage||coverImage.imageUrl || "/placeholder-business.jpg"}
-            alt={coverImage.altText || `${business.name || "Business"} cover`}
+            src={displayCoverImage}
+            alt={(coverImageObject as any)?.altText || `${business.name} cover`}
             fill
             className="object-cover"
             sizes="100vw"
@@ -129,7 +131,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
               {/* Business Name & Categories */}
               <div className="space-y-2">
                 {/* Fallback H1 for SEO when no cover image exists */}
-                {!coverImage && (
+                {!displayCoverImage && (
                   <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight mb-1">
                     {business.name}
                   </h1>
@@ -324,19 +326,19 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
           </div>
 
           {/* Temporary Closure Notice */}
-          {business.isTemporarilyClosed && business.temporaryClosureReason && (
+          {(business as any).isTemporarilyClosed && (business as any).temporaryClosureReason && (
             <Card className="mt-4 p-4 bg-destructive/5 border-destructive/20">
               <div className="flex gap-3">
                 <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <p className="font-medium text-destructive">Temporarily Closed</p>
                   <p className="text-sm text-muted-foreground">
-                    {business.temporaryClosureReason}
+                    {(business as any).temporaryClosureReason}
                   </p>
-                  {business.temporaryClosureEnd && (
+                  {(business as any).temporaryClosureEnd && (
                     <p className="text-sm text-muted-foreground">
                       Expected to reopen on{" "}
-                      {new Date(business.temporaryClosureEnd).toLocaleDateString("en-IN")}
+                      {new Date((business as any).temporaryClosureEnd).toLocaleDateString("en-IN")}
                     </p>
                   )}
                 </div>

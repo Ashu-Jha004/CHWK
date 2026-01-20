@@ -223,7 +223,11 @@ function extractSearchParams(request: NextRequest): SearchParams {
     50,
     Math.max(1, parseInt(searchParams.get("limit") || "12"))
   );
-  const sortBy = (searchParams.get("sort") as any) || "relevance";
+  const validSortOptions = ["relevance", "distance", "rating", "reviews"];
+  const sortByParam = searchParams.get("sort");
+  const sortBy = validSortOptions.includes(sortByParam || "")
+    ? (sortByParam as "relevance" | "distance" | "rating" | "reviews")
+    : "relevance";
 
   // Parse price ranges
   const priceRangesParam = searchParams.get("priceRange");

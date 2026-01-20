@@ -53,9 +53,7 @@ export async function POST(request: NextRequest) {
     // 1. Verify Business exists and accepts bookings
     const business = await prisma.business.findUnique({
       where: { id: businessId },
-      include: {
-        hours: true,
-      },
+      select: { acceptsBookings: true, autoConfirmBookings: true }, // Optimization: Only select needed fields
     });
 
     if (!business || !business.acceptsBookings) {
@@ -84,8 +82,6 @@ export async function POST(request: NextRequest) {
     const totalDuration = services.reduce((acc, s) => acc + (s.duration || s.serviceDuration || 30), 0);
     const totalAmount = services.reduce((acc, s) => acc + (s.discountedPrice || s.price), 0);
 
-    // 3. Calculate start and end times
-    // Assuming 'time' is "HH:MM" 24h format
     const [hours, minutes] = time.split(":").map(Number);
     const startDateTime = new Date(bookingDate);
     startDateTime.setHours(hours, minutes, 0, 0);
@@ -94,15 +90,19 @@ export async function POST(request: NextRequest) {
     const endTime = format(endDateTime, "HH:mm");
 
     // 4. Validate Availability (Basic Check)
-    // In a real app, we should check for overlaps with existing bookings for the same staff/business
-    // For now, we'll implement a simple overlapping check if staffId is provided
-
     if (staffId) {
+        // Fix: Check for all bookings on the SAME DAY, not just exact same start time
+        const dayStart = startOfDay(startDateTime);
+        const dayEnd = endOfDay(startDateTime);
+
         const conflictingBooking = await prisma.booking.findFirst({
             where: {
                 businessId,
                 staffId,
-                bookingDate: startDateTime, // Simplification: exact date match might need range check
+                bookingDate: {
+                    gte: dayStart,
+                    lte: dayEnd
+                },
                 status: {
                     in: ["CONFIRMED", "PENDING"]
                 },
@@ -116,6 +116,11 @@ export async function POST(request: NextRequest) {
                     {
                         bookingTime: { lt: endTime },
                         endTime: { gte: endTime }
+                    },
+                    // New range completely encompasses existing
+                    {
+                        bookingTime: { gte: time },
+                        endTime: { lte: endTime }
                     }
                 ]
             }

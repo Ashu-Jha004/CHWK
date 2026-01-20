@@ -9,8 +9,10 @@ export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    throw new Error(
-      "Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env"
+    console.error("❌ CLERK_WEBHOOK_SECRET is missing");
+    return NextResponse.json(
+      { error: "Server configuration error" },
+      { status: 500 }
     );
   }
 
@@ -110,7 +112,6 @@ export async function POST(req: Request) {
           where: { id },
           data: {
             isActive: false,
-            deletedAt: new Date(),
           },
         });
         break;

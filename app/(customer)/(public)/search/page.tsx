@@ -26,16 +26,35 @@ interface SearchPageProps {
   }>;
 }
 
+import { getCurrentUser } from "@/lib/auth";
+
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   // Await searchParams (Next.js 15)
   const params = await searchParams;
+
+  let latitude = params.lat ? parseFloat(params.lat) : undefined;
+  let longitude = params.lon ? parseFloat(params.lon) : undefined;
+
+  // Fallback to user default location if not provided in params
+  if (!latitude || !longitude) {
+    try {
+      const user = await getCurrentUser();
+      if (user?.defaultLatitude && user?.defaultLongitude) {
+        latitude = user.defaultLatitude;
+        longitude = user.defaultLongitude;
+      }
+    } catch (error) {
+      // Ignore auth errors on public search page
+      console.warn("Failed to fetch user defaults for search", error);
+    }
+  }
 
   // ✅ Direct function call - NO HTTP request!
   const data = await performSearch({
     query: params.q || "",
     location: params.location,
-    latitude: params.lat ? parseFloat(params.lat) : undefined,
-    longitude: params.lon ? parseFloat(params.lon) : undefined,
+    latitude,
+    longitude,
     radius: params.radius ? parseInt(params.radius) : undefined,
     page: params.page ? parseInt(params.page, 10) : 1,
     limit: 12,

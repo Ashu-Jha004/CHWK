@@ -27,7 +27,7 @@ export async function generateMetadata(
   { params }: PageProps
 ): Promise<Metadata> {
   const { slug } = await params;
-  const business = await fetchBusinessMetadata(slug);
+  const business: any = await fetchBusinessMetadata(slug);
 
   if (!business) {
     return {
@@ -142,8 +142,21 @@ const fetchBusinessMetadata = cache(async (slug: string) => {
   try {
     return await prisma.business.findUnique({
       where: { slug, deletedAt: null },
-      include: {
-        images: { where: { deletedAt: null, isApproved: true }, take: 1 },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        city: true,
+        area: true,
+        state: true,
+        latitude: true,
+        longitude: true,
+        averageRating: true,
+        totalReviews: true,
+        logo: true,
+        coverImage: true,
+        shortDescription: true,
+        images: { where: { deletedAt: null, isApproved: true } as any, take: 1 },
         categories: { include: { category: true } },
       },
     });
@@ -160,15 +173,18 @@ const fetchBusinessData = cache(async (slug: string): Promise<BusinessDetail | n
       where: { slug, deletedAt: null },
       include: {
         // Optimized: Reduced limits for initial page load
-        images: { where: { deletedAt: null, isApproved: true }, take: 4 }, // Carousel usually needs just a few or loads more
-        documents: { where: { status: "VERIFIED" }, take: 1 }, // Just need existence check mostly
+        images: {
+          where: { deletedAt: null, isApproved: true } as any,
+          take: 4,
+          select: { id: true, imageUrl: true }
+        },
+        documents: { where: { status: "VERIFIED" }, take: 1, select: { id: true } },
         categories: { include: { category: true } },
         amenities: { include: { amenity: true } },
-        serviceAreas: { where: { isActive: true }, take: 3 }, // reduced
-        serviceArea: { where: { isActive: true }, take: 3 }, // reduced
+        serviceAreas: { where: { isActive: true }, take: 3 },
         staff: {
           where: { deletedAt: null, isActive: true },
-          take: 4, // Top staff only
+          take: 4,
           include: {
             workingHours: {
               orderBy: { dayOfWeek: "asc" },
@@ -176,24 +192,43 @@ const fetchBusinessData = cache(async (slug: string): Promise<BusinessDetail | n
           },
         },
         hours: { orderBy: { dayOfWeek: "asc" } },
-        menuItems: { where: { deletedAt: null }, take: 50 }, // Needed for BookingWizard selection
+        // OPTIMIZATION: Select only essential fields for menu items to reduce payload size
+        menuItems: {
+          where: { deletedAt: null },
+          take: 30, // Reduced from 50
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            price: true,
+            discountedPrice: true,
+            image: true,
+            duration: true,
+            isVegetarian: true,
+            isVegan: true,
+            isGlutenFree: true,
+            isFeatured: true,
+            isBestseller: true,
+            category: true,
+          }
+        },
         reviews: {
           where: {
             deletedAt: null,
             status: "APPROVED",
             isPublished: true,
           },
-          take: 5,
+          take: 3, // Reduced from 5
           orderBy: { createdAt: "desc" },
           include: {
             user: { select: { id: true, firstName: true, lastName: true, avatar: true } },
-            photos: { where: { deletedAt: null, isApproved: true }, take: 1 } // Just 1 thumbnail per review
+            photos: { where: { deletedAt: null, isApproved: true }, take: 1 }
           }
         },
         photos: {
           where: { deletedAt: null, isApproved: true },
           orderBy: { createdAt: "desc" },
-          take: 8 // Reduced from 20
+          take: 8
         },
         chain: true,
         _count: { select: { reviews: true, photos: true, menuItems: true, staff: true } },

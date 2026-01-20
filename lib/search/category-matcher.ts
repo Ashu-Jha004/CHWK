@@ -18,114 +18,63 @@ export async function matchCategories(
   try {
     const startTime = Date.now();
     const normalizedQuery = normalizeSearchTerm(query);
-    const queryWords = normalizedQuery.split(" ");
 
     // Early return for empty query
-    if (!normalizedQuery || queryWords.length === 0) {
-      console.log("[matchCategories] Empty query, returning empty results");
+    if (!normalizedQuery || normalizedQuery.length < 2) {
       return [];
     }
 
-    // Fetch all active categories with searchKeywords
-    const categories = await prisma.category.findMany({
-      where: {
-        isActive: true,
-      },
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        searchKeywords: true,
-      },
-    });
+    // Use PostgreSQL pg_trgm for similarity matching
+    // We check both the name and the searchKeywords array
+    // The query is parameterized to prevent SQL injection
+    const categories = await prisma.$queryRaw<Array<{
+      id: string;
+      slug: string;
+      name: string;
+      similarity: number;
+    }>>`
+      SELECT
+        id,
+        slug,
+        name,
+        GREATEST(
+          similarity(name, ${normalizedQuery}),
+          (
+            SELECT MAX(similarity(keyword, ${normalizedQuery}))
+            FROM unnest("searchKeywords") as keyword
+          )
+        ) as similarity
+      FROM categories
+      WHERE
+        "isActive" = true
+        AND (
+          similarity(name, ${normalizedQuery}) > 0.3
+          OR EXISTS (
+            SELECT 1
+            FROM unnest("searchKeywords") as keyword
+            WHERE similarity(keyword, ${normalizedQuery}) > 0.3
+          )
+        )
+      ORDER BY similarity DESC
+      LIMIT ${limit}
+    `;
 
-    const matches: CategoryMatch[] = [];
-
-    // Score each category
-    for (const category of categories) {
-      let maxScore = 0;
-      let matchedKeyword: string | undefined;
-
-      // Check category name match
-      const nameScore = calculateSimilarity(normalizedQuery, category.name);
-      if (nameScore > maxScore) {
-        maxScore = nameScore;
-        matchedKeyword = category.name;
-      }
-
-      // Check searchKeywords matches
-      if (category.searchKeywords && category.searchKeywords.length > 0) {
-        for (const keyword of category.searchKeywords) {
-          const keywordNormalized = normalizeSearchTerm(keyword);
-
-          // Exact match gets highest score
-          if (keywordNormalized === normalizedQuery) {
-            maxScore = 100;
-            matchedKeyword = keyword;
-            break;
-          }
-
-          // Check if query contains keyword or vice versa
-          if (normalizedQuery.includes(keywordNormalized)) {
-            const score = 90;
-            if (score > maxScore) {
-              maxScore = score;
-              matchedKeyword = keyword;
-            }
-          } else if (keywordNormalized.includes(normalizedQuery)) {
-            const score = 85;
-            if (score > maxScore) {
-              maxScore = score;
-              matchedKeyword = keyword;
-            }
-          }
-
-          // Word-level matching
-          for (const queryWord of queryWords) {
-            if (queryWord.length > 2 && keywordNormalized.includes(queryWord)) {
-              const score = 70;
-              if (score > maxScore) {
-                maxScore = score;
-                matchedKeyword = keyword;
-              }
-            }
-          }
-
-          // Similarity-based matching
-          const similarity = calculateSimilarity(normalizedQuery, keyword);
-          if (similarity > maxScore && similarity >= 60) {
-            maxScore = similarity;
-            matchedKeyword = keyword;
-          }
-        }
-      }
-
-      // Only include categories with meaningful matches
-      if (maxScore >= 50) {
-        matches.push({
-          id: category.id,
-          slug: category.slug,
-          name: category.name,
-          matchScore: maxScore,
-          matchedKeyword,
-        });
-      }
-    }
-
-    // Sort by match score (highest first)
-    matches.sort((a, b) => b.matchScore - a.matchScore);
-
-    // Limit results
-    const topMatches = matches.slice(0, limit);
+    const formattedMatches: CategoryMatch[] = categories.map((c) => ({
+      id: c.id,
+      slug: c.slug,
+      name: c.name,
+      matchScore: Number(c.similarity) * 100, // Convert 0-1 to 0-100
+      matchedKeyword: c.name // We simplify to just showing the category name as matched
+    }));
 
     const timeTaken = Date.now() - startTime;
     console.log(
-      `[matchCategories] Query: "${query}" | Matches: ${topMatches.length} | Time: ${timeTaken}ms`
+      `[matchCategories] Query: "${query}" | Matches: ${formattedMatches.length} | Time: ${timeTaken}ms`
     );
 
-    return topMatches;
+    return formattedMatches;
   } catch (error) {
-    console.error("[matchCategories] Error matching categories:", error);
+    console.error(`[matchCategories] Error matching categories for query "${query}":`, error);
     // Return empty array on error (fail gracefully)
     return [];
   }

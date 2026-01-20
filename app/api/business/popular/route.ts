@@ -33,13 +33,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('[API Popular Businesses] 📍 Request:', {
-      city,
-      state,
-      categoryId,
-      limit,
-    });
-
     // Build where clause
     const whereClause: any = {
       status: 'ACTIVE',
@@ -97,15 +90,6 @@ export async function GET(request: NextRequest) {
         { totalReviews: 'desc' },
       ],
       take: limit,
-    });
-
-    const responseTime = Date.now() - startTime;
-
-    console.log('[API Popular Businesses] ✅ Success:', {
-      count: businesses.length,
-      city,
-      state,
-      responseTime: `${responseTime}ms`,
     });
 
     return NextResponse.json(
