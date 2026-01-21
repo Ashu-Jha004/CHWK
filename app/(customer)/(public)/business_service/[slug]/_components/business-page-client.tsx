@@ -59,6 +59,7 @@ export function BusinessPageClient({
   const visibleTabs = useMemo(() => {
     const tabs = [
       { id: "overview", visible: true },
+       { id: "website", visible: business.website !== null },
       { id: "about", visible: true },
       {
         id: "products",
@@ -71,8 +72,10 @@ export function BusinessPageClient({
       { id: "staff", visible: stats?.totalStaff > 0 },
       { id: "chain", visible: business.chainId !== null && business.chain !== null },
       { id: "photos", visible: stats?.totalPhotos > 0 },
+      { id: "actions", visible: true },
       { id: "reviews", visible: true }, // Always show (can write reviews)
       { id: "contact", visible: true },
+
     ];
 
     return tabs.filter((tab) => tab.visible);
@@ -203,7 +206,7 @@ export function BusinessPageClient({
       )}
 
       {/* AI Chatbot Widget */}
-      <ChatbotWidget
+      <ChatbotWidget 
         businessId={business.id}
         businessName={business.name}
       />

@@ -47,6 +47,9 @@ export function VideoPreviewGrid({
   // ================ Refs ================
   const containerRef = useRef<HTMLDivElement>(null);
   const pauseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const totalWidthRef = useRef<number>(0);
+  const videosCountRef = useRef<number>(videos.length);
+  const itemWidthRef = useRef<number>(0);
 
   // ================ State ================
   const [offset, setOffset] = useState(0);
@@ -66,15 +69,18 @@ export function VideoPreviewGrid({
     [videos]
   );
 
-  const itemWidth = useMemo(
-    () => CAROUSEL_CONFIG.CARD_WIDTH_DESKTOP + CAROUSEL_CONFIG.GAP,
-    []
-  );
+  const itemWidth = useMemo(() => {
+    const width = CAROUSEL_CONFIG.CARD_WIDTH_DESKTOP + CAROUSEL_CONFIG.GAP;
+    itemWidthRef.current = width;
+    return width;
+  }, []);
 
-  const totalWidth = useMemo(
-    () => videos.length * itemWidth,
-    [videos.length, itemWidth]
-  );
+  const totalWidth = useMemo(() => {
+    const width = videos.length * itemWidth;
+    totalWidthRef.current = width;
+    videosCountRef.current = videos.length;
+    return width;
+  }, [videos.length, itemWidth]);
 
   // ================ Helper Functions ================
 
@@ -168,29 +174,31 @@ export function VideoPreviewGrid({
 
   /**
    * Track current slide based on offset
+   * Only update state when slide actually changes to prevent unnecessary re-renders
    */
   useEffect(() => {
-    if (itemWidth === 0) return; // Prevent division by zero
+    if (itemWidthRef.current === 0 || videosCountRef.current === 0) return;
 
-    const slideIndex = Math.round(offset / itemWidth) % videos.length;
-    setCurrentSlide(slideIndex);
-  }, [offset, itemWidth, videos.length]);
+    const slideIndex = Math.round(offset / itemWidthRef.current) % videosCountRef.current;
+    setCurrentSlide(prev => prev === slideIndex ? prev : slideIndex);
+  }, [offset]);
 
   /**
    * Auto-scroll effect with proper cleanup
+   * Using refs to avoid dependency issues and prevent infinite loops
    */
   useEffect(() => {
-    if (isPaused || videos.length === 0) return;
+    if (isPaused || videosCountRef.current === 0) return;
 
     const interval = setInterval(() => {
       setOffset((prev) => {
         const newOffset = prev + 1;
-        return newOffset >= totalWidth ? 0 : newOffset;
+        return newOffset >= totalWidthRef.current ? 0 : newOffset;
       });
     }, CAROUSEL_CONFIG.AUTO_SCROLL_SPEED);
 
     return () => clearInterval(interval);
-  }, [isPaused, totalWidth, videos.length]);
+  }, [isPaused]);
 
   /**
    * Cleanup pause timeout on unmount

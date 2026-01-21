@@ -42,7 +42,6 @@ import {
 } from "@/lib/utils/business-detail-utils";
 import { useBusinessDetailStore } from "@/store/customer/business_service/business-detail-store";
 import { cn } from "@/lib/utils";
-import { ActionTabModal } from "./modals/action-tab-modal";
 
 interface BusinessHeaderProps {
   business: BusinessDetail;
@@ -259,10 +258,6 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                     Directions
                   </a>
                 </Button>
-                <Button size="default" variant="outline" className="gap-2 flex-1 sm:flex-initial" onClick={() => setActionTabOpen(true)}>
-                  <FileText className="h-4 w-4" />
-                  Action Tab
-                </Button>
               </div>
             </div>
 
@@ -300,10 +295,6 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                     <Navigation className="h-4 w-4" />
                     Directions
                   </a>
-                </Button>
-                <Button size="default" variant="outline" className="gap-2" onClick={() => setActionTabOpen(true)}>
-                  <FileText className="h-4 w-4" />
-                  Action Tab
                 </Button>
               </div>
 
@@ -359,12 +350,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
         </div>
       </div>
 
-      <ActionTabModal
-        isOpen={actionTabOpen}
-        onClose={() => setActionTabOpen(false)}
-        form={business.form || null}
-        businessName={business.name}
-      />
+
     </>
   );
 }

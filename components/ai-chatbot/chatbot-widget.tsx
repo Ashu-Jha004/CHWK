@@ -31,7 +31,7 @@ export const ChatbotWidget: FC<ChatbotWidgetProps> = ({ businessId, businessName
           // Mobile positions (full screen)
           "inset-0",
           // Desktop positions (reset mobile full screen)
-          "sm:inset-auto sm:bottom-20 sm:right-4",
+          "sm:inset-auto sm:bottom-10 sm:right-4",
           isOpen
             ? "opacity-100 translate-y-0 pointer-events-auto"
             : "opacity-0 translate-y-10 pointer-events-none"

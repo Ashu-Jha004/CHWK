@@ -19,6 +19,8 @@ import {
   Star,
   Phone,
   MessageSquareWarning,
+  ActivityIcon,
+  Globe
 } from "lucide-react";
 import { useBusinessDetailStore } from "@/store/customer/business_service/business-detail-store";
 import { cn } from "@/lib/utils";
@@ -35,8 +37,10 @@ const TAB_ICONS: Record<string, any> = {
   products: ShoppingBag,
   services: Wrench,
   staff: Users,
+  actions: ActivityIcon,
   chain: MapPin,
   photos: ImageIcon,
+  website: Globe,
   reviews: Star,
   contact: Phone,
 };
@@ -48,8 +52,10 @@ const TAB_LABELS: Record<string, string> = {
   services: "Services",
   staff: "Our Staff",
   chain: "Locations",
+  actions: "Actions",
   photos: "Photos",
   reviews: "Reviews",
+  website: "Website",
   contact: "Contact",
 };
 
@@ -157,19 +163,6 @@ export function BusinessSidebar({
                 <Star className="h-3.5 w-3.5 fill-primary text-primary" />
                 <span className="font-medium">{stats.averageRating.toFixed(1)}</span>
               </div>
-            </div>
-          )}
-
-          {stats.priceRange && (
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Price Range</span>
-              <span className="font-medium">
-                {"₹".repeat(
-                  ["BUDGET", "MODERATE", "EXPENSIVE", "LUXURY"].indexOf(
-                    stats.priceRange
-                  ) + 1
-                )}
-              </span>
             </div>
           )}
 

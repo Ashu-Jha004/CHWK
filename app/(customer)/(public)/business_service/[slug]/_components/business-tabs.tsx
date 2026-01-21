@@ -19,6 +19,12 @@ const AboutTab = dynamic(() => import("./tabs/about-tab").then(mod => ({ default
   loading: () => <TabContentSkeleton />,
 });
 
+const ActionTab = dynamic(() => import("./ActionTab").then(mod => ({ default: mod.default })), {
+  loading: () => <TabContentSkeleton />,
+});
+const WebsiteTab = dynamic(() => import("./Websitetab").then(mod => ({ default: mod.default })), {
+  loading: () => <TabContentSkeleton />,
+});
 const ProductsTab = dynamic(() => import("./tabs/products-tab").then(mod => ({ default: mod.ProductsTab })), {
   loading: () => <TabContentSkeleton />,
 });
@@ -96,6 +102,16 @@ export function BusinessTabs({
           <TabsContent value="about" className="mt-0">
             <Suspense fallback={<TabContentSkeleton />}>
                 <AboutTab business={business} stats={stats} />
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="actions" className="mt-0">
+            <Suspense fallback={<TabContentSkeleton />}>
+                <ActionTab business={business} />
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="website" className="mt-0">
+            <Suspense fallback={<TabContentSkeleton />}>
+                <WebsiteTab business={business} />
             </Suspense>
           </TabsContent>
 

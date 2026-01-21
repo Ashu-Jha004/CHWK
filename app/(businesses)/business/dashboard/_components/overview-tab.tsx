@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ActionTabDialog } from "./action-tab-dialog";
 import { Button } from "@/components/ui/button";
 import { FormResponseModal } from "./form-response-modal";
+import Link from "next/link";
 
 interface OverviewTabProps {
   businessId: string;
@@ -94,13 +95,13 @@ export function OverviewTab({ businessId }: OverviewTabProps) {
             <CardTitle>Action Tab</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center gap-3 h-[200px] text-muted-foreground">
+            <div className="flex flex-col  items-center justify-center gap-3 h-[200px] text-muted-foreground">
                <ActionTabDialog
                  businessId={businessId}
                  initialFormUrl={stats.form}
                  initialFormResponseUrl={stats.formResponse}
                />
-
+<Link href={stats.formResponse || "#"}>
                <Button
                  variant="outline"
                  className="gap-2"
@@ -109,12 +110,8 @@ export function OverviewTab({ businessId }: OverviewTabProps) {
                  <Table className="h-4 w-4" />
                  View Form Responses
                </Button>
+</Link>
 
-               <FormResponseModal
-                 isOpen={formResponseOpen}
-                 onClose={() => setFormResponseOpen(false)}
-                 formResponse={stats.formResponse || null}
-               />
             </div>
           </CardContent>
         </Card>
