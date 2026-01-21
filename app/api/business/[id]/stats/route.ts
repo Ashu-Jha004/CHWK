@@ -23,6 +23,8 @@ export async function GET(
           totalReviews: true,
           averageRating: true,
           totalComplaints: true,
+          form: true,
+          formResponse: true,
         }
       }),
       prisma.complaint.groupBy({
@@ -60,7 +62,9 @@ export async function GET(
         views: business.viewCount,
         reviews: business.totalReviews,
         rating: business.averageRating,
-        complaints: complaintStats
+        complaints: complaintStats,
+        form: business.form,
+        formResponse: business.formResponse
     });
 
   } catch (error) {

@@ -26,6 +26,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Navigation,
+  FileText,
 } from "lucide-react";
 import Image from "next/image";
 import {
@@ -41,6 +42,7 @@ import {
 } from "@/lib/utils/business-detail-utils";
 import { useBusinessDetailStore } from "@/store/customer/business_service/business-detail-store";
 import { cn } from "@/lib/utils";
+import { ActionTabModal } from "./modals/action-tab-modal";
 
 interface BusinessHeaderProps {
   business: BusinessDetail;
@@ -50,6 +52,7 @@ interface BusinessHeaderProps {
 export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
   const { isSaved, toggleSave, setShareModalOpen, setReportModalOpen } =
     useBusinessDetailStore();
+  const [actionTabOpen, setActionTabOpen] = useState(false);
 
   // Hydration mismatch prevention: Calculate time-based status only on client
   const [isOpen, setIsOpen] = useState<boolean | null>(null);
@@ -251,10 +254,14 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                   </a>
                 </Button>
                 <Button asChild size="default" variant="outline" className="gap-2 flex-1 sm:flex-initial">
-                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer">
+                  <a href={mapsUrl} target="_blank" rel="no opener noreferrer">
                     <Navigation className="h-4 w-4" />
                     Directions
                   </a>
+                </Button>
+                <Button size="default" variant="outline" className="gap-2 flex-1 sm:flex-initial" onClick={() => setActionTabOpen(true)}>
+                  <FileText className="h-4 w-4" />
+                  Action Tab
                 </Button>
               </div>
             </div>
@@ -293,6 +300,10 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                     <Navigation className="h-4 w-4" />
                     Directions
                   </a>
+                </Button>
+                <Button size="default" variant="outline" className="gap-2" onClick={() => setActionTabOpen(true)}>
+                  <FileText className="h-4 w-4" />
+                  Action Tab
                 </Button>
               </div>
 
@@ -347,6 +358,13 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
           )}
         </div>
       </div>
+
+      <ActionTabModal
+        isOpen={actionTabOpen}
+        onClose={() => setActionTabOpen(false)}
+        form={business.form || null}
+        businessName={business.name}
+      />
     </>
   );
 }

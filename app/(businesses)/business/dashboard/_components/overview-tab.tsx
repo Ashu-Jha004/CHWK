@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, Star, MessageSquareWarning, Activity, CheckCircle, Clock } from "lucide-react";
+import { Eye, Star, MessageSquareWarning, Activity, CheckCircle, Clock, Table } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { ActionTabDialog } from "./action-tab-dialog";
+import { Button } from "@/components/ui/button";
+import { FormResponseModal } from "./form-response-modal";
 
 interface OverviewTabProps {
   businessId: string;
@@ -14,6 +17,8 @@ interface StatsData {
   views: number;
   reviews: number;
   rating: number;
+  form?: string | null;
+  formResponse?: string | null;
   complaints: {
     total: number;
     pending: number;
@@ -25,6 +30,7 @@ interface StatsData {
 export function OverviewTab({ businessId }: OverviewTabProps) {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [formResponseOpen, setFormResponseOpen] = useState(false);
 
   useEffect(() => {
     async function fetchStats() {
@@ -85,13 +91,30 @@ export function OverviewTab({ businessId }: OverviewTabProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>Action Tab</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
-                <Activity className="h-8 w-8 mb-2 opacity-50" />
-                <p>No recent activity logs available</p>
-                {/* TODO: Implement Activity Feed */}
+            <div className="flex flex-col items-center justify-center gap-3 h-[200px] text-muted-foreground">
+               <ActionTabDialog
+                 businessId={businessId}
+                 initialFormUrl={stats.form}
+                 initialFormResponseUrl={stats.formResponse}
+               />
+
+               <Button
+                 variant="outline"
+                 className="gap-2"
+                 onClick={() => setFormResponseOpen(true)}
+               >
+                 <Table className="h-4 w-4" />
+                 View Form Responses
+               </Button>
+
+               <FormResponseModal
+                 isOpen={formResponseOpen}
+                 onClose={() => setFormResponseOpen(false)}
+                 formResponse={stats.formResponse || null}
+               />
             </div>
           </CardContent>
         </Card>

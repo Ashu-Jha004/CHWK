@@ -91,6 +91,8 @@ model Business {
   coverImagePublicId        String?
   introVideoUrl             String?
   chainId                   String?
+  form                      String?
+  formResponse              String?
   branchName                String?
   email                     String?
   phone                     String
