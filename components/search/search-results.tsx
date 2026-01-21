@@ -110,18 +110,27 @@ export function SearchResultsClient({
       )}
 
       <SearchHeader
-  query={searchParams.q || ""}
-  // Add optional chaining here to prevent the 'total' of undefined error
-  totalResults={currentData?.pagination?.total || 0}
-  location={searchParams.location}
-  sortBy={searchParams.sort || "relevance"}
-  onSortChange={handleSortChange}
-  view={view}
-  onViewChange={setView}
-/>
+        query={searchParams.q || ""}
+        // Add optional chaining here to prevent the 'total' of undefined error
+        totalResults={currentData?.pagination?.total || 0}
+        location={searchParams.location}
+        sortBy={searchParams.sort || "relevance"}
+        onSortChange={handleSortChange}
+        view={view}
+        onViewChange={setView}
+        currentFilters={{
+          radius: parseInt(searchParams.radius || "10"),
+          minRating: parseFloat(searchParams.minRating || "0") || undefined,
+          priceRange: searchParams.priceRange?.split(",") as any,
+          verified: searchParams.verified === "true",
+          category: searchParams.category,
+        }}
+        onFilterChange={handleFilterChange}
+        availableCategories={currentData.filters?.availableFilters?.categories || []}
+      />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <aside className="lg:col-span-1">
+          <aside className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24">
               <FilterSidebar
                 currentFilters={{

@@ -6,7 +6,7 @@ import { SearchResultsClient } from "@/components/search/search-results";
 import { performSearch } from "@/lib/search/server";
 
 export const metadata = {
-  title: "Search Results | Your App Name",
+  title: "Search Results",
   description: "Find the best local businesses near you",
 };
 

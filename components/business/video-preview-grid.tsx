@@ -1,7 +1,7 @@
 // components/business/video-preview-grid.tsx
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { Photo } from "@prisma/client";
 import { getYouTubeID } from "@/lib/video";
 import { Button } from "@/components/ui/button";
@@ -17,20 +17,89 @@ interface VideoPreviewGridProps {
 }
 
 export function VideoPreviewGrid({ videos, onViewAll, totalCount, hideTitle }: VideoPreviewGridProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [offset, setOffset] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   if (!videos || videos.length === 0) return null;
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const { scrollLeft, clientWidth } = scrollRef.current;
-      const scrollTo = direction === 'left'
-        ? scrollLeft - clientWidth * 0.8
-        : scrollLeft + clientWidth * 0.8;
+  // Duplicate videos for seamless infinite loop
+  const duplicatedVideos = [...videos, ...videos, ...videos, ...videos];
+  const cardWidth = 450; // md:w-[450px]
+  const mobileCardWidth = 300; // mobile width
+  const gap = 24; // gap-6
+  const itemWidth = cardWidth + gap;
 
-      scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
-    }
+  // Manual navigation functions
+  const scrollNext = () => {
+    setOffset((prev) => {
+      const totalWidth = videos.length * itemWidth;
+      const newOffset = prev + itemWidth;
+      return newOffset >= totalWidth ? 0 : newOffset;
+    });
+    // Pause auto-scroll temporarily when user manually navigates
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 3000); // Resume after 3 seconds
   };
+
+  const scrollPrev = () => {
+    setOffset((prev) => {
+      const totalWidth = videos.length * itemWidth;
+      return prev - itemWidth < 0 ? totalWidth - itemWidth : prev - itemWidth;
+    });
+    // Pause auto-scroll temporarily when user manually navigates
+    setIsPaused(true);
+    setTimeout(() => setIsPaused(false), 3000); // Resume after 3 seconds
+  };
+
+  // Touch handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      scrollNext();
+    }
+    if (isRightSwipe) {
+      scrollPrev();
+    }
+
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
+  // Auto-scroll effect
+  React.useEffect(() => {
+    if (isPaused) return;
+
+    const interval = setInterval(() => {
+      setOffset((prev) => {
+        const newOffset = prev + 1;
+        const totalWidth = videos.length * itemWidth;
+
+        // Reset to beginning when we've scrolled through one set
+        if (newOffset >= totalWidth) {
+          return 0;
+        }
+        return newOffset;
+      });
+    }, 30); // Adjust speed here (lower = faster)
+
+    return () => clearInterval(interval);
+  }, [isPaused, videos.length, itemWidth]);
 
   return (
     <section className={cn("py-8 relative group", hideTitle && "py-2")}>
@@ -45,31 +114,30 @@ export function VideoPreviewGrid({ videos, onViewAll, totalCount, hideTitle }: V
           </div>
 
           <div className="flex items-center gap-2">
-            {!hideTitle && videos.length > 2 && (
-              <div className="flex items-center gap-2 mr-4">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full h-10 w-10 border-border/50 bg-background/50 backdrop-blur-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
-                  onClick={() => scroll('left')}
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="rounded-full h-10 w-10 border-border/50 bg-background/50 backdrop-blur-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
-                  onClick={() => scroll('right')}
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-              </div>
-            )}
+            {/* Navigation Arrows - Desktop */}
+            <div className="hidden md:flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full h-10 w-10 border-border/50 bg-background/50 backdrop-blur-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
+                onClick={scrollPrev}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full h-10 w-10 border-border/50 bg-background/50 backdrop-blur-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-300"
+                onClick={scrollNext}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
 
             {onViewAll && (
               <Button
                 variant="ghost"
-                className="text-primary hover:text-primary/80 gap-2 font-semibold group/btn"
+                className="text-primary hover:text-primary/80 gap-2 font-semibold group/btn hidden md:flex"
                 onClick={onViewAll}
               >
                 Learn More
@@ -80,27 +148,54 @@ export function VideoPreviewGrid({ videos, onViewAll, totalCount, hideTitle }: V
         </div>
       )}
 
-      {/* Slider Container */}
+      {/* Infinite Carousel Container */}
       <div
-        ref={scrollRef}
-        className={cn(
-          "hide-scrollbar",
-          hideTitle
-            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-            : "flex overflow-x-auto snap-x snap-mandatory gap-6 pb-4 -mx-4 px-4 scroll-smooth"
-        )}
+        className="relative w-full overflow-hidden"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
-        {videos.map((video) => (
-          <div
-            key={video.id}
-            className={cn(
-              "relative",
-              !hideTitle && "flex-none w-[85%] md:w-[45%] snap-center"
-            )}
-          >
-            <VideoCard video={video} />
-          </div>
-        ))}
+        {/* Gradient Masks */}
+        <div className="absolute left-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+
+        {/* Floating Navigation Arrows - Mobile */}
+        <Button
+          variant="outline"
+          size="icon"
+          className="md:hidden absolute left-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm border-border hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 shadow-lg"
+          onClick={scrollPrev}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="md:hidden absolute right-2 top-1/2 -translate-y-1/2 z-20 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm border-border hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 shadow-lg"
+          onClick={scrollNext}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Button>
+
+        <div
+          ref={containerRef}
+          className="flex gap-6 w-max"
+          style={{
+            transform: `translateX(-${offset}px)`,
+            transition: 'transform 0.05s linear',
+          }}
+        >
+          {duplicatedVideos.map((video, index) => (
+            <div
+              key={`${video.id}-${index}`}
+              className="w-[300px] md:w-[450px] flex-shrink-0"
+            >
+              <VideoCard video={video} />
+            </div>
+          ))}
+        </div>
       </div>
 
       {onViewAll && (!totalCount || totalCount <= videos.length) && !hideTitle && (

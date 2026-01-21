@@ -4,6 +4,8 @@ import { useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useBusiness } from "@/context/business-context";
 import { useRouter, usePathname } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { UserButton } from "@/components/auth/user-button";
 import { Button } from "@/components/ui/button";
 import {
   MapPin,
@@ -43,6 +45,7 @@ export function MobileNav({
    const router = useRouter();
    const pathname = usePathname();
   const { isBusinessOwner } = useBusiness();
+  const { isSignedIn, user } = useUser();
   const { query, setQuery, location } = uiSelectors.useSearch();
 
   const handleSearch = useCallback(
@@ -108,7 +111,7 @@ export function MobileNav({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 z-40 animate-fade-in"
+        className="fixed inset-0 bg-black/60 z-[999] animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -116,7 +119,7 @@ export function MobileNav({
       {/* Mobile Menu */}
       <nav
         className={cn(
-          "fixed top-0 right-0 bottom-0 w-[85vw] max-w-sm bg-white z-50 overflow-y-auto",
+          "fixed top-0 right-0 bottom-0 w-[85vw] max-w-sm bg-white z-[1000] overflow-y-auto",
           "transform transition-transform duration-300 ease-out",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
@@ -264,17 +267,27 @@ export function MobileNav({
 
           {/* Bottom CTA */}
           <div className="p-6 border-t bg-gray-50 space-y-3">
-            <Button
-              className="w-full gap-2 btn-shine"
-              size="lg"
-              onClick={() => {
-                router.push(`/sign-in?redirect_url=${encodeURIComponent(pathname)}`);
-                onClose();
-              }}
-            >
-              <LogIn className="w-5 h-5" />
-              Sign In / Sign Up
-            </Button>
+             {isSignedIn ? (
+                <div className="flex items-center gap-3 p-2 bg-white rounded-lg border">
+                  <UserButton />
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="font-medium text-sm truncate">{user?.fullName || "User"}</span>
+                    <span className="text-xs text-muted-foreground truncate">{user?.primaryEmailAddress?.emailAddress}</span>
+                  </div>
+                </div>
+             ) : (
+                <Button
+                  className="w-full gap-2 btn-shine"
+                  size="lg"
+                  onClick={() => {
+                    router.push(`/sign-in?redirect_url=${encodeURIComponent(pathname)}`);
+                    onClose();
+                  }}
+                >
+                  <LogIn className="w-5 h-5" />
+                  Sign In / Sign Up
+                </Button>
+             )}
           </div>
         </div>
       </nav>

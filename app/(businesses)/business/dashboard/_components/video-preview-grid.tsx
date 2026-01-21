@@ -14,17 +14,48 @@ interface VideoPreviewGridProps {
 export function VideoPreviewGrid({ videos }: VideoPreviewGridProps) {
   if (!videos || videos.length === 0) return null;
 
+  // Determine if we need animation (min 3 items for good effect, duplicates for safe loop)
+  const shouldAnimate = videos.length > 0;
+  // Create a safe loop list. If few videos, repeat them more times to fill width
+  const displayVideos = shouldAnimate
+    ? [...videos, ...videos, ...videos, ...videos].slice(0, 12) // Limit total items for performance
+    : videos;
+
   return (
-    <section className="py-8">
-      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+    <section className="py-8 overflow-hidden w-full">
+      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2 px-1">
         <span className="w-2 h-8 bg-secondary rounded-full" />
         Videos & Virtual Tours
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {videos.map((video) => (
-          <VideoCard key={video.id} video={video} />
-        ))}
+
+      <div className="relative w-full">
+        {/* Gradient Masks for smooth fade out at edges */}
+        <div className="absolute left-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+
+        <div
+          className="flex gap-6 w-max animate-scroll hover:[animation-play-state:paused]"
+          style={{
+            animation: "scroll 40s linear infinite",
+          }}
+        >
+          {displayVideos.map((video, index) => (
+             <div
+               key={`${video.id}-${index}`}
+               className="w-[300px] md:w-[450px] flex-shrink-0"
+             >
+               <VideoCard video={video} />
+             </div>
+          ))}
+        </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </section>
   );
 }
