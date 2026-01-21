@@ -109,7 +109,7 @@ export function PhotosTab({ business }: PhotosTabProps) {
             <div>
               <h2 className="text-2xl font-semibold flex items-center gap-2">
                 <ImageIcon className="h-6 w-6 text-primary" />
-                Photo Gallery
+                Business Gallery
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {filteredImages.length} {filteredImages.length === 1 ? "photo" : "photos"}

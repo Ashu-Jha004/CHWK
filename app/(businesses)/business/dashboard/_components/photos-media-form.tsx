@@ -135,7 +135,7 @@ export function PhotosMediaForm({ business }: PhotosMediaFormProps) {
       {/* Gallery Section */}
       <div className="glass rounded-xl p-6 space-y-6">
         <div>
-          <h3 className="text-lg font-semibold mb-1">Photo Gallery</h3>
+          <h3 className="text-lg font-semibold mb-1">Business Gallery</h3>
           <p className="text-sm text-muted-foreground">
             Add photos of your business, products, or services. Drag to reorder.
           </p>
