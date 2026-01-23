@@ -271,30 +271,6 @@ export function Footer() {
                     About Us
                   </Link>
                 </li>
-                <li>
-                  <Link
-                    href="/careers"
-                    className="text-xs hover:text-primary transition-colors focus-visible-ring"
-                  >
-                    Careers
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/press"
-                    className="text-xs hover:text-primary transition-colors focus-visible-ring"
-                  >
-                    Press
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/blog"
-                    className="text-xs hover:text-primary transition-colors focus-visible-ring"
-                  >
-                    Blog
-                  </Link>
-                </li>
               </ul>
             </div>
 
@@ -429,10 +405,10 @@ export function Footer() {
               <div>
                 <h5 className="text-white font-medium text-sm mb-1">Email</h5>
                 <a
-                  href="mailto:support@chwk.com"
+                  href="mailto:ashujha009322@gmail.com"
                   className="text-sm hover:text-primary transition-colors focus-visible-ring"
                 >
-                  support@chwk.com
+                  ashujha009322@gmail.com
                 </a>
               </div>
             </div>
@@ -444,10 +420,10 @@ export function Footer() {
               <div>
                 <h5 className="text-white font-medium text-sm mb-1">Phone</h5>
                 <a
-                  href="tel:+911234567890"
+                  href="tel:+919818618448"
                   className="text-sm hover:text-primary transition-colors focus-visible-ring"
                 >
-                  +91 123 456 7890
+                  +91 9818618448
                 </a>
               </div>
             </div>
@@ -458,7 +434,7 @@ export function Footer() {
               </div>
               <div>
                 <h5 className="text-white font-medium text-sm mb-1">Address</h5>
-                <p className="text-sm">Mumbai, Maharashtra, India</p>
+                <p className="text-sm">Delhi, India</p>
               </div>
             </div>
           </div>

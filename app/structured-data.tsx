@@ -8,17 +8,19 @@ export function StructuredData() {
     "@id": `${baseUrl}/#organization`,
     name: "CHWK",
     legalName: "CHWK India Private Limited",
+    alternateName: ["chwk", "CHWK India", "chwk.in", "CHWK App"],
     url: baseUrl,
     logo: `${baseUrl}/logo.png`,
+    slogan: "India's #1 Local Business Discovery Platform",
     description:
-      "India's most trusted local business discovery platform connecting customers with verified local businesses and services",
+      "CHWK is India's most trusted local business discovery platform connecting customers with verified local businesses and services across 25+ cities.",
     foundingDate: "2024",
     contactPoint: [
       {
         "@type": "ContactPoint",
         telephone: "+91-123-456-7890",
         contactType: "Customer Support",
-        email: "support@chwk.com",
+        email: "ashujha009322@gmail.com",
         areaServed: "IN",
         availableLanguage: ["English", "Hindi"],
       },
@@ -219,6 +221,90 @@ export function StructuredData() {
     ],
   };
 
+  // 6. SiteNavigationElement (Helps with Sitelinks)
+  const navigationSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "itemListElement": [
+      {
+        "@type": "SiteNavigationElement",
+        "position": 1,
+        "name": "About Us",
+        "description": "Learn about CHWK mission and team",
+        "url": `${baseUrl}/about`
+      },
+      {
+        "@type": "SiteNavigationElement",
+        "position": 2,
+        "name": "Local Search",
+        "description": "Find businesses and services near you",
+        "url": `${baseUrl}/search`
+      },
+      {
+        "@type": "SiteNavigationElement",
+        "position": 3,
+        "name": "Categories",
+        "description": "Browse businesses by category",
+        "url": `${baseUrl}/categories`
+      },
+      {
+        "@type": "SiteNavigationElement",
+        "position": 4,
+        "name": "Sign up as Business",
+        "description": "Register your business on CHWK",
+        "url": `${baseUrl}/business/signup`
+      }
+    ]
+  };
+
+  // 7. FAQPage Schema (for rich snippets)
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is CHWK?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "CHWK is India's leading local business discovery platform that helps customers find and connect with verified local businesses across 25+ cities. From restaurants and salons to healthcare and home services, CHWK makes it easy to discover trusted local services."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I list my business on CHWK?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You can list your business on CHWK by visiting chwk.vercel.app/business/signup and completing the simple 5-minute onboarding process. Your business will be verified and published within 24 hours."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is CHWK free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, CHWK is completely free for customers to search, discover, and connect with local businesses. Business owners can also list their business for free with basic features."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does CHWK verify businesses?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "CHWK uses a multi-step verification process including GST/Business ID validation, phone verification, and manual community checks to ensure all listed businesses are authentic and trustworthy."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What cities does CHWK cover?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "CHWK is available in 25+ cities across India including Mumbai, Delhi, Bangalore, Hyderabad, Chennai, Kolkata, Pune, and Ahmedabad, with more cities being added regularly."
+        }
+      }
+    ]
+  };
+
   return (
     <>
       {/* Organization Schema */}
@@ -260,6 +346,23 @@ export function StructuredData() {
           __html: JSON.stringify(breadcrumbSchema),
         }}
       />
+
+      {/* Site Navigation Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(navigationSchema),
+        }}
+      />
+
+      {/* FAQ Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
+      />
     </>
   );
 }
+

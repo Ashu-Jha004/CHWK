@@ -20,10 +20,19 @@ export const BRAND_COLORS = {
 
 // SEO Configuration for Tier 1 cities
 export const SEO_CONFIG = {
-  title: "CHWK - Discover Local Businesses & Services in India",
+  title: "CHWK - India's #1 Local Business Discovery Platform",
   description:
-    "Find the best restaurants, salons, repair services, healthcare, education, and home services near you. Read reviews, compare ratings, and connect with trusted local businesses across India's top cities.",
+    "CHWK helps you discover the best local businesses and services in India. Find restaurants, salons, repair services, healthcare, education, and home services near you. Read reviews, compare ratings, and connect with verified local businesses across India's top cities.",
   keywords: [
+    // Brand keywords (highest priority)
+    "chwk",
+    "CHWK",
+    "chwk india",
+    "chwk app",
+    "chwk business directory",
+    "chwk local search",
+    "chwk reviews",
+    // Service keywords
     "local business India",
     "find services near me",
     "business directory India",
@@ -37,10 +46,14 @@ export const SEO_CONFIG = {
     "salons near me",
     "home services India",
     "business reviews India",
+    "verified businesses India",
+    "local business reviews",
+    "India business listing",
   ],
   url: "https://chwk.vercel.app/", // Update with your actual domain
   ogImage: "/public/images/og-image.jpg", // We'll create this later
 };
+
 
 // Business Categories
 export interface Category {

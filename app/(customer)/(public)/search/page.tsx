@@ -4,11 +4,31 @@
 import { Header } from "@/components/LandingPage/layout/header";
 import { SearchResultsClient } from "@/components/search/search-results";
 import { performSearch } from "@/lib/search/server";
+import { Metadata } from "next";
 
-export const metadata = {
-  title: "Search Results",
-  description: "Find the best local businesses near you",
-};
+export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const query = params.q || "";
+  const location = params.location || "";
+
+  const title = query
+    ? `${query} ${location ? `in ${location}` : ""} | Search CHWK`
+    : "Discover Local Businesses | CHWK";
+
+  const description = query
+    ? `Find the best ${query} ${location ? `in ${location}` : "near you"}. Read reviews, compare ratings, and connect with verified local businesses on CHWK.`
+    : "Search for the best local businesses, restaurants, salons, and services across India on CHWK.";
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
+  };
+}
 
 interface SearchPageProps {
   searchParams: Promise<{
