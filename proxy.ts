@@ -14,6 +14,11 @@ const isPublicRoute = createRouteMatcher([
   "/categories(.*)",
   "/business(.*)",
   "/about",
+  "/contact",
+  "/privacy-policy",
+  "/terms-of-service",
+  "/faq",
+  "/blog",
 
   // Auth pages
   "/sign-in(.*)",
