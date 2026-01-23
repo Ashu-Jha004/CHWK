@@ -53,7 +53,7 @@ export const ChatbotWidget: FC<ChatbotWidgetProps> = ({ businessId, businessName
       <Button
         onClick={toggleChat}
         className={cn(
-          "fixed bottom-4 right-4 z-50 w-16 h-16 rounded-full shadow-lg transition-all duration-300",
+          "fixed bottom-24 right-4 sm:bottom-4 z-50 w-16 h-16 rounded-full shadow-lg transition-all duration-300",
           isOpen ? "scale-0" : "scale-100"
         )}
         size="icon"

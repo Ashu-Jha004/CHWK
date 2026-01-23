@@ -10,6 +10,7 @@ interface ActionTabProps {
 export default function ActionTab({ business }: ActionTabProps) {
   // Do not render iframe if form URL is missing
   if (!business?.form) {
+    console.log("Form not available",business?.form);
     return (
       <div className="flex min-h-screen w-full items-center justify-center text-gray-500">
         Form not available
