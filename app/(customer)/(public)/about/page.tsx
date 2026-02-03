@@ -133,17 +133,17 @@ export default function AboutPage() {
               <div className="flex flex-col md:flex-row gap-8 items-center md:items-start glass p-8 rounded-3xl border border-white/20 shadow-xl">
                 <div className="w-48 h-48 relative rounded-2xl overflow-hidden flex-shrink-0 shadow-lg">
                   <Image
-                    src="/images/about/founder_arjun.png"
-                    alt="Arjun Sharma"
+                    src="/images/about/founder_ashu.png"
+                    alt="Ashu Jha"
                     fill
                     className="object-cover"
                   />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold mb-1">Arjun Sharma</h3>
-                  <p className="text-primary font-medium mb-4">CEO & Co-Founder</p>
+                  <h3 className="text-2xl font-bold mb-1">Ashu Jha</h3>
+                  <p className="text-primary font-medium mb-4">CEO & Founder</p>
                   <p className="text-muted-foreground leading-relaxed">
-                    With over 12 years of experience in the Indian tech ecosystem, Arjun formerly led
+                    With over 3 years of experience in the Indian tech ecosystem, Ashu formerly led
                     product departments at major marketplaces. He founded CHWK to solve the
                     fragmentation he saw in local service discovery.
                   </p>
@@ -165,10 +165,10 @@ export default function AboutPage() {
                   />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold mb-1">Priya Iyer</h3>
+                  <h3 className="text-2xl font-bold mb-1">Pragati Jha</h3>
                   <p className="text-primary font-medium mb-4">COO & Co-Founder</p>
                   <p className="text-muted-foreground leading-relaxed">
-                    Priya is a community builder at heart. Her background in operations and local
+                    Pragati is a community builder at heart. Her background in operations and local
                     governance collaborations has been instrumental in onboarding our first
                     5,000+ businesses across Tier 1 and Tier 2 cities.
                   </p>

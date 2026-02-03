@@ -476,6 +476,16 @@ function ReviewCard({ review, currentUserId, onEdit, onPhotoClick }: ReviewCardP
   const editPermission = canEditReview(review.editableUntil);
   const verificationInfo = getVerificationBadgeInfo(review.verificationStatus);
 
+  const getReviewPhotoSrc = (photo: { url: string; thumbnailUrl: string | null }) => {
+    if (photo.url.includes("youtube.com") || photo.url.includes("youtu.be")) {
+      return photo.thumbnailUrl || "";
+    }
+    return photo.url || photo.thumbnailUrl || "";
+  };
+
+  const mainPhoto = review.photos?.[0];
+  const avatarFallbackSrc = review.user?.avatar || (mainPhoto ? getReviewPhotoSrc(mainPhoto) : "");
+
   return (
     <Card className="p-6 space-y-4 hover:shadow-md transition-shadow">
       {/* User Info & Rating */}
@@ -494,13 +504,14 @@ function ReviewCard({ review, currentUserId, onEdit, onPhotoClick }: ReviewCardP
               }
             }}
           >
-            {review.user?.avatar || review.photos?.[0]?.url ? (
+            {avatarFallbackSrc ? (
               <Image
-                src={review.user?.avatar || review.photos?.[0]?.url || ""}
+                src={avatarFallbackSrc}
                 alt={`${review.user?.firstName || "User"}'s avatar`}
                 fill
                 className="object-cover"
                 sizes="48px"
+                quality={100}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground font-semibold text-lg">
@@ -621,11 +632,12 @@ function ReviewCard({ review, currentUserId, onEdit, onPhotoClick }: ReviewCardP
               onClick={() => onPhotoClick(photo.url, photo.caption)}
             >
               <Image
-                src={photo.url}
+                src={getReviewPhotoSrc(photo)}
                 alt={photo.caption || "Review photo"}
                 fill
                 className="object-cover"
                 sizes="96px"
+                quality={100}
               />
             </div>
           ))}

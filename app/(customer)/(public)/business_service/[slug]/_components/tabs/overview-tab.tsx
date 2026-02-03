@@ -139,7 +139,9 @@ export function OverviewTab({
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-110"
                     sizes="(max-width: 768px) 50vw, 25vw"
-                    loading="lazy"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    priority={index === 0}
+                    quality={100}
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                 </div>

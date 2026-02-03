@@ -8,7 +8,7 @@ export function StructuredData() {
     "@id": `${baseUrl}/#organization`,
     name: "CHWK",
     legalName: "CHWK India Private Limited",
-    alternateName: ["chwk", "CHWK India", "chwk.in", "CHWK App"],
+    alternateName: ["chwk","chock", "chowk","choque" , "choque","chowk india", "choque india", "chwk.com", "justdial","choque.in", "choque.com", "CHWK India", "chwk.in", "CHWK App"],
     url: baseUrl,
     logo: `${baseUrl}/logo.png`,
     slogan: "India's #1 Local Business Discovery Platform",

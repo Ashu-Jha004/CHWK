@@ -468,7 +468,7 @@ export function HeroSection() {
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto animate-fade-in-up animation-delay-200">
-            From restaurants to salons, repairs to healthcare - find verified
+            From Lawyers to Doctors, from Chart Accountants to Restaurants, find verified
             businesses with genuine reviews in your city.
           </p>
 

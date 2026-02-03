@@ -182,12 +182,10 @@ export function PhotosTab({ business }: PhotosTabProps) {
             </p>
           </Card>
         ) : filter === "video" ? (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <VideoPreviewGrid
-               videos={business.photos.filter(p => p.type === "VIDEO")}
-               hideTitle
-             />
-          </div>
+           <VideoPreviewGrid
+             videos={business.photos.filter(p => p.type === "VIDEO")}
+             hideTitle
+           />
         ) : viewMode === "grid" ? (
           <GalleryGrid images={filteredImages} onImageClick={handleImageClick} />
         ) : (
@@ -218,17 +216,18 @@ function GalleryGrid({
           onClick={() => onImageClick(index)}
         >
           <Image
-            src={image.thumbnailUrl || image.url}
+            src={image.type === "video" ? (image.thumbnailUrl || "") : (image.url || image.thumbnailUrl || "")}
             alt={image.altText || image.caption || `Photo ${index + 1}`}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-110"
+            className="object-cover"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            quality={100}
           />
 
           {/* Video Play Overlay */}
           {image.type === "video" && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/20 transition-transform group-hover:scale-110">
+              <div className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center border border-white/20">
                 <Play className="h-6 w-6 text-white fill-white ml-1" />
               </div>
             </div>
@@ -283,11 +282,12 @@ function GalleryList({
             {/* Thumbnail */}
             <div className="relative aspect-square rounded-lg overflow-hidden bg-muted">
               <Image
-                src={image.thumbnailUrl || image.url}
+                src={image.type === "video" ? (image.thumbnailUrl || "") : (image.url || image.thumbnailUrl || "")}
                 alt={image.altText || image.caption || `Photo ${index + 1}`}
                 fill
-                className="object-cover transition-transform duration-300 group-hover:scale-110"
+                className="object-cover"
                 sizes="200px"
+                quality={100}
               />
               {image.type === "video" && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20">

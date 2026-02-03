@@ -100,7 +100,7 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
             className="object-cover"
             sizes="100vw"
             priority
-            quality={90}
+            quality={100}
           />
           {/* Gradient Overlay for better header visibility */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/60" />
@@ -271,7 +271,9 @@ export function BusinessHeader({ business, stats }: BusinessHeaderProps) {
                     alt={`${business.name || "Business"} logo`}
                     fill
                     className="object-cover"
-                    sizes="128px"
+                    sizes="(max-width: 768px) 128px, 256px"
+                    priority
+                    quality={100}
                   />
                 </div>
               )}

@@ -19,6 +19,7 @@ const isPublicRoute = createRouteMatcher([
   "/terms-of-service",
   "/faq",
   "/blog",
+  "/monitoring(.*)",           // Sentry tunnel route
 
   // Auth pages
   "/sign-in(.*)",
